@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:softwaregraduateproject/Forgetpassword.dart';
 import 'package:softwaregraduateproject/Signup.dart';
 import 'package:softwaregraduateproject/homepage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Loginpage extends StatefulWidget {
   @override
@@ -14,6 +15,7 @@ class _LoginpageState extends State<Loginpage> {
   String? email = '';
   String? password = '';
   String? _errorMessage; // Error message variable
+  String? _token;
 
   // State variables
   bool _isPasswordVisible = false; // Used for toggling password visibility
@@ -56,6 +58,40 @@ class _LoginpageState extends State<Loginpage> {
         _buttonsOpacity = 1.0;
       });
     });
+
+    // Check if the user is already logged in
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedToken = prefs.getString('token');
+    String? savedEmail = prefs.getString('email');
+    String? savedPassword = prefs.getString('password');
+
+    if (savedToken != null && savedEmail != null && savedPassword != null) {
+      // User is already logged in, navigate to homepage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Homepage(savedEmail, savedPassword, savedToken),
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveCredentials(String token, String email, String password) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
+    await prefs.setString('email', email);
+    await prefs.setString('password', password);
+  }
+
+  Future<void> _clearCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('email');
+    await prefs.remove('password');
   }
 
   @override
@@ -214,14 +250,20 @@ class _LoginpageState extends State<Loginpage> {
                                           print("Response body: ${response.body}");
 
                                           if (response.statusCode == 200) {
+                                            final responseBody = json.decode(response.body);
+                                            _token = responseBody['accesstoken'];
                                             print("User logged in successfully");
                                             setState(() {
                                               _errorMessage = null; // Clear any error message
                                             });
+
+                                            // Save token, email, and password in Shared Preferences
+                                            await _saveCredentials(_token!, email!, password!);
+
                                             Navigator.pushReplacement(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (context) => Homepage(email, password),
+                                                builder: (context) => Homepage(email!, password!, _token!),
                                               ),
                                             );
                                           } else {
@@ -233,24 +275,24 @@ class _LoginpageState extends State<Loginpage> {
                                         } catch (error) {
                                           print("Request failed: $error");
                                           setState(() {
-                                            _errorMessage = "An error occurred: $error";
+                                            _errorMessage = "An error occurred. Please try again.";
                                           });
                                         }
+                                      } else {
+                                        setState(() {
+                                          _errorMessage = "Please fill out both fields";
+                                        });
                                       }
-                                    } else {
-                                      setState(() {
-                                        _errorMessage = "Please fill in all fields correctly";
-                                      });
                                     }
                                   },
                                   child: Text(
                                     "Login",
-                                    style: TextStyle(fontSize: 20, color: Colors.white),
+                                    style: TextStyle(fontSize: 16),
                                   ),
                                 ),
                               ),
                             ),
-                            // Signup Redirect
+                            // Signup Button
                             Container(
                               child: Row(
                                 children: [
@@ -301,7 +343,7 @@ class _LoginpageState extends State<Loginpage> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                    Text(" G",style: TextStyle(fontSize: 25,color: Colors.white),),
+                                      Text(" G",style: TextStyle(fontSize: 25,color: Colors.white),),
                                       SizedBox(width: 10),
                                       Text(
                                         "Signup with Gmail",

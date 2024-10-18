@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:softwaregraduateproject/homepage.dart';
 
+import 'Login.dart';
+
 class Signup extends StatefulWidget {
   @override
   _SignupState createState() => _SignupState();
@@ -18,6 +20,7 @@ class _SignupState extends State<Signup> {
   String? email = '';
   String? age;
   String? password = '';
+  String? _token;
 
   // Animation Opacity Variables
   double _imageOpacity = 0.0;
@@ -307,6 +310,7 @@ class _SignupState extends State<Signup> {
                                 };
 
                                 try {
+
                                   final response = await http.post(
                                     Uri.parse('http://10.0.2.2:3001/api/users'),
                                     headers: {'Content-Type': 'application/json'},
@@ -318,12 +322,12 @@ class _SignupState extends State<Signup> {
 
                                   if (response.statusCode == 200 || response.statusCode == 201) {
                                     // User created successfully
+                                    final responseBody = json.decode(response.body);
+                                    _token = responseBody['accesstoken'];
                                     print("User created successfully");
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => Homepage(email, password),
-                                      ),
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(builder: (context) => Loginpage()), // Navigate to the Login page
+                                          (Route<dynamic> route) => false, // Remove all previous routes
                                     );
                                   } else if (response.statusCode == 409||response.statusCode == 500) { // Assuming 409 is used for email already exists
                                     // Show a SnackBar indicating the email already exists
