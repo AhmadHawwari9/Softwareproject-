@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:softwaregraduateproject/homepage.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'Login.dart';
 
 class Signup extends StatefulWidget {
@@ -87,6 +87,40 @@ class _SignupState extends State<Signup> {
         _buttonOpacity = 1.0;
       });
     });
+
+    _checkLoginStatus();
+  }
+
+
+  Future<void> _checkLoginStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedToken = prefs.getString('token');
+    String? savedEmail = prefs.getString('email');
+    String? savedPassword = prefs.getString('password');
+
+    if (savedToken != null && savedEmail != null && savedPassword != null) {
+      // User is already logged in, navigate to homepage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Homepage(savedEmail, savedPassword, savedToken),
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveCredentials(String token, String email, String password) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
+    await prefs.setString('email', email);
+    await prefs.setString('password', password);
+  }
+
+  Future<void> _clearCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('email');
+    await prefs.remove('password');
   }
 
   @override
@@ -310,7 +344,6 @@ class _SignupState extends State<Signup> {
                                 };
 
                                 try {
-
                                   final response = await http.post(
                                     Uri.parse('http://10.0.2.2:3001/api/users'),
                                     headers: {'Content-Type': 'application/json'},
@@ -323,18 +356,35 @@ class _SignupState extends State<Signup> {
                                   if (response.statusCode == 200 || response.statusCode == 201) {
                                     // User created successfully
                                     final responseBody = json.decode(response.body);
-                                    _token = responseBody['accesstoken'];
-                                    print("User created successfully");
-                                    Navigator.of(context).pushAndRemoveUntil(
-                                      MaterialPageRoute(builder: (context) => Loginpage()), // Navigate to the Login page
-                                          (Route<dynamic> route) => false, // Remove all previous routes
-                                    );
-                                  } else if (response.statusCode == 409||response.statusCode == 500) { // Assuming 409 is used for email already exists
-                                    // Show a SnackBar indicating the email already exists
+
+                                    // Ensure you access the token correctly
+                                    if (responseBody != null && responseBody['accessToken'] != null) {
+                                      _token = responseBody['accessToken'];
+                                      print("User created successfully");
+
+                                      await _saveCredentials(_token!, email!, password!);
+
+                                      Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute(builder: (context) => Homepage(email!, password!, _token!)), // Navigate to the Login page
+                                            (Route<dynamic> route) => false, // Remove all previous routes
+                                      );
+
+                                    } else {
+                                      // Handle the case when the token is null
+                                      print("Token not found in response.");
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text("An error occurred. Please try again."),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  } else if (response.statusCode == 409 || response.statusCode == 500) {
+                                    // Show a SnackBar indicating the email already exists or another server error
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text("Email already exists. Please use another email."),
-                                        backgroundColor: Colors.red,  // You can customize the color
+                                        backgroundColor: Colors.red,
                                       ),
                                     );
                                   } else {
@@ -346,6 +396,7 @@ class _SignupState extends State<Signup> {
                                       ),
                                     );
                                   }
+
                                 } catch (error) {
                                   print("Request failed: $error");
                                   // Show SnackBar for network errors
