@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; // To handle JSON
 import 'package:shared_preferences/shared_preferences.dart'; // For handling preferences
@@ -67,6 +68,8 @@ class _HomepageState extends State<Homepage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear(); // Clear saved credentials
 
+    GoogleSignIn googleSignIn=GoogleSignIn();
+    googleSignIn.disconnect();
     // Navigate back to the login page after logging out
     Navigator.pushReplacement(
       context,

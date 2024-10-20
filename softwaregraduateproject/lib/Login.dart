@@ -5,6 +5,10 @@ import 'package:softwaregraduateproject/Forgetpassword.dart';
 import 'package:softwaregraduateproject/Signup.dart';
 import 'package:softwaregraduateproject/homepage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class Loginpage extends StatefulWidget {
   @override
@@ -12,10 +16,13 @@ class Loginpage extends StatefulWidget {
 }
 
 class _LoginpageState extends State<Loginpage> {
+
+
   String? email = '';
   String? password = '';
   String? _errorMessage; // Error message variable
   String? _token;
+  bool signinwithgoogle=false;
 
   // State variables
   bool _isPasswordVisible = false; // Used for toggling password visibility
@@ -337,8 +344,9 @@ class _LoginpageState extends State<Loginpage> {
                                 borderRadius: BorderRadius.circular(20),
                                 child: MaterialButton(
                                   color: Colors.red,
-                                  onPressed: () {
-                                    // Gmail login functionality here
+                                  onPressed: ()  async{
+                                    signInWithGoogle();
+                                    signinwithgoogle=true;
                                   },
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -346,7 +354,7 @@ class _LoginpageState extends State<Loginpage> {
                                       Text(" G",style: TextStyle(fontSize: 25,color: Colors.white),),
                                       SizedBox(width: 10),
                                       Text(
-                                        "Signup with Gmail",
+                                        "Sign In with Gmail",
                                         style: TextStyle(fontSize: 12, color: Colors.white),
                                       ),
                                     ],
@@ -366,5 +374,90 @@ class _LoginpageState extends State<Loginpage> {
         ),
       ),
     );
+
+
   }
+
+
+  Future<void> signInWithGoogle() async {
+    if (signinwithgoogle) {
+      try {
+        // Trigger the authentication flow
+        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+        // Obtain the auth details from the request
+        final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
+
+        // Create a new credential
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        // Now sign in to Firebase with the credential
+        final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+        final User? user = userCredential.user;
+
+        // Save email and token to SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('email', user?.email ?? '');
+        await prefs.setString('token', await user?.getIdToken() ?? '');
+
+        // Ensure these variables are set
+        email = user?.email;  // User's email
+        _token = await user?.getIdToken(); // Get the ID token
+
+        // Log the values to check if they are set correctly
+        print('Email: $email');
+        print('Token: $_token');
+
+        // Now make the HTTP request to your backend API
+        if (email != null && _token != null) {
+          final response = await http.post(
+            Uri.parse('http://10.0.2.2:3001/api/SignInwithGoogle'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+              'Authorization': 'Bearer $_token', // Optional: If your API uses token authentication
+            },
+            body: jsonEncode(<String, String>{
+              'email': email!,
+            }),
+          );
+
+          if (response.statusCode == 200) {
+            // Successfully signed in with Google and your API
+            print('Sign-in with API successful: ${response.body}');
+
+            // Extract password from response
+            final responseData = json.decode(response.body);
+            final password = responseData['result']['password']; // Assuming this is how your response is structured
+
+            // Navigate to Homepage, passing the email, password, and token
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => Homepage(email!, password, _token!), // Pass the password
+              ),
+                  (Route<dynamic> route) => false, // Remove all previous routes
+            );
+          } else {
+            // Handle error from API
+            print('Error from API: ${response.body}');
+          }
+        } else {
+          print('One or more variables are null: email=$email, token=$_token');
+        }
+      } catch (e) {
+        print('Error during sign-in: $e');
+      }
+    }
+  }
+
+
 }
+
+
+
+
+
+
+

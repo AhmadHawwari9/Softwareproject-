@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'Login.dart'; // Ensure this widget is correctly defined
 
-import 'Login.dart';
-
-void main() {
-  runApp( MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget{
-MyApp({super.key});
-State <StatefulWidget> createState() => _MyAppState();
+class MyApp extends StatefulWidget {
+  MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State <MyApp> {
-  int i=0;
+class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Loginpage(),);
+      home: Loginpage(), // Ensure Loginpage is properly implemented
+    );
   }
-
 }
-
-
