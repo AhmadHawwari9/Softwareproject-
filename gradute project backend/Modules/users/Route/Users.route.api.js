@@ -12,7 +12,7 @@ const {resetPassword}=require('../Controller/emailandcode.controller');
 const jwt = require("jsonwebtoken");
 const {authonitication}=require('../../../middlware/logger.authonitication')
 const {homepagecontroller}=require("../Controller/homepage")
-
+const { createUsersUsingGoogleSignIn } = require("../Controller/SignInwithGoogle.controller");
 const router=express.Router();
 
 
@@ -22,5 +22,6 @@ router.post('/api/ForgetPassword',validateEmail,sendCode);
 router.post('/api/ForgetPasswword/verifycode',validateCode,verifyCode);
 router.post('/api/ForgetPassword/verifycode/Newpassword', validateNewPassword, resetPassword);
 router.get('/api/homepage',authonitication,homepagecontroller );
+router.post('/api/SignInwithGoogle',  createUsersUsingGoogleSignIn);
 
 module.exports=router;
