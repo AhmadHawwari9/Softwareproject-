@@ -16,12 +16,18 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   List<dynamic> messages = [];
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  bool _isAtBottom = true; // Flag to check if user is at the bottom
 
   @override
   void initState() {
     super.initState();
     print("Other User ID: ${widget.otherUserId}");
     _fetchMessages();
+    _scrollController.addListener(() {
+      // Update the flag based on scroll position
+      _isAtBottom = _scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 50;
+    });
   }
 
   Future<void> _fetchMessages() async {
@@ -34,12 +40,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (response.statusCode == 200) {
       print("Messages fetched: ${response.body}");
+      List<dynamic> newMessages = json.decode(response.body);
       setState(() {
-        messages = json.decode(response.body);
-        messages.forEach((message) {
-          print("Message: ${message['id']}, Sender: ${message['sender_id']}, Receiver: ${message['receiver_id']}, Text: ${message['message']}");
-        });
+        messages = newMessages;
       });
+      // Scroll to bottom after fetching messages
+      _scrollToBottom();
     } else {
       print("Failed to load messages: ${response.statusCode} - ${response.body}");
     }
@@ -51,6 +57,33 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
+    if (_messageController.text.isEmpty) {
+      print("Message cannot be empty.");
+      return; // Prevent sending an empty message
+    }
+
+    // Create a new message object
+    final newMessage = {
+      'sender_email': 'You',
+      'receiver_id': widget.otherUserId,
+      'message': _messageController.text,
+      'timestamp': DateTime.now().toString(),
+    };
+
+    // Add the new message to the local messages list immediately
+    setState(() {
+      messages.add(newMessage);
+    });
+
+    // Scroll to the bottom if the user is at the bottom
+    if (_isAtBottom) {
+      _scrollToBottom();
+    }
+
+    // Clear the message input
+    _messageController.clear();
+
+    // Send the message to the server
     final response = await http.post(
       Uri.parse('http://10.0.2.2:3001/chat/send'),
       headers: {
@@ -58,16 +91,24 @@ class _ChatScreenState extends State<ChatScreen> {
         'Content-Type': 'application/json',
       },
       body: json.encode({
+        'sender_id': widget.userEmail,
         'receiver_id': widget.otherUserId,
-        'text': _messageController.text,
+        'message': newMessage['message'],
       }),
     );
 
-    if (response.statusCode == 200) {
-      _messageController.clear();
-      _fetchMessages();
-    } else {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       print("Failed to send message: ${response.statusCode} - ${response.body}");
+    }
+  }
+
+  void _scrollToBottom() {
+    // Check if the controller has any listeners
+    if (_scrollController.hasClients) {
+      // Use the SchedulerBinding to ensure scrolling occurs after the widget has built
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent); // Scroll to the bottom
+      });
     }
   }
 
@@ -82,6 +123,7 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final message = messages[index];
@@ -109,7 +151,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          message['message'] ?? 'No text', // Correct key access here
+                          message['message'] ?? 'No text',
                           style: TextStyle(color: isSentByMe ? Colors.white : Colors.black),
                         ),
                       ),
