@@ -233,7 +233,12 @@ class _SignupState extends State<Signup> {
               AnimatedOpacity(
                 opacity: _imageOpacity,
                 duration: Duration(milliseconds: 500),
-                child: Image.asset("imgs/project_logo.png"),
+                child:               Image.asset(
+                  "imgs/project_logo.png",
+                  width: MediaQuery.of(context).size.width, // Full width of the screen
+                  height: MediaQuery.of(context).size.height * 0.40, // 40% of the screen height
+                  fit: BoxFit.cover, // Ensures the image fills the space without distortion
+                ),
               ),
 
               Container(

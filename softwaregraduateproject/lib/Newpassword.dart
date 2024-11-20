@@ -64,7 +64,7 @@ class _NewPasswordState extends State<NewPassword> {
     if (value != null && !RegExp(r'[0-9]').hasMatch(value)) {
       _validationErrors.add('Password must contain at least one number');
     }
-    if (value != null && !RegExp(r'[a-zA-Z]').hasMatch(value)) {
+    if (value != null && !RegExp(r'[a-zAZ]').hasMatch(value)) {
       _validationErrors.add('Password must contain at least one letter');
     }
 
@@ -78,7 +78,7 @@ class _NewPasswordState extends State<NewPassword> {
         title: Text("Set New Password"),
         backgroundColor: Colors.blue,
       ),
-      body: Padding(
+      body: SingleChildScrollView(  // Wrap the entire body with SingleChildScrollView
         padding: EdgeInsets.all(0.0),
         child: Form(
           key: _formKey,
@@ -87,7 +87,12 @@ class _NewPasswordState extends State<NewPassword> {
               AnimatedOpacity(
                 opacity: _imageOpacity,
                 duration: Duration(seconds: 2),
-                child: Image.asset("imgs/project_logo.png"),
+                child:               Image.asset(
+                  "imgs/project_logo.png",
+                  width: MediaQuery.of(context).size.width, // Full width of the screen
+                  height: MediaQuery.of(context).size.height * 0.40, // 40% of the screen height
+                  fit: BoxFit.cover, // Ensures the image fills the space without distortion
+                ),
               ),
 
               AnimatedOpacity(
