@@ -13,12 +13,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart';
 
+import 'Myfiles.dart';
+import 'PdfReader.dart';
+
 class CareRecipientHomepage extends StatefulWidget {
   final String savedEmail;
   final String savedPassword;
   final String savedToken;
+  final bool isGoogleSignInEnabled; // Flag for Google sign-in
 
-  CareRecipientHomepage(this.savedEmail, this.savedPassword, this.savedToken);
+  CareRecipientHomepage(this.savedEmail, this.savedPassword, this.savedToken, this.isGoogleSignInEnabled); // Update constructor
 
   @override
   State<CareRecipientHomepage> createState() => _HomepageState();
@@ -31,9 +35,6 @@ class _HomepageState extends State<CareRecipientHomepage> {
   String? apiResponse;
   String? photoUrl;
   String accessToken = '';
-
-
-
 
   List<dynamic> conversations = [];
   bool _isLoading = true;
@@ -56,7 +57,6 @@ class _HomepageState extends State<CareRecipientHomepage> {
       }
     });
   }
-
 
   Future<void> _fetchConversations() async {
     if (widget.savedToken.isEmpty) {
@@ -116,8 +116,6 @@ class _HomepageState extends State<CareRecipientHomepage> {
       print("Body: ${message.notification!.body}");
     }
   }
-
-
 
   Future<void> _loadCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -194,8 +192,6 @@ class _HomepageState extends State<CareRecipientHomepage> {
         setState(() {
           apiResponse = 'Failed: ${jsonDecode(homepageResponse.body)['error']}';
         });
-
-
       }
 
       final imageResponse = await http.get(
@@ -220,7 +216,6 @@ class _HomepageState extends State<CareRecipientHomepage> {
         apiResponse = 'Error: $error';
         photoUrl = null;
       });
-
     }
   }
 
@@ -260,11 +255,15 @@ class _HomepageState extends State<CareRecipientHomepage> {
               style: const TextStyle(fontSize: 24),
             ),
             const SizedBox(height: 20),
-            Text(
-              'Password: ${password ?? 'No password provided'}',
-              style: const TextStyle(fontSize: 24),
-            ),
+
+            // Conditionally show password only if Google Sign-In is NOT enabled
+            if (!widget.isGoogleSignInEnabled)
+              Text(
+                'Password: ${password ?? 'No password provided'}',
+                style: const TextStyle(fontSize: 24),
+              ),
             const SizedBox(height: 20),
+
             apiResponse != null
                 ? Text(
               apiResponse!,
@@ -295,7 +294,8 @@ class _HomepageState extends State<CareRecipientHomepage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ConversationsPage(jwtToken: token!)),
+                  MaterialPageRoute(
+                      builder: (context) => ConversationsPage(jwtToken: token!)),
                 );
               },
               child: const Text(
@@ -303,6 +303,31 @@ class _HomepageState extends State<CareRecipientHomepage> {
                 style: TextStyle(fontSize: 20),
               ),
             ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => PdfFilesPage( jwtToken:token!)),
+                );
+              },
+              child: const Text(
+                'Go to myreports',
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PDFReaderScreen(jwtToken: token!)),
+                );
+              },
+              child: const Text(
+                'Go to add pdf report to test ',
+                style: TextStyle(fontSize: 20),
+              ),
+            )
           ],
         ),
       ),

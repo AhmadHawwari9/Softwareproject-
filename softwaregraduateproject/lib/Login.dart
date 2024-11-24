@@ -24,6 +24,7 @@ class _LoginPageState extends State<Loginpage> {
   String? _token;
   bool _isPasswordVisible = false;
   bool _isCheckingLogin = true; // Flag to track if login check is in progress
+  bool isGoogleSignInEnabled = false; // Flag for Google Sign-In
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -39,10 +40,12 @@ class _LoginPageState extends State<Loginpage> {
     String? savedToken = prefs.getString('token');
     String? savedEmail = prefs.getString('email');
     String? savedPassword = prefs.getString('password');
+    bool? savedGoogleSignInFlag = prefs.getBool('isGoogleSignInEnabled') ?? false;
 
     if (savedToken != null && savedEmail != null && savedPassword != null) {
       // If credentials are found, navigate to the appropriate homepage
-      await fetchHomepageAndNavigate(context, savedEmail, savedPassword, savedToken);
+      isGoogleSignInEnabled = savedGoogleSignInFlag; // Set flag
+      await fetchHomepageAndNavigate(context, savedEmail, savedPassword, savedToken, isGoogleSignInEnabled);
     } else {
       // If no saved credentials, stop loading and show the login page
       setState(() {
@@ -52,7 +55,7 @@ class _LoginPageState extends State<Loginpage> {
   }
 
   Future<void> fetchHomepageAndNavigate(
-      BuildContext context, String email, String password, String token) async {
+      BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
       final response = await http.get(
         Uri.parse('http://10.0.2.2:3001/api/homepage'),
@@ -65,11 +68,11 @@ class _LoginPageState extends State<Loginpage> {
 
         Widget homepage;
         if (userType == 'Care recipient') {
-          homepage = CareRecipientHomepage(email, password, token);
+          homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
-          homepage = AdminHomepage(email, password, token);
+          homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
         } else {
-          homepage = CareGiverHomepage(email, password, token);
+          homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
         }
 
         // If mounted, navigate to the homepage
@@ -87,11 +90,12 @@ class _LoginPageState extends State<Loginpage> {
     }
   }
 
-  Future<void> _saveCredentials(String token, String email, String password) async {
+  Future<void> _saveCredentials(String token, String email, String password, bool isGoogleSignInEnabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
     await prefs.setString('email', email);
     await prefs.setString('password', password);
+    await prefs.setBool('isGoogleSignInEnabled', isGoogleSignInEnabled);
   }
 
   Future<http.Response> _loginUser(Map<String, String> userData) async {
@@ -127,6 +131,10 @@ class _LoginPageState extends State<Loginpage> {
   }
 
   Future<void> signInWithGoogle() async {
+    if (!isGoogleSignInEnabled) {
+      return; // Skip Google sign-in if the flag is false
+    }
+
     try {
       final googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return; // User canceled the sign-in
@@ -147,6 +155,7 @@ class _LoginPageState extends State<Loginpage> {
 
         await prefs.setString('email', email ?? '');
         await prefs.setString('token', token ?? '');
+        await prefs.setBool('isGoogleSignInEnabled', true); // Set flag to true
 
         final response = await http.post(
           Uri.parse('http://10.0.2.2:3001/api/SignInwithGoogle'),
@@ -157,7 +166,7 @@ class _LoginPageState extends State<Loginpage> {
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
           password = data['result']['password'];
-          await fetchHomepageAndNavigate(context, email!, password!, token!);
+          await fetchHomepageAndNavigate(context, email!, password!, token!, true);
         } else {
           _showErrorDialog('Google sign-in failed');
         }
@@ -266,8 +275,8 @@ class _LoginPageState extends State<Loginpage> {
                     if (response.statusCode == 200) {
                       final data = json.decode(response.body);
                       _token = data['accesstoken'];
-                      await _saveCredentials(_token!, email!, password!);
-                      await fetchHomepageAndNavigate(context, email!, password!, _token!);
+                      await _saveCredentials(_token!, email!, password!, isGoogleSignInEnabled);
+                      await fetchHomepageAndNavigate(context, email!, password!, _token!, isGoogleSignInEnabled);
                     } else {
                       setState(() => _errorMessage = 'Login failed');
                     }

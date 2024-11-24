@@ -13,12 +13,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart';
 
+import 'Myfiles.dart';
+import 'PdfReader.dart';
+
 class AdminHomepage extends StatefulWidget {
   final String savedEmail;
   final String savedPassword;
   final String savedToken;
+  final bool isGoogleSignInEnabled; // Flag for Google sign-in
 
-  AdminHomepage(this.savedEmail, this.savedPassword, this.savedToken);
+  AdminHomepage(this.savedEmail, this.savedPassword, this.savedToken, this.isGoogleSignInEnabled); // Update constructor
 
   @override
   State<AdminHomepage> createState() => _HomepageState();
@@ -31,9 +35,6 @@ class _HomepageState extends State<AdminHomepage> {
   String? apiResponse;
   String? photoUrl;
   String accessToken = '';
-
-
-
 
   List<dynamic> conversations = [];
   bool _isLoading = true;
@@ -56,7 +57,6 @@ class _HomepageState extends State<AdminHomepage> {
       }
     });
   }
-
 
   Future<void> _fetchConversations() async {
     if (widget.savedToken.isEmpty) {
@@ -116,8 +116,6 @@ class _HomepageState extends State<AdminHomepage> {
       print("Body: ${message.notification!.body}");
     }
   }
-
-
 
   Future<void> _loadCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -194,8 +192,6 @@ class _HomepageState extends State<AdminHomepage> {
         setState(() {
           apiResponse = 'Failed: ${jsonDecode(homepageResponse.body)['error']}';
         });
-
-
       }
 
       final imageResponse = await http.get(
@@ -220,7 +216,6 @@ class _HomepageState extends State<AdminHomepage> {
         apiResponse = 'Error: $error';
         photoUrl = null;
       });
-
     }
   }
 
@@ -260,11 +255,15 @@ class _HomepageState extends State<AdminHomepage> {
               style: const TextStyle(fontSize: 24),
             ),
             const SizedBox(height: 20),
-            Text(
-              'Password: ${password ?? 'No password provided'}',
-              style: const TextStyle(fontSize: 24),
-            ),
+
+            // Conditionally show password only if Google Sign-In is NOT enabled
+            if (!widget.isGoogleSignInEnabled)
+              Text(
+                'Password: ${password ?? 'No password provided'}',
+                style: const TextStyle(fontSize: 24),
+              ),
             const SizedBox(height: 20),
+
             apiResponse != null
                 ? Text(
               apiResponse!,
@@ -295,7 +294,8 @@ class _HomepageState extends State<AdminHomepage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ConversationsPage(jwtToken: token!)),
+                  MaterialPageRoute(
+                      builder: (context) => ConversationsPage(jwtToken: token!)),
                 );
               },
               child: const Text(
@@ -303,16 +303,42 @@ class _HomepageState extends State<AdminHomepage> {
                 style: TextStyle(fontSize: 20),
               ),
             ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => PdfFilesPage( jwtToken :token!)),
+                );
+              },
+              child: const Text(
+                'Go to myreports',
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PDFReaderScreen(jwtToken: token!)),
+                );
+              },
+              child: const Text(
+                'Go to add pdf report to test',
+                style: TextStyle(fontSize: 20),
+              ),
+            )
           ],
         ),
       ),
     );
   }
 }
+
 Future<void> sendMessage(String title) async {
   // Access token from Firebase (ensure it's valid and updated)
   const accessToken =
-      'Bearer  ya29.c.c0ASRK0Gbaz8XYJgAUHolvuSYpPD8A7IYu2jBZVf7hdLLoe4Obksl1SgxDNOTM4pvLoc9B1YDIubYsD2Zyfhjm5jMvOR7ZVL5rZhLutdefa3tG6ja68R0bN1cGPm6VgcUOfoEjJwdAcQM_bpcuUkQewFW_sbGXe5mNd4dHe3of8VJ1pzKHke5X8rYttw3a_gSMnqD_b9mqpw228PRHbmGgfMPZFkAAJc7px7s2Z9BnfIY0YFh3JGvKVWdGOrWOgzToyRl46qsvE9iBZBpu_Rl7P-qyXgK7tJGQCNm4Q-J03m0L5OyS3tr93jo2N7xAHfeG0Jnob7uLCea7ofEym222LFoJrLtW9sDOqPxCURoNBppdsAiul95qCz82G385K4QzzbVfaOtJu9kQIOlI3Ra81da5hlutiSlfQdVYMkYwxpBSO5RFr644fSee2OwSmtuM-4nymZOk8mWIrlvIY6O8dlpZu66QcQ2Qjj-IfUjnfbIi1idW1087Siiyzk2Q4hYmiky-ubXSsw38yBXS0U0s-drwRl4p-4oxMFFiSgW1ktxROhxixp3xZ1SocfxUIf5x3nntn2ogw6YU7SotuWBJ9r77RWII87y2mp49fbu6cvM2OF-lh0SWjsn7y1ORuuxw9t2yOMtSMXJQ_cwZYdi98xr8ednineXykxXcQ0Fc02jyu1gbn8Ij_43fO2lIarIYFU6JhMhvs246z6ww11W9b68oiO5zlWzfl8gFebgvWv4k_e-B1WejSytdi6pFkV7ZzoamiztmyxfF9hl2pxpixQO-Ze2jQaVziuRzcV-r4uqFo9eVk2QIo9O1Z998YdJIIhzB-bkzvOXfRM28ruzFajFlwjf2tv4uqz_t49dfk-mXRVgs2nuRBjX5S0FrccpV-zozpwIJYsiI_1o8B34I62_15q_zr3mOy8dXFj0_eF44y5g46Fr4ZYgIotuyfFyw2OffBdfy6inpyVkMZUXwg9Ynp30ln0edIy8Yxt4J';
+      'Bearer  ya29.c.c0ASRK0GahME2cwxzVwmwVbRKhyDcELfan36VuEBNo9_WLdb_s4_C6yJNBjhHZ71YGi9cEyRUODRFJVcOqrsuQ1GNuSa96CgfJwhJIywYm5QsS5RinnozEA_VqIcRTQLP-_IANQpNWTQ_Ua7EyAHq4PfU864SJNiixTGDmoO1cd7amnVfHqdgWBrvX7l8Q-mJ1Q5bIgGGViUNAGyimm0nMD_83P6bNELvVJyCaYrbCJaz4Z1EI-pgte_eB8no_oYXk54iQP7iv9LLD4xlUf4DGVtq7Hm0oGS3d7s4uLwRLq2FeoQW0fjS3UXBca6bQ_EYtXc66wnNsvxHovabToFPlpXLuGmHHlK1sO5-KMRQMIAgh3upcLwpDnt2WE385PQgmM4OF-JiV7opl7XBBatI8Jfj9uc9is3yxFIhXcWSMheXcwY_Rm_U14Vcmk1VXiXm_Fmm5-YIFkr90lb2fJZ4e9_zgh1IauqQlM3bF8uIdznY3k-lpwaIM84XotFJaBSpdIQv8zIxVVQnlSB3gXbjiqF-iqk3f_jeFfqRvOUc4oJedhRnWXjZ7iv408nezYBku485BY-i20f1WpYWw8JW3UQQz5OrSUecpmMeIu8zuVQth2qqVOUXOupyfg4B8WOrzr0b-YFwIY7RQw8Q2FjgthhVx7fgVQvVZrJXSv86aRQUFfdRer61-Jcqb1ngZetvrV7ebyJ6jf_4ikuqzUiRoh8S2lRwOfvxvU3Xp3igQR9h6unmsX25eBc8jdpxtxItXcrqFq3X-YgayB4i5BxVkM8ZrZxctOicmh-q7xsmXvz--j2aU1j5fgi3c33Ra5rywMnm8ZcmYcas8aoe8Yl_d08JpeoWpmfBXgsgxihZvq8vnQUel7i1Rpa7kz7FWswgivsJrw2dZY92kq7qqIUVpIko_sRZM6JRsQfcebJQ-i8nQiVwUItp9eVjvJrllSpWhB-MY-s6FhdsFUkBeSJFQlB63-akY6o9jmyiwdyne';
 
   // Replace with your actual FCM API endpoint and receiver token
   const fcmEndpoint = 'https://fcm.googleapis.com/v1/projects/softwareproject-e838c/messages:send';
