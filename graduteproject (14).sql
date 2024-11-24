@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 20 نوفمبر 2024 الساعة 13:13
+-- Generation Time: 24 نوفمبر 2024 الساعة 16:02
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -88,7 +88,44 @@ INSERT INTO `filemannager` (`file_id`, `old_name`, `new_name`, `folder`, `path`)
 (106, 'recording.wav', 'recording-1732015724622.wav', './public/Uploade', 'Uploade/recording-1732015724622.wav'),
 (107, 'recording.wav', 'recording-1732016416885.wav', './public/Uploade', 'Uploade/recording-1732016416885.wav'),
 (108, 'recording.wav', 'recording-1732103511956.wav', './public/Uploade', 'Uploade/recording-1732103511956.wav'),
-(109, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732103538951.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732103538951.jpg');
+(109, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732103538951.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732103538951.jpg'),
+(110, 'recording.wav', 'recording-1732115807530.wav', './public/Uploade', 'Uploade/recording-1732115807530.wav'),
+(112, 'report form.pdf', 'report form-1732287659959.pdf', './public/Uploade', 'Uploade/report form-1732287659959.pdf'),
+(113, 'report form.pdf', 'report form-1732295520640.pdf', './public/Uploade', 'Uploade/report form-1732295520640.pdf'),
+(114, 'uploaded_file.pdf', 'uploaded_file-1732358614470.pdf', './public/Uploade', 'Uploade/uploaded_file-1732358614470.pdf'),
+(115, 'uploaded_file.pdf', 'uploaded_file-1732358806512.pdf', './public/Uploade', 'Uploade/uploaded_file-1732358806512.pdf'),
+(116, 'test.pdf-1732358982646.pdf', 'test-1732358982468.pdf', './public/Uploade', 'Uploade/test-1732358982468.pdf'),
+(117, 'test.pdf-1732359035196.pdf', 'test-1732359035085.pdf', './public/Uploade', 'Uploade/test-1732359035085.pdf'),
+(120, 'reportform.pdf-1732437302133.pdf', 'reportform-1732437302482.pdf', './public/Uploade', 'Uploade/reportform-1732437302482.pdf'),
+(121, 'reportform.pdf-1732437371372.pdf', 'reportform-1732437371713.pdf', './public/Uploade', 'Uploade/reportform-1732437371713.pdf'),
+(122, 'reportform.pdf-1732439510865.pdf', 'reportform-1732439511203.pdf', './public/Uploade', 'Uploade/reportform-1732439511203.pdf'),
+(123, 'reportform.pdf-1732439596103.pdf', 'reportform-1732439596444.pdf', './public/Uploade', 'Uploade/reportform-1732439596444.pdf'),
+(124, 'reportform.pdf-1732439921072.pdf', 'reportform-1732439921473.pdf', './public/Uploade', 'Uploade/reportform-1732439921473.pdf'),
+(125, 'reportform.pdf-1732440068565.pdf', 'reportform-1732440068900.pdf', './public/Uploade', 'Uploade/reportform-1732440068900.pdf'),
+(126, 'reportform.pdf-1732440207434.pdf', 'reportform-1732440207767.pdf', './public/Uploade', 'Uploade/reportform-1732440207767.pdf'),
+(127, 'reportform.pdf-1732440355124.pdf', 'reportform-1732440355456.pdf', './public/Uploade', 'Uploade/reportform-1732440355456.pdf'),
+(128, 'reportform.pdf-1732440398736.pdf', 'reportform-1732440399069.pdf', './public/Uploade', 'Uploade/reportform-1732440399069.pdf'),
+(129, 'reportform.pdf-1732440465489.pdf', 'reportform-1732440465819.pdf', './public/Uploade', 'Uploade/reportform-1732440465819.pdf'),
+(130, 'reportform.pdf-1732440601935.pdf', 'reportform-1732440602265.pdf', './public/Uploade', 'Uploade/reportform-1732440602265.pdf'),
+(131, 'reportform.pdf-1732440869337.pdf', 'reportform-1732440869671.pdf', './public/Uploade', 'Uploade/reportform-1732440869671.pdf'),
+(132, 'reportform.pdf-1732441023836.pdf', 'reportform-1732441024196.pdf', './public/Uploade', 'Uploade/reportform-1732441024196.pdf'),
+(133, 'reportform.pdf-1732444988948.pdf', 'reportform-1732444989315.pdf', './public/Uploade', 'Uploade/reportform-1732444989315.pdf'),
+(134, 'reportform.pdf-1732445220768.pdf', 'reportform-1732445221168.pdf', './public/Uploade', 'Uploade/reportform-1732445221168.pdf'),
+(135, 'reportform.pdf-1732445239027.pdf', 'reportform-1732445239384.pdf', './public/Uploade', 'Uploade/reportform-1732445239384.pdf'),
+(136, 'reportform.pdf-1732445508800.pdf', 'reportform-1732445509201.pdf', './public/Uploade', 'Uploade/reportform-1732445509201.pdf'),
+(137, 'reportform.pdf-1732445617887.pdf', 'reportform-1732445618223.pdf', './public/Uploade', 'Uploade/reportform-1732445618223.pdf'),
+(138, 'reportform.pdf-1732445879121.pdf', 'reportform-1732445879470.pdf', './public/Uploade', 'Uploade/reportform-1732445879470.pdf'),
+(139, 'reportform.pdf-1732446223398.pdf', 'reportform-1732446223732.pdf', './public/Uploade', 'Uploade/reportform-1732446223732.pdf'),
+(140, 'reportform.pdf-1732446292300.pdf', 'reportform-1732446292742.pdf', './public/Uploade', 'Uploade/reportform-1732446292742.pdf'),
+(141, 'reportform.pdf-1732446501680.pdf', 'reportform-1732446502025.pdf', './public/Uploade', 'Uploade/reportform-1732446502025.pdf'),
+(142, 'reportform.pdf-1732446819960.pdf', 'reportform-1732446820325.pdf', './public/Uploade', 'Uploade/reportform-1732446820325.pdf'),
+(143, 'reportform.pdf-1732446896184.pdf', 'reportform-1732446896588.pdf', './public/Uploade', 'Uploade/reportform-1732446896588.pdf'),
+(144, 'reportform.pdf-1732446963155.pdf', 'reportform-1732446963504.pdf', './public/Uploade', 'Uploade/reportform-1732446963504.pdf'),
+(145, 'reportform.pdf-1732447282335.pdf', 'reportform-1732447282721.pdf', './public/Uploade', 'Uploade/reportform-1732447282721.pdf'),
+(146, 'reportform.pdf-1732447301204.pdf', 'reportform-1732447301531.pdf', './public/Uploade', 'Uploade/reportform-1732447301531.pdf'),
+(147, 'reportform.pdf-1732447721668.pdf', 'reportform-1732447722011.pdf', './public/Uploade', 'Uploade/reportform-1732447722011.pdf'),
+(148, 'reportform.pdf-1732447734768.pdf', 'reportform-1732447735098.pdf', './public/Uploade', 'Uploade/reportform-1732447735098.pdf'),
+(149, 'reportform.pdf-1732447759715.pdf', 'reportform-1732447760065.pdf', './public/Uploade', 'Uploade/reportform-1732447760065.pdf');
 
 -- --------------------------------------------------------
 
@@ -116,22 +153,78 @@ INSERT INTO `messages` (`id`, `sender_id`, `receiver_id`, `message`, `timestamp`
 (55, 84, 83, 'hello', '2024-11-14 11:10:17', 1, NULL, NULL),
 (82, 84, 83, 'كيف حالك؟', '2024-11-16 14:21:31', 1, NULL, NULL),
 (83, 84, 83, 'Uploade/Screenshot 2024-10-07 145258-1731759700800.png', '2024-11-16 14:21:40', 1, 81, NULL),
-(99, 83, 84, 'Uploade/man-male-young-person-icon_24877-30218-1731919719697.jpg', '2024-11-18 10:48:39', 0, 96, NULL),
-(100, 83, 84, 'Uploade/man-male-young-person-icon_24877-30218-1731928697132.jpg', '2024-11-18 13:18:17', 0, 97, NULL),
-(101, 83, 84, 'hello', '2024-11-18 13:18:28', 0, NULL, NULL),
+(99, 83, 84, 'Uploade/man-male-young-person-icon_24877-30218-1731919719697.jpg', '2024-11-18 10:48:39', 1, 96, NULL),
+(100, 83, 84, 'Uploade/man-male-young-person-icon_24877-30218-1731928697132.jpg', '2024-11-18 13:18:17', 1, 97, NULL),
+(101, 83, 84, 'hello', '2024-11-18 13:18:28', 1, NULL, NULL),
 (102, 84, 83, 'Uploade/recording-1731931609417.wav', '2024-11-18 14:06:49', 1, NULL, 98),
-(103, 83, 84, 'Uploade/recording-1731937289004.wav', '2024-11-18 15:41:29', 0, NULL, 99),
-(104, 83, 84, 'Uploade/recording-1731940006941.wav', '2024-11-18 16:26:47', 0, NULL, 100),
-(105, 83, 84, 'Uploade/man-male-young-person-icon_24877-30218-1732006907814.jpg', '2024-11-19 11:01:47', 0, 101, NULL),
-(106, 83, 84, 'Uploade/recording-1732007647413.wav', '2024-11-19 11:14:07', 0, NULL, 102),
-(107, 83, 84, 'Uploade/recording-1732012003907.wav', '2024-11-19 12:26:43', 0, NULL, 103),
-(108, 83, 84, 'Uploade/recording-1732012074909.wav', '2024-11-19 12:27:54', 0, NULL, 104),
-(109, 83, 84, 'Uploade/recording-1732013443083.wav', '2024-11-19 12:50:43', 0, NULL, 105),
-(110, 83, 84, 'Uploade/recording-1732015724622.wav', '2024-11-19 13:28:44', 0, NULL, 106),
-(111, 83, 84, 'Uploade/recording-1732016416885.wav', '2024-11-19 13:40:16', 0, NULL, 107),
-(112, 83, 84, 'Uploade/recording-1732103511956.wav', '2024-11-20 13:51:52', 0, NULL, 108),
-(113, 83, 84, 'hi', '2024-11-20 13:52:06', 0, NULL, NULL),
-(114, 83, 84, 'Uploade/man-male-young-person-icon_24877-30218-1732103538951.jpg', '2024-11-20 13:52:19', 0, 109, NULL);
+(103, 83, 84, 'Uploade/recording-1731937289004.wav', '2024-11-18 15:41:29', 1, NULL, 99),
+(104, 83, 84, 'Uploade/recording-1731940006941.wav', '2024-11-18 16:26:47', 1, NULL, 100),
+(105, 83, 84, 'Uploade/man-male-young-person-icon_24877-30218-1732006907814.jpg', '2024-11-19 11:01:47', 1, 101, NULL),
+(106, 83, 84, 'Uploade/recording-1732007647413.wav', '2024-11-19 11:14:07', 1, NULL, 102),
+(107, 83, 84, 'Uploade/recording-1732012003907.wav', '2024-11-19 12:26:43', 1, NULL, 103),
+(108, 83, 84, 'Uploade/recording-1732012074909.wav', '2024-11-19 12:27:54', 1, NULL, 104),
+(109, 83, 84, 'Uploade/recording-1732013443083.wav', '2024-11-19 12:50:43', 1, NULL, 105),
+(110, 83, 84, 'Uploade/recording-1732015724622.wav', '2024-11-19 13:28:44', 1, NULL, 106),
+(111, 83, 84, 'Uploade/recording-1732016416885.wav', '2024-11-19 13:40:16', 1, NULL, 107),
+(112, 83, 84, 'Uploade/recording-1732103511956.wav', '2024-11-20 13:51:52', 1, NULL, 108),
+(113, 83, 84, 'hi', '2024-11-20 13:52:06', 1, NULL, NULL),
+(114, 83, 84, 'Uploade/man-male-young-person-icon_24877-30218-1732103538951.jpg', '2024-11-20 13:52:19', 1, 109, NULL),
+(115, 83, 84, 'Uploade/recording-1732115807530.wav', '2024-11-20 17:16:47', 1, NULL, 110),
+(116, 83, 84, 'hello', '2024-11-21 13:52:25', 1, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- بنية الجدول `mymedicalreports`
+--
+
+CREATE TABLE `mymedicalreports` (
+  `report_id` int(10) NOT NULL,
+  `user_id` int(10) NOT NULL,
+  `filemannager_id` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- إرجاع أو استيراد بيانات الجدول `mymedicalreports`
+--
+
+INSERT INTO `mymedicalreports` (`report_id`, `user_id`, `filemannager_id`) VALUES
+(2, 83, 112),
+(3, 83, 113),
+(4, 83, 114),
+(5, 83, 115),
+(6, 83, 116),
+(7, 83, 117),
+(10, 84, 120),
+(11, 84, 121),
+(12, 84, 122),
+(13, 84, 123),
+(14, 84, 124),
+(15, 84, 125),
+(16, 84, 126),
+(17, 84, 127),
+(18, 84, 128),
+(19, 84, 129),
+(20, 84, 130),
+(21, 84, 131),
+(22, 84, 132),
+(23, 84, 133),
+(24, 84, 134),
+(25, 84, 135),
+(26, 84, 136),
+(27, 84, 137),
+(28, 84, 138),
+(29, 84, 139),
+(30, 84, 140),
+(31, 84, 141),
+(32, 84, 142),
+(33, 84, 143),
+(34, 84, 144),
+(35, 84, 145),
+(36, 84, 146),
+(37, 84, 147),
+(38, 84, 148),
+(39, 84, 149);
 
 -- --------------------------------------------------------
 
@@ -188,6 +281,14 @@ ALTER TABLE `messages`
   ADD KEY `Audiomessages2ss` (`Audio_id`);
 
 --
+-- Indexes for table `mymedicalreports`
+--
+ALTER TABLE `mymedicalreports`
+  ADD PRIMARY KEY (`report_id`),
+  ADD KEY `userid` (`user_id`),
+  ADD KEY `fileid` (`filemannager_id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -203,13 +304,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `filemannager`
 --
 ALTER TABLE `filemannager`
-  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=110;
+  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=150;
 
 --
 -- AUTO_INCREMENT for table `messages`
 --
 ALTER TABLE `messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=115;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
+
+--
+-- AUTO_INCREMENT for table `mymedicalreports`
+--
+ALTER TABLE `mymedicalreports`
+  MODIFY `report_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -226,6 +333,12 @@ ALTER TABLE `users`
 --
 ALTER TABLE `messages`
   ADD CONSTRAINT `Audiomessages2ss` FOREIGN KEY (`Audio_id`) REFERENCES `filemannager` (`file_id`);
+
+--
+-- قيود الجداول `mymedicalreports`
+--
+ALTER TABLE `mymedicalreports`
+  ADD CONSTRAINT `fileid` FOREIGN KEY (`filemannager_id`) REFERENCES `filemannager` (`file_id`);
 
 --
 -- قيود الجداول `users`
