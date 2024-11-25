@@ -15,6 +15,7 @@ import 'package:googleapis_auth/auth_io.dart';
 
 import 'Myfiles.dart';
 import 'PdfReader.dart';
+import 'UserProfilePage.dart';
 
 class CareGiverHomepage extends StatefulWidget {
   final String savedEmail;
@@ -325,6 +326,18 @@ class _HomepageState extends State<CareGiverHomepage> {
               },
               child: const Text(
                 'Go to add pdf report to test',
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserProfilePage(jwtToken: token!, email: email!)),
+                );
+              },
+              child: const Text(
+                'Your profile',
                 style: TextStyle(fontSize: 20),
               ),
             )

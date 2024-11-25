@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:softwaregraduateproject/UserProfilePage.dart';
 import 'Conversations.dart';
 import 'Login.dart';
 
@@ -325,6 +326,18 @@ class _HomepageState extends State<AdminHomepage> {
               },
               child: const Text(
                 'Go to add pdf report to test',
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserProfilePage(jwtToken: token!, email: email!,)),
+                );
+              },
+              child: const Text(
+                'Your profile',
                 style: TextStyle(fontSize: 20),
               ),
             )
