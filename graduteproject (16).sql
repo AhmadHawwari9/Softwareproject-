@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 24 نوفمبر 2024 الساعة 16:02
+-- Generation Time: 25 نوفمبر 2024 الساعة 17:28
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -125,7 +125,36 @@ INSERT INTO `filemannager` (`file_id`, `old_name`, `new_name`, `folder`, `path`)
 (146, 'reportform.pdf-1732447301204.pdf', 'reportform-1732447301531.pdf', './public/Uploade', 'Uploade/reportform-1732447301531.pdf'),
 (147, 'reportform.pdf-1732447721668.pdf', 'reportform-1732447722011.pdf', './public/Uploade', 'Uploade/reportform-1732447722011.pdf'),
 (148, 'reportform.pdf-1732447734768.pdf', 'reportform-1732447735098.pdf', './public/Uploade', 'Uploade/reportform-1732447735098.pdf'),
-(149, 'reportform.pdf-1732447759715.pdf', 'reportform-1732447760065.pdf', './public/Uploade', 'Uploade/reportform-1732447760065.pdf');
+(149, 'reportform.pdf-1732447759715.pdf', 'reportform-1732447760065.pdf', './public/Uploade', 'Uploade/reportform-1732447760065.pdf'),
+(150, '1.png', '1-1732543740017.png', './public/Uploade', 'Uploade/1-1732543740017.png'),
+(151, '1.png', '1-1732543777278.png', './public/Uploade', 'Uploade/1-1732543777278.png'),
+(152, '1.png', '1-1732543818382.png', './public/Uploade', 'Uploade/1-1732543818382.png'),
+(153, '1.png', '1-1732543873661.png', './public/Uploade', 'Uploade/1-1732543873661.png'),
+(154, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732545022030.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732545022030.jpg'),
+(155, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732545122775.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732545122775.jpg'),
+(156, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732545383297.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732545383297.jpg'),
+(157, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732545497119.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732545497119.jpg'),
+(158, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732546081396.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732546081396.jpg'),
+(159, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732546451235.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732546451235.jpg'),
+(160, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732546569475.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732546569475.jpg'),
+(161, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732546989274.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732546989274.jpg'),
+(162, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732547045316.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732547045316.jpg'),
+(163, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732547074891.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732547074891.jpg'),
+(164, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732548908834.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732548908834.jpg'),
+(165, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732548919544.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732548919544.jpg'),
+(166, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732549076458.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732549076458.jpg'),
+(167, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732549142662.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732549142662.jpg'),
+(168, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732549368776.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732549368776.jpg'),
+(169, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732549493913.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732549493913.jpg'),
+(170, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732549522415.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732549522415.jpg'),
+(171, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732549590912.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732549590912.jpg'),
+(172, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732549598701.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732549598701.jpg'),
+(173, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732550155815.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732550155815.jpg'),
+(174, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732550184067.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732550184067.jpg'),
+(175, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732550413615.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732550413615.jpg'),
+(176, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732550421930.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732550421930.jpg'),
+(177, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732550443005.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732550443005.jpg'),
+(178, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732550449125.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732550449125.jpg');
 
 -- --------------------------------------------------------
 
@@ -240,25 +269,26 @@ CREATE TABLE `users` (
   `Age` int(10) NOT NULL,
   `Password` varchar(255) NOT NULL,
   `Type_oftheuser` text NOT NULL,
-  `image_id` int(11) DEFAULT NULL
+  `image_id` int(11) DEFAULT NULL,
+  `Bio` varchar(1000) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- إرجاع أو استيراد بيانات الجدول `users`
 --
 
-INSERT INTO `users` (`User_id`, `First_name`, `Last_name`, `Email`, `Age`, `Password`, `Type_oftheuser`, `image_id`) VALUES
-(76, 'Ahmad', 'Hawwari', 'a.haw@gmail.com', 22, '$2b$10$tcQq1I1cWR.SIbgzWHTJSugIIjQXASttRE/rlr7POq0AADM/ub.Ey', 'Admin', 56),
-(77, 'sd', 'sd', 'sd@gmail.com', 22, '$2b$10$TENLq9GtczfMypgd40QWn.jRO2lVtnohOj9QQ12UhjWvgfpj.DT7e', 'Care giver', 57),
-(78, 'f', 'hh', 'h@gmail.com', 22, '$2b$10$2MPmPu8nKxdNddplEuCGrOtruFWtAeLNq/UtSGmSjenJtJC6t2gB6', 'Care recipient', 58),
-(79, 'k', 'k', 'k@gmail.com', 60, '$2b$10$m3q5/Rd.CHMUPRw0j8U0M.B4igcrz5bO2uaN74r5kaadlPSxm22MW', 'Care recipient', 59),
-(80, 'v', 'v', 'v@gmail.com', 89, '$2b$10$mClfY/ieqKUcfgtdxEEE7elxNxxABlQSYGyztGeW3v7pHCrtvXqQS', 'Care recipient', 60),
-(81, 'n', 'n', 'n@gmail.com', 56, '$2b$10$ymrOe0fFhgwEG76Gv6d5seTd0.KQQ0PQ7Gyf3SuYuAeSyxcTmwmR.', 'Care recipient', 61),
-(82, 'o', 'ol', 'o@gmail.com', 56, '$2b$10$8/UBq/IhAXNhVbYsG2mouuGVS8MpaiovpgK0jxkh5LShgKi4Lu.hW', 'Care recipient', 62),
-(83, 'bg', 'bg', 'bg@gmail.com', 55, '$2b$10$1CF1dKlL0JxOB6G4lqvedebia/ICotjtyrQ1C8JpKM2a9GaQZC.9u', 'Care recipient', 63),
-(84, 'ahmad', 'hawwari', 'ahmadhawwari1092@gmail.com', 22, '$2b$10$WqzfGZKWrhJW8tu72oDhYOuov3hAHII.GmE2XiJ9eZbvSFiHnAxmK', 'Care giver', 64),
-(85, 's', 's', 's@gmail.com', 55, '$2b$10$HanD0Zn3crVwctR06jHKqOuuw.0MSnQWxHXArvwGxSEekqkLKHM5m', 'Care recipient', 65),
-(87, 'kj', 'kj', 'kj@gmail.com', 22, '$2b$10$lkzJwu5wEMHpjviENTnb9eTx3dDM4Eem8iRTxejqsmap5WtN/XSey', 'Care giver', 67);
+INSERT INTO `users` (`User_id`, `First_name`, `Last_name`, `Email`, `Age`, `Password`, `Type_oftheuser`, `image_id`, `Bio`) VALUES
+(76, 'Ahmad', 'Hawwari', 'a.haw@gmail.com', 22, '$2b$10$tcQq1I1cWR.SIbgzWHTJSugIIjQXASttRE/rlr7POq0AADM/ub.Ey', 'Admin', 56, NULL),
+(77, 'sd', 'sd', 'sd@gmail.com', 22, '$2b$10$TENLq9GtczfMypgd40QWn.jRO2lVtnohOj9QQ12UhjWvgfpj.DT7e', 'Care giver', 57, NULL),
+(78, 'f', 'hh', 'h@gmail.com', 22, '$2b$10$2MPmPu8nKxdNddplEuCGrOtruFWtAeLNq/UtSGmSjenJtJC6t2gB6', 'Care recipient', 58, NULL),
+(79, 'k', 'k', 'k@gmail.com', 60, '$2b$10$m3q5/Rd.CHMUPRw0j8U0M.B4igcrz5bO2uaN74r5kaadlPSxm22MW', 'Care recipient', 59, NULL),
+(80, 'v', 'v', 'v@gmail.com', 89, '$2b$10$mClfY/ieqKUcfgtdxEEE7elxNxxABlQSYGyztGeW3v7pHCrtvXqQS', 'Care recipient', 60, NULL),
+(81, 'n', 'n', 'n@gmail.com', 56, '$2b$10$ymrOe0fFhgwEG76Gv6d5seTd0.KQQ0PQ7Gyf3SuYuAeSyxcTmwmR.', 'Care recipient', 61, NULL),
+(82, 'o', 'ol', 'o@gmail.com', 56, '$2b$10$8/UBq/IhAXNhVbYsG2mouuGVS8MpaiovpgK0jxkh5LShgKi4Lu.hW', 'Care recipient', 62, NULL),
+(83, 'bg', 'bg', 'bg@gmail.com', 55, '$2b$10$1CF1dKlL0JxOB6G4lqvedebia/ICotjtyrQ1C8JpKM2a9GaQZC.9u', 'Care recipient', 178, 'I am bg !!!!!'),
+(84, 'ahmad', 'hawwari', 'ahmadhawwari1092@gmail.com', 22, '$2b$10$WqzfGZKWrhJW8tu72oDhYOuov3hAHII.GmE2XiJ9eZbvSFiHnAxmK', 'Care giver', 64, 'I am a care Giver !'),
+(85, 's', 's', 's@gmail.com', 55, '$2b$10$HanD0Zn3crVwctR06jHKqOuuw.0MSnQWxHXArvwGxSEekqkLKHM5m', 'Care recipient', 65, NULL),
+(87, 'kj', 'kj', 'kj@gmail.com', 22, '$2b$10$lkzJwu5wEMHpjviENTnb9eTx3dDM4Eem8iRTxejqsmap5WtN/XSey', 'Care giver', 67, NULL);
 
 --
 -- Indexes for dumped tables
@@ -304,7 +334,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `filemannager`
 --
 ALTER TABLE `filemannager`
-  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=150;
+  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=179;
 
 --
 -- AUTO_INCREMENT for table `messages`
