@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 25 نوفمبر 2024 الساعة 17:28
+-- Generation Time: 28 نوفمبر 2024 الساعة 18:31
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -95,7 +95,6 @@ INSERT INTO `filemannager` (`file_id`, `old_name`, `new_name`, `folder`, `path`)
 (114, 'uploaded_file.pdf', 'uploaded_file-1732358614470.pdf', './public/Uploade', 'Uploade/uploaded_file-1732358614470.pdf'),
 (115, 'uploaded_file.pdf', 'uploaded_file-1732358806512.pdf', './public/Uploade', 'Uploade/uploaded_file-1732358806512.pdf'),
 (116, 'test.pdf-1732358982646.pdf', 'test-1732358982468.pdf', './public/Uploade', 'Uploade/test-1732358982468.pdf'),
-(117, 'test.pdf-1732359035196.pdf', 'test-1732359035085.pdf', './public/Uploade', 'Uploade/test-1732359035085.pdf'),
 (120, 'reportform.pdf-1732437302133.pdf', 'reportform-1732437302482.pdf', './public/Uploade', 'Uploade/reportform-1732437302482.pdf'),
 (121, 'reportform.pdf-1732437371372.pdf', 'reportform-1732437371713.pdf', './public/Uploade', 'Uploade/reportform-1732437371713.pdf'),
 (122, 'reportform.pdf-1732439510865.pdf', 'reportform-1732439511203.pdf', './public/Uploade', 'Uploade/reportform-1732439511203.pdf'),
@@ -154,7 +153,9 @@ INSERT INTO `filemannager` (`file_id`, `old_name`, `new_name`, `folder`, `path`)
 (175, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732550413615.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732550413615.jpg'),
 (176, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732550421930.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732550421930.jpg'),
 (177, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732550443005.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732550443005.jpg'),
-(178, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732550449125.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732550449125.jpg');
+(178, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732550449125.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732550449125.jpg'),
+(179, 'reportform-1732437302482.pdf-1732609113109.pdf', 'reportform-1732437302482-1732609113485.pdf', './public/Uploade', 'Uploade/reportform-1732437302482-1732609113485.pdf'),
+(180, 'test-1732359035085.pdf-1732609457788.pdf', 'test-1732359035085-1732609458192.pdf', './public/Uploade', 'Uploade/test-1732359035085-1732609458192.pdf');
 
 -- --------------------------------------------------------
 
@@ -223,7 +224,6 @@ INSERT INTO `mymedicalreports` (`report_id`, `user_id`, `filemannager_id`) VALUE
 (4, 83, 114),
 (5, 83, 115),
 (6, 83, 116),
-(7, 83, 117),
 (10, 84, 120),
 (11, 84, 121),
 (12, 84, 122),
@@ -253,7 +253,55 @@ INSERT INTO `mymedicalreports` (`report_id`, `user_id`, `filemannager_id`) VALUE
 (36, 84, 146),
 (37, 84, 147),
 (38, 84, 148),
-(39, 84, 149);
+(39, 84, 149),
+(40, 83, 179),
+(41, 83, 180);
+
+-- --------------------------------------------------------
+
+--
+-- بنية الجدول `schedule`
+--
+
+CREATE TABLE `schedule` (
+  `id` int(10) NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `Date` varchar(255) NOT NULL,
+  `Time` varchar(255) NOT NULL,
+  `scedual_id` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- إرجاع أو استيراد بيانات الجدول `schedule`
+--
+
+INSERT INTO `schedule` (`id`, `Name`, `Date`, `Time`, `scedual_id`) VALUES
+(84, 'b b', '22/12/2024', '12:00', 1),
+(84, 'S S', '22/12/2024', '11:00', 2),
+(84, 'ol o', '21/12/2024', '13:00 ', 3),
+(84, 'n n', '21/12/2024', '12:00', 4),
+(84, 'b b', '21/11/2024', '11:00', 7),
+(84, 'n n', '2024-12-01', '10:00', 11),
+(84, 'm m', '20/12/2024', '10:30', 12),
+(84, 'n n', '21/1/2025', '11:30', 13),
+(84, 'n n', '22/1/2025', '11:00', 14),
+(84, 'm m', '21/1/2025', '10:00', 15),
+(84, 'm m', '21/12', '9:30', 16),
+(84, '.ss', '233', '123', 17),
+(84, '.ss', '233', '123', 18),
+(84, '.ss', '233', '12', 19),
+(84, '.ss', '233', '12', 20),
+(84, 'ahmad', '22/11/2025', '11:30', 21),
+(84, 'ha', '232', '1', 22),
+(84, 'j', '3232', '23', 23),
+(84, 'fgfd', '323', '98', 24),
+(84, 'fff', '11321', '66', 25),
+(84, 'ASa', '233', '323', 27),
+(84, '2', '2', '1', 31),
+(84, 'mi', '5/12/2024', '10:30', 39),
+(84, '9', '9', '9', 40),
+(84, '11', '11', '11', 41),
+(84, '11', '11', '1', 42);
 
 -- --------------------------------------------------------
 
@@ -319,6 +367,13 @@ ALTER TABLE `mymedicalreports`
   ADD KEY `fileid` (`filemannager_id`);
 
 --
+-- Indexes for table `schedule`
+--
+ALTER TABLE `schedule`
+  ADD PRIMARY KEY (`scedual_id`),
+  ADD KEY `userid` (`id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -334,7 +389,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `filemannager`
 --
 ALTER TABLE `filemannager`
-  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=179;
+  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=181;
 
 --
 -- AUTO_INCREMENT for table `messages`
@@ -346,7 +401,13 @@ ALTER TABLE `messages`
 -- AUTO_INCREMENT for table `mymedicalreports`
 --
 ALTER TABLE `mymedicalreports`
-  MODIFY `report_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `report_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+
+--
+-- AUTO_INCREMENT for table `schedule`
+--
+ALTER TABLE `schedule`
+  MODIFY `scedual_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -369,6 +430,12 @@ ALTER TABLE `messages`
 --
 ALTER TABLE `mymedicalreports`
   ADD CONSTRAINT `fileid` FOREIGN KEY (`filemannager_id`) REFERENCES `filemannager` (`file_id`);
+
+--
+-- قيود الجداول `schedule`
+--
+ALTER TABLE `schedule`
+  ADD CONSTRAINT `userid` FOREIGN KEY (`id`) REFERENCES `users` (`User_id`);
 
 --
 -- قيود الجداول `users`
