@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 28 نوفمبر 2024 الساعة 18:31
+-- Generation Time: 30 نوفمبر 2024 الساعة 15:40
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,28 @@ SET time_zone = "+00:00";
 --
 -- Database: `graduteproject`
 --
+
+-- --------------------------------------------------------
+
+--
+-- بنية الجدول `carerecipientlist`
+--
+
+CREATE TABLE `carerecipientlist` (
+  `CareRecipientList_id` int(10) NOT NULL,
+  `Care_giverid` int(10) NOT NULL,
+  `carerecipient_id` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- إرجاع أو استيراد بيانات الجدول `carerecipientlist`
+--
+
+INSERT INTO `carerecipientlist` (`CareRecipientList_id`, `Care_giverid`, `carerecipient_id`) VALUES
+(1, 84, 83),
+(2, 84, 82),
+(3, 84, 81),
+(6, 84, 79);
 
 -- --------------------------------------------------------
 
@@ -155,7 +177,28 @@ INSERT INTO `filemannager` (`file_id`, `old_name`, `new_name`, `folder`, `path`)
 (177, 'smiling-young-man-illustration_1308-174669.jpg', 'smiling-young-man-illustration_1308-174669-1732550443005.jpg', './public/Uploade', 'Uploade/smiling-young-man-illustration_1308-174669-1732550443005.jpg'),
 (178, 'man-male-young-person-icon_24877-30218.jpg', 'man-male-young-person-icon_24877-30218-1732550449125.jpg', './public/Uploade', 'Uploade/man-male-young-person-icon_24877-30218-1732550449125.jpg'),
 (179, 'reportform-1732437302482.pdf-1732609113109.pdf', 'reportform-1732437302482-1732609113485.pdf', './public/Uploade', 'Uploade/reportform-1732437302482-1732609113485.pdf'),
-(180, 'test-1732359035085.pdf-1732609457788.pdf', 'test-1732359035085-1732609458192.pdf', './public/Uploade', 'Uploade/test-1732359035085-1732609458192.pdf');
+(180, 'test-1732359035085.pdf-1732609457788.pdf', 'test-1732359035085-1732609458192.pdf', './public/Uploade', 'Uploade/test-1732359035085-1732609458192.pdf'),
+(182, 'reportform.pdf-1732890170098.pdf', 'reportform-1732890170302.pdf', './public/Uploade', 'Uploade/reportform-1732890170302.pdf'),
+(183, 'reportform.pdf-1732890230789.pdf', 'reportform-1732890230882.pdf', './public/Uploade', 'Uploade/reportform-1732890230882.pdf'),
+(184, 'reportform.pdf-1732893261230.pdf', 'reportform-1732893261465.pdf', './public/Uploade', 'Uploade/reportform-1732893261465.pdf'),
+(185, 'reportform.pdf-1732893426274.pdf', 'reportform-1732893426556.pdf', './public/Uploade', 'Uploade/reportform-1732893426556.pdf'),
+(186, 'reportform.pdf-1732893613504.pdf', 'reportform-1732893613786.pdf', './public/Uploade', 'Uploade/reportform-1732893613786.pdf'),
+(187, 'reportform.pdf-1732893772132.pdf', 'reportform-1732893772278.pdf', './public/Uploade', 'Uploade/reportform-1732893772278.pdf'),
+(188, 'reportform.pdf-1732893876091.pdf', 'reportform-1732893876287.pdf', './public/Uploade', 'Uploade/reportform-1732893876287.pdf'),
+(189, 'reportform.pdf-1732894054626.pdf', 'reportform-1732894054850.pdf', './public/Uploade', 'Uploade/reportform-1732894054850.pdf'),
+(190, 'reportform.pdf-1732894673369.pdf', 'reportform-1732894673706.pdf', './public/Uploade', 'Uploade/reportform-1732894673706.pdf'),
+(191, 'reportform.pdf-1732954769807.pdf', 'reportform-1732954770152.pdf', './public/Uploade', 'Uploade/reportform-1732954770152.pdf'),
+(192, 'reportform.pdf-1732954857310.pdf', 'reportform-1732954858016.pdf', './public/Uploade', 'Uploade/reportform-1732954858016.pdf'),
+(193, 'reportform.pdf-1732954910017.pdf', 'reportform-1732954910409.pdf', './public/Uploade', 'Uploade/reportform-1732954910409.pdf'),
+(194, 'reportform.pdf-1732955014349.pdf', 'reportform-1732955014771.pdf', './public/Uploade', 'Uploade/reportform-1732955014771.pdf'),
+(195, 'reportform.pdf-1732955184772.pdf', 'reportform-1732955185039.pdf', './public/Uploade', 'Uploade/reportform-1732955185039.pdf'),
+(196, 'reportform.pdf-1732955532239.pdf', 'reportform-1732955532669.pdf', './public/Uploade', 'Uploade/reportform-1732955532669.pdf'),
+(197, 'reportform.pdf-1732955712627.pdf', 'reportform-1732955713048.pdf', './public/Uploade', 'Uploade/reportform-1732955713048.pdf'),
+(198, 'reportform.pdf-1732956564268.pdf', 'reportform-1732956564588.pdf', './public/Uploade', 'Uploade/reportform-1732956564588.pdf'),
+(199, 'reportform.pdf-1732956900587.pdf', 'reportform-1732956900848.pdf', './public/Uploade', 'Uploade/reportform-1732956900848.pdf'),
+(200, 'reportform.pdf-1732957143815.pdf', 'reportform-1732957144207.pdf', './public/Uploade', 'Uploade/reportform-1732957144207.pdf'),
+(201, 'reportform.pdf-1732957246880.pdf', 'reportform-1732957247289.pdf', './public/Uploade', 'Uploade/reportform-1732957247289.pdf'),
+(202, 'reportform.pdf-1732957471963.pdf', 'reportform-1732957472234.pdf', './public/Uploade', 'Uploade/reportform-1732957472234.pdf');
 
 -- --------------------------------------------------------
 
@@ -211,51 +254,24 @@ INSERT INTO `messages` (`id`, `sender_id`, `receiver_id`, `message`, `timestamp`
 CREATE TABLE `mymedicalreports` (
   `report_id` int(10) NOT NULL,
   `user_id` int(10) NOT NULL,
-  `filemannager_id` int(10) NOT NULL
+  `filemannager_id` int(10) NOT NULL,
+  `Date` varchar(255) NOT NULL,
+  `Heartrate` varchar(255) NOT NULL,
+  `FastingBloodSugar` varchar(255) NOT NULL,
+  `Haemoglobin` varchar(255) NOT NULL,
+  `whitebloodcells` varchar(255) NOT NULL,
+  `Bloodpressure` varchar(255) NOT NULL,
+  `HDL` varchar(255) NOT NULL,
+  `LDL` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
 -- إرجاع أو استيراد بيانات الجدول `mymedicalreports`
 --
 
-INSERT INTO `mymedicalreports` (`report_id`, `user_id`, `filemannager_id`) VALUES
-(2, 83, 112),
-(3, 83, 113),
-(4, 83, 114),
-(5, 83, 115),
-(6, 83, 116),
-(10, 84, 120),
-(11, 84, 121),
-(12, 84, 122),
-(13, 84, 123),
-(14, 84, 124),
-(15, 84, 125),
-(16, 84, 126),
-(17, 84, 127),
-(18, 84, 128),
-(19, 84, 129),
-(20, 84, 130),
-(21, 84, 131),
-(22, 84, 132),
-(23, 84, 133),
-(24, 84, 134),
-(25, 84, 135),
-(26, 84, 136),
-(27, 84, 137),
-(28, 84, 138),
-(29, 84, 139),
-(30, 84, 140),
-(31, 84, 141),
-(32, 84, 142),
-(33, 84, 143),
-(34, 84, 144),
-(35, 84, 145),
-(36, 84, 146),
-(37, 84, 147),
-(38, 84, 148),
-(39, 84, 149),
-(40, 83, 179),
-(41, 83, 180);
+INSERT INTO `mymedicalreports` (`report_id`, `user_id`, `filemannager_id`, `Date`, `Heartrate`, `FastingBloodSugar`, `Haemoglobin`, `whitebloodcells`, `Bloodpressure`, `HDL`, `LDL`) VALUES
+(64, 83, 201, '21/12/2024', '75', '90', '13.5', '5200', '120/80', '55', '100'),
+(65, 83, 202, '21/12/2024', '75', '90', '13.5', '5200', '120/80', '55', '100');
 
 -- --------------------------------------------------------
 
@@ -276,7 +292,7 @@ CREATE TABLE `schedule` (
 --
 
 INSERT INTO `schedule` (`id`, `Name`, `Date`, `Time`, `scedual_id`) VALUES
-(84, 'b b', '22/12/2024', '12:00', 1),
+(84, 'b ', '22/12/2024', '12:00', 1),
 (84, 'S S', '22/12/2024', '11:00', 2),
 (84, 'ol o', '21/12/2024', '13:00 ', 3),
 (84, 'n n', '21/12/2024', '12:00', 4),
@@ -285,23 +301,7 @@ INSERT INTO `schedule` (`id`, `Name`, `Date`, `Time`, `scedual_id`) VALUES
 (84, 'm m', '20/12/2024', '10:30', 12),
 (84, 'n n', '21/1/2025', '11:30', 13),
 (84, 'n n', '22/1/2025', '11:00', 14),
-(84, 'm m', '21/1/2025', '10:00', 15),
-(84, 'm m', '21/12', '9:30', 16),
-(84, '.ss', '233', '123', 17),
-(84, '.ss', '233', '123', 18),
-(84, '.ss', '233', '12', 19),
-(84, '.ss', '233', '12', 20),
-(84, 'ahmad', '22/11/2025', '11:30', 21),
-(84, 'ha', '232', '1', 22),
-(84, 'j', '3232', '23', 23),
-(84, 'fgfd', '323', '98', 24),
-(84, 'fff', '11321', '66', 25),
-(84, 'ASa', '233', '323', 27),
-(84, '2', '2', '1', 31),
-(84, 'mi', '5/12/2024', '10:30', 39),
-(84, '9', '9', '9', 40),
-(84, '11', '11', '11', 41),
-(84, '11', '11', '1', 42);
+(84, 'm m', '21/1/2025', '10:00', 15);
 
 -- --------------------------------------------------------
 
@@ -326,7 +326,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`User_id`, `First_name`, `Last_name`, `Email`, `Age`, `Password`, `Type_oftheuser`, `image_id`, `Bio`) VALUES
-(76, 'Ahmad', 'Hawwari', 'a.haw@gmail.com', 22, '$2b$10$tcQq1I1cWR.SIbgzWHTJSugIIjQXASttRE/rlr7POq0AADM/ub.Ey', 'Admin', 56, NULL),
+(76, 'Ahmad', 'Hawwari', 'ahaw@gmail.com', 22, '$2b$10$tcQq1I1cWR.SIbgzWHTJSugIIjQXASttRE/rlr7POq0AADM/ub.Ey', 'Admin', 56, NULL),
 (77, 'sd', 'sd', 'sd@gmail.com', 22, '$2b$10$TENLq9GtczfMypgd40QWn.jRO2lVtnohOj9QQ12UhjWvgfpj.DT7e', 'Care giver', 57, NULL),
 (78, 'f', 'hh', 'h@gmail.com', 22, '$2b$10$2MPmPu8nKxdNddplEuCGrOtruFWtAeLNq/UtSGmSjenJtJC6t2gB6', 'Care recipient', 58, NULL),
 (79, 'k', 'k', 'k@gmail.com', 60, '$2b$10$m3q5/Rd.CHMUPRw0j8U0M.B4igcrz5bO2uaN74r5kaadlPSxm22MW', 'Care recipient', 59, NULL),
@@ -341,6 +341,14 @@ INSERT INTO `users` (`User_id`, `First_name`, `Last_name`, `Email`, `Age`, `Pass
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `carerecipientlist`
+--
+ALTER TABLE `carerecipientlist`
+  ADD PRIMARY KEY (`CareRecipientList_id`),
+  ADD KEY `Care_giverid11` (`Care_giverid`),
+  ADD KEY `11carerecipient_id` (`carerecipient_id`);
 
 --
 -- Indexes for table `filemannager`
@@ -386,10 +394,16 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `carerecipientlist`
+--
+ALTER TABLE `carerecipientlist`
+  MODIFY `CareRecipientList_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
 -- AUTO_INCREMENT for table `filemannager`
 --
 ALTER TABLE `filemannager`
-  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=181;
+  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=203;
 
 --
 -- AUTO_INCREMENT for table `messages`
@@ -401,13 +415,13 @@ ALTER TABLE `messages`
 -- AUTO_INCREMENT for table `mymedicalreports`
 --
 ALTER TABLE `mymedicalreports`
-  MODIFY `report_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `report_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- AUTO_INCREMENT for table `schedule`
 --
 ALTER TABLE `schedule`
-  MODIFY `scedual_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `scedual_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -418,6 +432,13 @@ ALTER TABLE `users`
 --
 -- قيود الجداول المُلقاة.
 --
+
+--
+-- قيود الجداول `carerecipientlist`
+--
+ALTER TABLE `carerecipientlist`
+  ADD CONSTRAINT `11carerecipient_id` FOREIGN KEY (`carerecipient_id`) REFERENCES `users` (`User_id`),
+  ADD CONSTRAINT `Care_giverid11` FOREIGN KEY (`Care_giverid`) REFERENCES `users` (`User_id`);
 
 --
 -- قيود الجداول `messages`
