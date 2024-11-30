@@ -21,10 +21,13 @@ const userController = require('../Controller/imageshow.controller');
 const {uploadPdf}=require('../Controller/MedicalReportpdf.controller');
 const {getUserFiles}=require('../Controller/MedicalReportpdf.controller');
 const {checkReport}=require('../Controller/medicalTests.controller');
-const {deleteUserFile}=require('../Controller/MedicalReportpdf.controller');
+const {deleteUserFile,getFilesByUserId}=require('../Controller/MedicalReportpdf.controller');
 const {getUserProfile}=require('../Controller/Profile.controller');
 const {updateUserBio}=require('../Controller/Profile.controller');
 const {updateUserage,updateImageForUser}=require('../Controller/Profile.controller');
+const{getSchedule,updateSchedule,deleteSchedule,addSchedule}=require('../Controller/scheduleforcaregiver.Controller');
+const {getCareRecipients}=require('../Controller/Tablecarerecipientlist.controller');
+const {getReportsByUserId}=require('../Controller/History.controller');
 const router = express.Router();
 
 const uploade = require('../../fileMannager/helper/multerobj');
@@ -49,6 +52,7 @@ router.post('/chat/conversations/:otherUserId',authonitication, markMessageAsRea
 
 
 router.post('/upload', authonitication,uploade.single('file'), uploadPdf);
+
 router.get('/user/files',authonitication, getUserFiles);
 
 router.post('/check', checkReport);
@@ -59,5 +63,18 @@ router.put('/update-bio', authonitication, updateUserBio);
 router.put('/update-age', authonitication, updateUserage);
 router.post('/update-image',uploade.single('photo'),authonitication, updateImageForUser);
 
+router.get('/ScheduleforCaregiver', authonitication, getSchedule);
+
+router.put('/updateSchedule/:scedual_id',authonitication ,updateSchedule);
+
+router.delete('/deleteSchedule/:scedual_id', authonitication, deleteSchedule);
+
+router.post('/addSchedule', authonitication, addSchedule);
+
+router.get('/getCareRecipients', authonitication, getCareRecipients);
+
+router.get('/user/files/:id', getFilesByUserId);
+
+router.get('/History/:user_id', getReportsByUserId);
 
 module.exports = router;

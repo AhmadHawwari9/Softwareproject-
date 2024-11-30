@@ -1,14 +1,33 @@
 const db = require('../../../db/database');
 const { filecreate } = require('../../fileMannager/services/FileMannager.service');
 
-const processPdfUpload = async (file, userId) => {
+const processPdfUpload = async (file, userId, extractedText) => {
     try {
-        // Insert the file into the filemannager table
+        // Insert the file into the filemanager table and get its ID
         const fileManagerId = await filecreate(file);
 
-        // Link the file to the user in the mymedicalreports table
-        const query = 'INSERT INTO mymedicalreports (user_id, filemannager_id) VALUES (?, ?)';
-        const values = [userId, fileManagerId];
+        // Parse the extracted text to get the specific medical values
+        const medicalData = parseExtractedText(extractedText);
+
+        // Insert the file and associated medical data into the mymedicalreports table
+        const query = `
+            INSERT INTO mymedicalreports 
+            (user_id, filemannager_id, Date, Heartrate, FastingBloodSugar, Haemoglobin, 
+            whitebloodcells, Bloodpressure, HDL, LDL)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        const values = [
+            userId, 
+            fileManagerId, 
+            medicalData.date, 
+            medicalData.heartrate,
+            medicalData.fastingBloodSugar,
+            medicalData.haemoglobin,
+            medicalData.whiteBloodCells,
+            medicalData.bloodPressure,
+            medicalData.hdl,
+            medicalData.ldl
+        ];
 
         await new Promise((resolve, reject) => {
             db.query(query, values, (error, results) => {
@@ -20,12 +39,41 @@ const processPdfUpload = async (file, userId) => {
             });
         });
 
-        return { userId, fileManagerId };
+        return { userId, fileManagerId, medicalData };
     } catch (error) {
         console.error('Error processing PDF upload:', error);
         throw error;
     }
 };
+
+
+const parseExtractedText = (text) => {
+    const medicalData = {};
+
+    // Updated regex to handle variations in casing and spaces
+    const dateMatch = text.match(/Date:\s*(\S+)/);
+    const heartRateMatch = text.match(/Heart\s*rate:\s*(\d+)/);
+    const bloodSugarMatch = text.match(/Fasting\s*Blood\s*Sugar:\s*(\d+)/);
+    const haemoglobinMatch = text.match(/Haemoglobin:\s*(\d+\.?\d*)/);
+    const whiteBloodCellsMatch = text.match(/white\s*blood\s*cells?:\s*(\d+)/i);  // Case-insensitive match
+    const bloodPressureMatch = text.match(/Blood\s*pressure?:\s*(\d+\/\d+)/i);   // Case-insensitive match
+    const hdlMatch = text.match(/HDL:\s*(\d+)/);
+    const ldlMatch = text.match(/LDL:\s*(\d+)/);
+
+    medicalData.date = dateMatch ? dateMatch[1] : '';
+    medicalData.heartrate = heartRateMatch ? heartRateMatch[1] : '';
+    medicalData.fastingBloodSugar = bloodSugarMatch ? bloodSugarMatch[1] : '';
+    medicalData.haemoglobin = haemoglobinMatch ? haemoglobinMatch[1] : '';
+    medicalData.whiteBloodCells = whiteBloodCellsMatch ? whiteBloodCellsMatch[1] : '';
+    medicalData.bloodPressure = bloodPressureMatch ? bloodPressureMatch[1] : '';
+    medicalData.hdl = hdlMatch ? hdlMatch[1] : '';
+    medicalData.ldl = ldlMatch ? ldlMatch[1] : '';
+
+    return medicalData;
+};
+
+
+
 
 
 const getUserFiles = (userId) => {
@@ -103,4 +151,39 @@ const deleteFile = async (fileManagerId, userId) => {
     }
 };
 
-module.exports = { getUserFiles, processPdfUpload, deleteFile };
+
+const getFilesByUserId = (userId) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const sqlReports = `
+                SELECT f.file_id AS id, f.path 
+                FROM mymedicalreports m
+                JOIN filemannager f ON m.filemannager_id = f.file_id
+                WHERE m.user_id = ?
+            `;
+
+            db.query(sqlReports, [userId], (err, result) => {
+                if (err) {
+                    console.error("Error fetching files for user:", err);
+                    return reject(err);
+                }
+
+                // If no files found, resolve with an empty array
+                if (!result || result.length === 0) {
+                    return resolve([]);
+                }
+
+                // Resolve with the array of files containing id and path
+                resolve(result);
+            });
+        } catch (error) {
+            console.error("Unexpected error in getFilesByUserId:", error);
+            reject(new Error("Could not fetch user files"));
+        }
+    });
+};
+
+
+
+
+module.exports = { getUserFiles, processPdfUpload, deleteFile ,getFilesByUserId};
