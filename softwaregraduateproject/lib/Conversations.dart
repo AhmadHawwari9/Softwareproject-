@@ -8,6 +8,9 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart';
 
+import 'AdminHomepage.dart';
+import 'CareGiverHomepage.dart';
+import 'CareRecipientHomepage.dart';
 import 'chatwithspecificperson.dart'; // Ensure you have this import for DateFormat
 
 
@@ -15,9 +18,10 @@ String accessToken = '';
 String? mytoken;
 class ConversationsPage extends StatefulWidget {
   final String jwtToken;
-
-  ConversationsPage({required this.jwtToken});
-
+  final String savedEmail;
+  final String savedPassword;
+  final bool isGoogleSignInEnabled;
+  ConversationsPage(this.savedEmail, this.savedPassword, this.jwtToken, this.isGoogleSignInEnabled);
   @override
   _ConversationsPageState createState() => _ConversationsPageState();
 }
@@ -175,6 +179,89 @@ class _ConversationsPageState extends State<ConversationsPage> {
       return dateTimeStr;
     }
   }
+  Future<void> fetchHomepageAndNavigate(
+      BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:3001/api/homepage'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final userType = data['userType'];
+
+        Widget homepage;
+        if (userType == 'Care recipient') {
+          homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
+        } else if (userType == 'Admin') {
+          homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
+        } else {
+          homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
+        }
+
+        // If mounted, navigate to the homepage
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => homepage),
+          );
+        }
+      } else {
+        _showErrorDialog('Failed to load homepage data');
+      }
+    } catch (e) {
+      _showErrorDialog('An error occurred: $e');
+    }
+  }
+  void _showErrorDialog(String message) {
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  int _selectedIndex = 0;
+
+  Future<void> _onItemTapped(int index) async {
+    setState(() {
+      _selectedIndex = index;
+    });
+    switch (index) {
+      case 0:
+        await fetchHomepageAndNavigate(context,widget.savedEmail, widget.savedPassword,widget.jwtToken, false);
+        break;
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ConversationsPage(widget.savedEmail, widget.savedPassword,widget.jwtToken, false)),
+        );
+        break;
+      case 2:
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => SearchPage()),
+      // );
+        break;
+      case 3:
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => BrowsePage()),
+      // );
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -260,6 +347,28 @@ class _ConversationsPageState extends State<ConversationsPage> {
 
           );
         },
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home, color: Colors.blue),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat, color: Colors.blue),
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search, color: Colors.blue),
+            label: 'Search',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu, color: Colors.blue),
+            label: 'Browse',
+          ),
+        ],
       ),
     );
   }

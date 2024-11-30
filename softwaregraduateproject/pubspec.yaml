@@ -103,6 +103,10 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - imgs/project_logo.png
+    - imgs/istockphoto-1266230179-612x612.jpg
+    - imgs/healthy-food-restaurants-640b5d1e9e8fc.png
+    - imgs/CODERED_B1_food-photography_p4b_690x455.jpg.img.jpg
+    - imgs/how-the-human-brain-decides-what-to-remember.jpg
     - assets/softwareproject-e838c-firebase-adminsdk-qd2od-f42b6120cb.json
     - assets/PDFmedicalformreport/reportform.pdf
 
