@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 30 نوفمبر 2024 الساعة 15:40
+-- Generation Time: 02 ديسمبر 2024 الساعة 13:10
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -24,6 +24,35 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- بنية الجدول `caregiverrequesttoadmin`
+--
+
+CREATE TABLE `caregiverrequesttoadmin` (
+  `Request_id` int(10) NOT NULL,
+  `First_name` varchar(255) NOT NULL,
+  `Last_name` varchar(255) NOT NULL,
+  `Email` varchar(255) NOT NULL,
+  `Age` int(10) NOT NULL,
+  `Password` varchar(255) NOT NULL,
+  `Type_oftheuser` text NOT NULL,
+  `image_id` int(10) NOT NULL,
+  `cv_id` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- إرجاع أو استيراد بيانات الجدول `caregiverrequesttoadmin`
+--
+
+INSERT INTO `caregiverrequesttoadmin` (`Request_id`, `First_name`, `Last_name`, `Email`, `Age`, `Password`, `Type_oftheuser`, `image_id`, `cv_id`) VALUES
+(7, 'ahmad', 'haw', 'jh6@gmail.com', 30, '$2b$10$DbpMW88uhkS8/DbwyGytjeIptcXeouYQh6OJnqKnnDuPY0oWUla6u', 'Caregiver', 215, 216),
+(10, 'ahmad', 'haw', 'jh8@gmail.com', 30, '$2b$10$9I3gFnsecSwzU4iR3f5H8eo8hiZr5gILJXGiEX470V1x1AEBZCCWq', 'Caregiver', 221, 222),
+(11, 'ahmad', 'haw', 'jh7@gmail.com', 30, '$2b$10$w1/hV2SAnKpxpC6jE4hQLO0TS4PeeSwHRc7czSZ5u47102FZG1mwW', 'Caregiver', 223, 224),
+(12, 'jh', 'k', 'jk@gmail.com', 30, '$2b$10$A0m6SG1yCgcjhJRkjp9jWemeGJh8nY7fKW9JnvUcHdxgNTl8aLeGe', 'Care giver', 225, 226),
+(13, 'jh', 'k', 'jk1@gmail.com', 30, '$2b$10$z3lRuaIdTwrIE1PgpdmCE.HDwst12d9i8vpBye2Phv3qw0ae558Ke', 'Care giver', 227, 228);
+
+-- --------------------------------------------------------
+
+--
 -- بنية الجدول `carerecipientlist`
 --
 
@@ -40,8 +69,7 @@ CREATE TABLE `carerecipientlist` (
 INSERT INTO `carerecipientlist` (`CareRecipientList_id`, `Care_giverid`, `carerecipient_id`) VALUES
 (1, 84, 83),
 (2, 84, 82),
-(3, 84, 81),
-(6, 84, 79);
+(3, 84, 81);
 
 -- --------------------------------------------------------
 
@@ -198,7 +226,33 @@ INSERT INTO `filemannager` (`file_id`, `old_name`, `new_name`, `folder`, `path`)
 (199, 'reportform.pdf-1732956900587.pdf', 'reportform-1732956900848.pdf', './public/Uploade', 'Uploade/reportform-1732956900848.pdf'),
 (200, 'reportform.pdf-1732957143815.pdf', 'reportform-1732957144207.pdf', './public/Uploade', 'Uploade/reportform-1732957144207.pdf'),
 (201, 'reportform.pdf-1732957246880.pdf', 'reportform-1732957247289.pdf', './public/Uploade', 'Uploade/reportform-1732957247289.pdf'),
-(202, 'reportform.pdf-1732957471963.pdf', 'reportform-1732957472234.pdf', './public/Uploade', 'Uploade/reportform-1732957472234.pdf');
+(202, 'reportform.pdf-1732957471963.pdf', 'reportform-1732957472234.pdf', './public/Uploade', 'Uploade/reportform-1732957472234.pdf'),
+(203, '1.png', '1-1733121334926.png', './public/Uploade', 'Uploade/1-1733121334926.png'),
+(204, 'hardware presentation.pdf', 'hardware presentation-1733121334977.pdf', './public/Uploade', 'Uploade/hardware presentation-1733121334977.pdf'),
+(205, '1.png', '1-1733130565564.png', './public/Uploade', 'Uploade/1-1733130565564.png'),
+(206, 'hardware presentation.pdf', 'hardware presentation-1733130565576.pdf', './public/Uploade', 'Uploade/hardware presentation-1733130565576.pdf'),
+(207, '1.png', '1-1733130573973.png', './public/Uploade', 'Uploade/1-1733130573973.png'),
+(208, 'hardware presentation.pdf', 'hardware presentation-1733130573973.pdf', './public/Uploade', 'Uploade/hardware presentation-1733130573973.pdf'),
+(209, '1.png', '1-1733130581194.png', './public/Uploade', 'Uploade/1-1733130581194.png'),
+(210, 'hardware presentation.pdf', 'hardware presentation-1733130581195.pdf', './public/Uploade', 'Uploade/hardware presentation-1733130581195.pdf'),
+(211, '1.png', '1-1733130604149.png', './public/Uploade', 'Uploade/1-1733130604149.png'),
+(212, 'hardware presentation.pdf', 'hardware presentation-1733130604150.pdf', './public/Uploade', 'Uploade/hardware presentation-1733130604150.pdf'),
+(213, '1.png', '1-1733130611284.png', './public/Uploade', 'Uploade/1-1733130611284.png'),
+(214, 'hardware presentation.pdf', 'hardware presentation-1733130611284.pdf', './public/Uploade', 'Uploade/hardware presentation-1733130611284.pdf'),
+(215, '1.png', '1-1733130617444.png', './public/Uploade', 'Uploade/1-1733130617444.png'),
+(216, 'hardware presentation.pdf', 'hardware presentation-1733130617445.pdf', './public/Uploade', 'Uploade/hardware presentation-1733130617445.pdf'),
+(217, '1.png', '1-1733136988599.png', './public/Uploade', 'Uploade/1-1733136988599.png'),
+(218, 'hardware presentation.pdf', 'hardware presentation-1733136988600.pdf', './public/Uploade', 'Uploade/hardware presentation-1733136988600.pdf'),
+(219, '1.png', '1-1733137023248.png', './public/Uploade', 'Uploade/1-1733137023248.png'),
+(220, 'hardware presentation.pdf', 'hardware presentation-1733137023249.pdf', './public/Uploade', 'Uploade/hardware presentation-1733137023249.pdf'),
+(221, '1.png', '1-1733137058834.png', './public/Uploade', 'Uploade/1-1733137058834.png'),
+(222, 'hardware presentation.pdf', 'hardware presentation-1733137058835.pdf', './public/Uploade', 'Uploade/hardware presentation-1733137058835.pdf'),
+(223, '1.png', '1-1733137084162.png', './public/Uploade', 'Uploade/1-1733137084162.png'),
+(224, 'hardware presentation.pdf', 'hardware presentation-1733137084163.pdf', './public/Uploade', 'Uploade/hardware presentation-1733137084163.pdf'),
+(225, 'hardware presentation-1733121334977.pdf', 'hardware presentation-1733121334977-1733140382026.pdf', './public/Uploade', 'Uploade/hardware presentation-1733121334977-1733140382026.pdf'),
+(226, 'hardware presentation-1733121334977.pdf', 'hardware presentation-1733121334977-1733140385998.pdf', './public/Uploade', 'Uploade/hardware presentation-1733121334977-1733140385998.pdf'),
+(227, 'reportform.pdf', 'reportform-1733140443614.pdf', './public/Uploade', 'Uploade/reportform-1733140443614.pdf'),
+(228, 'reportform.pdf', 'reportform-1733140444164.pdf', './public/Uploade', 'Uploade/reportform-1733140444164.pdf');
 
 -- --------------------------------------------------------
 
@@ -242,8 +296,7 @@ INSERT INTO `messages` (`id`, `sender_id`, `receiver_id`, `message`, `timestamp`
 (112, 83, 84, 'Uploade/recording-1732103511956.wav', '2024-11-20 13:51:52', 1, NULL, 108),
 (113, 83, 84, 'hi', '2024-11-20 13:52:06', 1, NULL, NULL),
 (114, 83, 84, 'Uploade/man-male-young-person-icon_24877-30218-1732103538951.jpg', '2024-11-20 13:52:19', 1, 109, NULL),
-(115, 83, 84, 'Uploade/recording-1732115807530.wav', '2024-11-20 17:16:47', 1, NULL, 110),
-(116, 83, 84, 'hello', '2024-11-21 13:52:25', 1, NULL, NULL);
+(115, 83, 84, 'Uploade/recording-1732115807530.wav', '2024-11-20 14:21:47', 1, NULL, 110);
 
 -- --------------------------------------------------------
 
@@ -318,29 +371,36 @@ CREATE TABLE `users` (
   `Password` varchar(255) NOT NULL,
   `Type_oftheuser` text NOT NULL,
   `image_id` int(11) DEFAULT NULL,
-  `Bio` varchar(1000) DEFAULT NULL
+  `Bio` varchar(1000) DEFAULT NULL,
+  `cv_id` int(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- إرجاع أو استيراد بيانات الجدول `users`
 --
 
-INSERT INTO `users` (`User_id`, `First_name`, `Last_name`, `Email`, `Age`, `Password`, `Type_oftheuser`, `image_id`, `Bio`) VALUES
-(76, 'Ahmad', 'Hawwari', 'ahaw@gmail.com', 22, '$2b$10$tcQq1I1cWR.SIbgzWHTJSugIIjQXASttRE/rlr7POq0AADM/ub.Ey', 'Admin', 56, NULL),
-(77, 'sd', 'sd', 'sd@gmail.com', 22, '$2b$10$TENLq9GtczfMypgd40QWn.jRO2lVtnohOj9QQ12UhjWvgfpj.DT7e', 'Care giver', 57, NULL),
-(78, 'f', 'hh', 'h@gmail.com', 22, '$2b$10$2MPmPu8nKxdNddplEuCGrOtruFWtAeLNq/UtSGmSjenJtJC6t2gB6', 'Care recipient', 58, NULL),
-(79, 'k', 'k', 'k@gmail.com', 60, '$2b$10$m3q5/Rd.CHMUPRw0j8U0M.B4igcrz5bO2uaN74r5kaadlPSxm22MW', 'Care recipient', 59, NULL),
-(80, 'v', 'v', 'v@gmail.com', 89, '$2b$10$mClfY/ieqKUcfgtdxEEE7elxNxxABlQSYGyztGeW3v7pHCrtvXqQS', 'Care recipient', 60, NULL),
-(81, 'n', 'n', 'n@gmail.com', 56, '$2b$10$ymrOe0fFhgwEG76Gv6d5seTd0.KQQ0PQ7Gyf3SuYuAeSyxcTmwmR.', 'Care recipient', 61, NULL),
-(82, 'o', 'ol', 'o@gmail.com', 56, '$2b$10$8/UBq/IhAXNhVbYsG2mouuGVS8MpaiovpgK0jxkh5LShgKi4Lu.hW', 'Care recipient', 62, NULL),
-(83, 'bg', 'bg', 'bg@gmail.com', 55, '$2b$10$1CF1dKlL0JxOB6G4lqvedebia/ICotjtyrQ1C8JpKM2a9GaQZC.9u', 'Care recipient', 178, 'I am bg !!!!!'),
-(84, 'ahmad', 'hawwari', 'ahmadhawwari1092@gmail.com', 22, '$2b$10$WqzfGZKWrhJW8tu72oDhYOuov3hAHII.GmE2XiJ9eZbvSFiHnAxmK', 'Care giver', 64, 'I am a care Giver !'),
-(85, 's', 's', 's@gmail.com', 55, '$2b$10$HanD0Zn3crVwctR06jHKqOuuw.0MSnQWxHXArvwGxSEekqkLKHM5m', 'Care recipient', 65, NULL),
-(87, 'kj', 'kj', 'kj@gmail.com', 22, '$2b$10$lkzJwu5wEMHpjviENTnb9eTx3dDM4Eem8iRTxejqsmap5WtN/XSey', 'Care giver', 67, NULL);
+INSERT INTO `users` (`User_id`, `First_name`, `Last_name`, `Email`, `Age`, `Password`, `Type_oftheuser`, `image_id`, `Bio`, `cv_id`) VALUES
+(76, 'Ahmad', 'Hawwari', 'ahaw@gmail.com', 22, '$2b$10$tcQq1I1cWR.SIbgzWHTJSugIIjQXASttRE/rlr7POq0AADM/ub.Ey', 'Admin', 56, NULL, 0),
+(80, 'v', 'v', 'v@gmail.com', 89, '$2b$10$mClfY/ieqKUcfgtdxEEE7elxNxxABlQSYGyztGeW3v7pHCrtvXqQS', 'Care recipient', 60, NULL, 0),
+(81, 'n', 'n', 'n@gmail.com', 56, '$2b$10$ymrOe0fFhgwEG76Gv6d5seTd0.KQQ0PQ7Gyf3SuYuAeSyxcTmwmR.', 'Care recipient', 61, NULL, 0),
+(82, 'o', 'ol', 'o@gmail.com', 56, '$2b$10$8/UBq/IhAXNhVbYsG2mouuGVS8MpaiovpgK0jxkh5LShgKi4Lu.hW', 'Care recipient', 62, NULL, 0),
+(83, 'bg', 'bg', 'bg@gmail.com', 55, '$2b$10$1CF1dKlL0JxOB6G4lqvedebia/ICotjtyrQ1C8JpKM2a9GaQZC.9u', 'Care recipient', 178, 'I am bg !!!!!', 0),
+(84, 'ahmad', 'hawwari', 'ahmadhawwari1092@gmail.com', 22, '$2b$10$WqzfGZKWrhJW8tu72oDhYOuov3hAHII.GmE2XiJ9eZbvSFiHnAxmK', 'Care giver', 64, 'I am a care Giver !', 0),
+(85, 's', 's', 's@gmail.com', 55, '$2b$10$HanD0Zn3crVwctR06jHKqOuuw.0MSnQWxHXArvwGxSEekqkLKHM5m', 'Care recipient', 65, NULL, 0),
+(88, 'ahmad', 'haw', 'jh5@gmail.com', 30, '$2b$10$1Ce0vIaOGSG3Cx2lGoib1.zWHqnn79IE46Iq9o9ymgqv4No1mhdxS', 'Caregiver', 213, NULL, 214);
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `caregiverrequesttoadmin`
+--
+ALTER TABLE `caregiverrequesttoadmin`
+  ADD PRIMARY KEY (`Request_id`),
+  ADD UNIQUE KEY `email11` (`Email`),
+  ADD KEY `cv_id11` (`cv_id`),
+  ADD KEY `image_id11` (`image_id`);
 
 --
 -- Indexes for table `carerecipientlist`
@@ -360,11 +420,7 @@ ALTER TABLE `filemannager`
 -- Indexes for table `messages`
 --
 ALTER TABLE `messages`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `messages1ss` (`sender_id`),
-  ADD KEY `messages2ss` (`receiver_id`),
-  ADD KEY `imagemessages2ss` (`img_id`),
-  ADD KEY `Audiomessages2ss` (`Audio_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `mymedicalreports`
@@ -394,6 +450,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `caregiverrequesttoadmin`
+--
+ALTER TABLE `caregiverrequesttoadmin`
+  MODIFY `Request_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
 -- AUTO_INCREMENT for table `carerecipientlist`
 --
 ALTER TABLE `carerecipientlist`
@@ -403,13 +465,7 @@ ALTER TABLE `carerecipientlist`
 -- AUTO_INCREMENT for table `filemannager`
 --
 ALTER TABLE `filemannager`
-  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=203;
-
---
--- AUTO_INCREMENT for table `messages`
---
-ALTER TABLE `messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
+  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=229;
 
 --
 -- AUTO_INCREMENT for table `mymedicalreports`
@@ -427,11 +483,18 @@ ALTER TABLE `schedule`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `User_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
+  MODIFY `User_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
 
 --
 -- قيود الجداول المُلقاة.
 --
+
+--
+-- قيود الجداول `caregiverrequesttoadmin`
+--
+ALTER TABLE `caregiverrequesttoadmin`
+  ADD CONSTRAINT `cv_id11` FOREIGN KEY (`cv_id`) REFERENCES `filemannager` (`file_id`),
+  ADD CONSTRAINT `image_id11` FOREIGN KEY (`image_id`) REFERENCES `filemannager` (`file_id`);
 
 --
 -- قيود الجداول `carerecipientlist`
@@ -439,12 +502,6 @@ ALTER TABLE `users`
 ALTER TABLE `carerecipientlist`
   ADD CONSTRAINT `11carerecipient_id` FOREIGN KEY (`carerecipient_id`) REFERENCES `users` (`User_id`),
   ADD CONSTRAINT `Care_giverid11` FOREIGN KEY (`Care_giverid`) REFERENCES `users` (`User_id`);
-
---
--- قيود الجداول `messages`
---
-ALTER TABLE `messages`
-  ADD CONSTRAINT `Audiomessages2ss` FOREIGN KEY (`Audio_id`) REFERENCES `filemannager` (`file_id`);
 
 --
 -- قيود الجداول `mymedicalreports`
@@ -457,12 +514,6 @@ ALTER TABLE `mymedicalreports`
 --
 ALTER TABLE `schedule`
   ADD CONSTRAINT `userid` FOREIGN KEY (`id`) REFERENCES `users` (`User_id`);
-
---
--- قيود الجداول `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `imageid` FOREIGN KEY (`image_id`) REFERENCES `filemannager` (`file_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
