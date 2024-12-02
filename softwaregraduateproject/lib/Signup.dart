@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:softwaregraduateproject/CareGiverHomepage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'AdminHomepage.dart';
+import 'CareGiverFileUpload.dart';
 import 'CareRecipientHomepage.dart';
 import 'Login.dart';
 
@@ -477,7 +478,6 @@ class _SignupState extends State<Signup> {
                             color: Colors.lightBlue,
                             onPressed: () async {
                               if (_formKey.currentState!.validate()) {
-                                // طباعة المدخلات الخاصة بالمستخدم لأغراض التصحيح
                                 print('First Name: ${firstName ?? 'null'}');
                                 print('Last Name: ${lastName ?? 'null'}');
                                 print('Email: ${email ?? 'null'}');
@@ -485,7 +485,6 @@ class _SignupState extends State<Signup> {
                                 print('Password: ${password ?? 'null'}');
                                 print('User Type: ${selectedRole ?? 'null'}');
 
-                                // إعداد بيانات المستخدم
                                 final userData = {
                                   'first_name': firstName ?? '',
                                   'last_name': lastName ?? '',
@@ -495,83 +494,83 @@ class _SignupState extends State<Signup> {
                                   'typeofuser': selectedRole ?? 'guest',
                                 };
 
-                                try {
-                                  // إنشاء طلب multipart
-                                  var request = http.MultipartRequest(
-                                    'POST',
-                                    Uri.parse('http://10.0.2.2:3001/api/users'),
-                                  );
-
-                                  // إضافة بيانات المستخدم إلى الطلب
-                                  request.fields.addAll(userData.map((key, value) => MapEntry(key, value!)));
-
-                                  // إضافة رأس التفويض إذا كان متوفرًا
-                                  if (_token != null) {
-                                    request.headers['authorization'] = 'Bearer $_token';
-                                  }
-
-                                  // إضافة ملف الصورة إذا تم تحديده
-                                  if (_image != null) {
-                                    // تحويل الصورة إلى `MultipartFile`
-                                    var file = await http.MultipartFile.fromPath('photo', _image!.path);
-                                    request.files.add(file);
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text("No image selected."),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                    return; // الخروج إذا لم يتم اختيار صورة
-                                  }
-
-                                  // إرسال الطلب والحصول على الاستجابة
-                                  final response = await request.send();
-
-                                  // التحقق من حالة الاستجابة وجسمها
-                                  final responseBody = await http.Response.fromStream(response);
-                                  if (responseBody.statusCode == 201) {
-                                    var responseData = json.decode(responseBody.body);
-                                    _token = responseData['accessToken']; // استخراج التوكن من الاستجابة
-
-                                    print('Token value: $_token'); // طباعة قيمة التوكن للتصحيح
-
-                                    setState(() {
-                                      _errorMessage = null; // مسح أي رسائل خطأ
-                                    });
-
-                                    // حفظ بيانات الاعتماد بشكل آمن (تنفيذ طريقتك الخاصة)
-                                    await _saveCredentials(_token!, email!, password!);
-
-                                    await fetchHomepageAndNavigate(context, email!, password!, _token!);
-
-                                    // عرض رسالة النجاح
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text("Signup successful!"),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                  } else {
-                                    // عرض رسالة خطأ مع جسم الاستجابة
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text("Signup failed: ${responseBody.body}"),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  print("Error: $e"); // طباعة أي أخطاء للتصحيح
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text("An error occurred. Please try again."),
-                                      backgroundColor: Colors.red,
+                                if (selectedRole == "Care giver") {
+                                  // Navigate to CareGiverFileUpload and pass userData
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => CareGiverFileUpload(userData: Map<String, String>.from(userData),
                                     ),
-                                  );
+                                  ));
+                                } else {
+                                  try {
+                                    var request = http.MultipartRequest(
+                                      'POST',
+                                      Uri.parse('http://10.0.2.2:3001/api/users'),
+                                    );
+
+                                    request.fields.addAll(userData.map((key, value) => MapEntry(key, value!)));
+
+                                    if (_token != null) {
+                                      request.headers['authorization'] = 'Bearer $_token';
+                                    }
+
+                                    if (_image != null) {
+                                      var file = await http.MultipartFile.fromPath('photo', _image!.path);
+                                      request.files.add(file);
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text("No image selected."),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    final response = await request.send();
+                                    final responseBody = await http.Response.fromStream(response);
+
+                                    if (responseBody.statusCode == 201) {
+                                      var responseData = json.decode(responseBody.body);
+                                      _token = responseData['accessToken'];
+
+                                      print('Token value: $_token');
+
+                                      setState(() {
+                                        _errorMessage = null;
+                                      });
+
+                                      await _saveCredentials(_token!, email!, password!);
+                                      await fetchHomepageAndNavigate(context, email!, password!, _token!);
+
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text("Signup successful!"),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text("Signup failed: ${responseBody.body}"),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    print("Error: $e");
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("An error occurred. Please try again."),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
                                 }
                               }
                             }
+
 ,
 
 

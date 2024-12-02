@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'AdminHomepage.dart';
@@ -58,26 +61,33 @@ class _HomepageState extends State<AdminHomepage> {
   List<dynamic> scheduleData = []; // Holds the data from the database
   bool isLoading = false;
 
-  List<Map<String, dynamic>> careRecipients = [
-  ];
-
+  List<Map<String, dynamic>> careRecipients = [];
+  List<dynamic> users = [];
   @override
   void initState() {
     super.initState();
-    _loadCredentials();
-    _fetchConversations();
-    getAccessToken();
-    getToken();
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        print("new message");
-        print(message.notification!.title);
-        print(message.notification!.body);
-      }
-    });
-
-
+    _initializeApp();
   }
+
+  Future<void> _initializeApp() async {
+    try {
+      await _loadCredentials();  // Load credentials
+      await _fetchConversations();  // Fetch conversations if needed
+      await getAccessToken();  // Get access token
+      await fetchUsers();  // Fetch users after getting the access token
+      await getToken();  // Get token if needed
+      await fetchCaregiversData();
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        if (message.notification != null) {
+          print("New message: ${message.notification!.title}");
+          print(message.notification!.body);
+        }
+      });
+    } catch (e) {
+      print('Error during initialization: $e');
+    }
+  }
+
 
   @override
   void dispose() {
@@ -176,6 +186,37 @@ class _HomepageState extends State<AdminHomepage> {
     print("================");
     print(mytoken);
   }
+
+
+  Future<void> fetchUsers() async {
+    if (widget.savedToken == null || widget.savedToken.isEmpty) {
+      print('No token available');
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:3001/usersoperationsforadmin'),
+        headers: {'Authorization': 'Bearer ${widget.savedToken}'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> fetchedUsers = json.decode(response.body);
+
+        setState(() {
+          users = fetchedUsers;
+        });
+
+        print('Users fetched successfully: $users');
+      } else {
+        print('Failed to fetch users with status: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching users: $e');
+    }
+  }
+
+
 
   Future<void> getAccessToken() async {
     try {
@@ -341,7 +382,7 @@ class _HomepageState extends State<AdminHomepage> {
         await fetchHomepageAndNavigate(context, email!, password!, token!, false);
         break;
       case 1:
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => ConversationsPage(email!,password!,token!,false)),
         );
@@ -488,6 +529,158 @@ class _HomepageState extends State<AdminHomepage> {
     }
   }
 
+
+
+  Future<void> deleteUser(int userId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('http://10.0.2.2:3001/deleteUser/$userId'),
+        headers: {
+          'Authorization': 'Bearer ${widget.savedToken}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          users.removeWhere((user) => user['User_id'] == userId);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User deleted successfully')),
+        );
+      } else {
+        throw Exception('Failed to delete user');
+      }
+    } catch (e) {
+      print('Error deleting user: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete user')),
+      );
+    }
+  }
+
+  void showDeleteConfirmationDialog(int userId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete User'),
+        content: Text('Are you sure you want to delete this user?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+              deleteUser(userId); // Call the delete function
+            },
+            child: Text('Delete'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          ),
+        ],
+      ),
+    );
+  }
+  List<Map<String, dynamic>> caregivers = [];
+
+  Future<void> fetchCaregiversData() async {
+    final response = await http.get(Uri.parse('http://10.0.2.2:3001/caregiverRequestToTheAdminDisplay'));
+
+    if (response.statusCode == 200) {
+      // Parse the response JSON
+      List<dynamic> data = json.decode(response.body);
+      setState(() {
+        // Map the data into a format suitable for the DataTable
+        caregivers = data.map((item) {
+          return {
+            'Request_id': item['Request_id'],
+            'Email': item['Email'],
+            'cv_id': item['cv_id'],
+            // Assuming the 'file_path' is added as a part of the response
+            'File': item['cv_path'] ?? 'No file available', // If file path is returned as 'cv_file_path'
+          };
+        }).toList();
+      });
+    } else {
+      // Handle error if necessary
+      throw Exception('Failed to load caregivers');
+    }
+  }
+
+  Future<void> moveCaregiverToUser(String requestId) async {
+    final url = 'http://10.0.2.2:3001/movecaregivertouserstable/$requestId'; // Replace with actual URL
+
+    try {
+      final response = await http.delete(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        await fetchUsers();
+        fetchCaregiversData();
+
+        print('Caregiver moved to users table successfully');
+      } else {
+        // Failure: Handle error (maybe show an error message)
+        print('Failed to move caregiver to users table');
+      }
+    } catch (error) {
+      // Handle network or other errors
+      print('Error occurred: $error');
+    }
+  }
+
+  Future<void> deletecaregiverfrompending(String requestId) async {
+    final url = 'http://10.0.2.2:3001/deletecaregiver/$requestId'; // Replace with actual URL
+
+    try {
+      final response = await http.delete(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        fetchCaregiversData();
+      } else {
+        print('Failed to delete the caregiver from pending ');
+      }
+    } catch (error) {
+      print('Error occurred: $error');
+    }
+  }
+
+
+  Future<String> downloadPdf(String pdfPath) async {
+    try {
+      if (pdfPath.isEmpty) throw Exception('Invalid file path');
+      final permissionStatus = await Permission.storage.request();
+
+      if (permissionStatus.isGranted) {
+        final response = await http.get(
+          Uri.parse('http://10.0.2.2:3001/$pdfPath'),
+        );
+
+        if (response.statusCode == 200) {
+          // Get the path for the Downloads folder
+          final downloadsDirectory =
+          Directory('/storage/emulated/0/Download'); // Path to Downloads
+
+          if (!await downloadsDirectory.exists()) {
+            await downloadsDirectory.create(recursive: true); // Create the folder
+          }
+
+          // Create the file path
+          final file = File(
+              '${downloadsDirectory.path}/${pdfPath.split('/').last}');
+          await file.writeAsBytes(response.bodyBytes); // Save the file
+
+          return file.path; // Return the local path of the file
+        } else {
+          throw Exception('Failed to download PDF');
+        }
+      } else {
+        throw Exception('Storage permission denied');
+      }
+    } catch (e) {
+      print('Error downloading PDF: $e');
+      throw e;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -632,21 +825,43 @@ class _HomepageState extends State<AdminHomepage> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.vertical,
                     child: DataTable(
-                      headingRowColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.blueAccent),
+                      headingRowColor:
+                      MaterialStateColor.resolveWith((states) => Colors.blueAccent),
                       columns: [
                         DataColumn(label: Text('ID')),
-                        DataColumn(label: Text('Name')),
-                        DataColumn(label: Text('Role')),
+                        DataColumn(label: Text('Email')),
+                        DataColumn(label: Text('Type of the user')),
                         DataColumn(label: Text('Actions')),
                       ],
-                      rows: [],
+                      rows: users.isNotEmpty
+                          ? users.map<DataRow>((user) {
+                        return DataRow(cells: [
+                          DataCell(Text(user['User_id'].toString())),
+                          DataCell(Text(user['Email'])),
+                          DataCell(Text(user['Type_oftheuser'])),
+                          DataCell(
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    showDeleteConfirmationDialog(user['User_id']);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ]);
+                      }).toList()
+                          : [],
                     ),
                   ),
                 ),
               ),
             ),
-            // جدول الأطباء الجدد
+
+            
+
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
@@ -654,6 +869,7 @@ class _HomepageState extends State<AdminHomepage> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
+
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Card(
@@ -664,21 +880,91 @@ class _HomepageState extends State<AdminHomepage> {
                     scrollDirection: Axis.vertical,
                     child: DataTable(
                       headingRowColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.blueAccent),
+                            (states) => Colors.blueAccent,
+                      ),
                       columns: [
                         DataColumn(label: Text('ID')),
-                        DataColumn(label: Text('Name')),
+                        DataColumn(label: Text('Email')),
+                        DataColumn(label: Text('CV')),
                         DataColumn(label: Text('Actions')),
-                      ], rows: [],
-
+                      ],
+                      rows: caregivers.map((caregiver) {
+                        String filePath = caregiver['File'];
+                        String fileName = filePath.replaceFirst('Uploade/', ''); // Remove 'Upload/' prefix
+                        return DataRow(cells: [
+                          DataCell(Text(caregiver['Request_id'].toString())),
+                          DataCell(Text(caregiver['Email'])),
+                          DataCell(
+                            GestureDetector(
+                              onTap: () async {
+                                // Download and open PDF
+                                String pdfPath = await downloadPdf(filePath);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PdfViewerPage(pdfPath: pdfPath),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.picture_as_pdf,
+                                      color: Colors.red,
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      fileName,  // Display the file name without the 'Upload/' prefix
+                                      style: TextStyle(color: Colors.black, fontSize: 14),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.check, color: Colors.green),
+                                  onPressed: () {
+                                    // Call the API to move caregiver to users table
+                                    moveCaregiverToUser(caregiver['Request_id'].toString());
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.close, color: Colors.red),
+                                  onPressed: () {
+                                    deletecaregiverfrompending(caregiver['Request_id'].toString());
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ]);
+                      }).toList(),
                     ),
                   ),
                 ),
               ),
-            ),
+            )
+
+
+
+
+
           ],
         ),
       ),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
@@ -811,4 +1097,26 @@ Future<void> sendMessage(String title) async {
   }
 }
 
+
+
+class PdfViewerPage extends StatelessWidget {
+  final String pdfPath;
+
+  PdfViewerPage({required this.pdfPath});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('PDF Viewer'),
+        backgroundColor: Colors.blueAccent, // Keep consistent theme
+      ),
+      body: Center(
+        child: PDFView(
+          filePath: pdfPath, // Pass the local path to the PDF file
+        ),
+      ),
+    );
+  }
+}
 
