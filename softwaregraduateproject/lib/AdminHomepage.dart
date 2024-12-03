@@ -22,6 +22,7 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'Myfiles.dart';
 import 'PdfReader.dart';
 import 'Reportsshowtocaregiver.dart';
+import 'Searchpage.dart';
 import 'Settingspage.dart';
 import 'UserProfilePage.dart';
 import 'Card1.dart';
@@ -388,10 +389,10 @@ class _HomepageState extends State<AdminHomepage> {
         );
         break;
       case 2:
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => SearchPage()),
-      // );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => SearchPage(email!,password!,token!,false)),
+      );
         break;
       case 3:
       // Navigator.push(

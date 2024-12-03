@@ -1,7 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:softwaregraduateproject/Login.dart';
 import 'AdminHomepage.dart';
 import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
@@ -20,24 +22,150 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-
   TextEditingController nameController = TextEditingController();
-  TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  // تحديث الملف الشخصي (تحتاج إلى تنفيذ المنطق هنا)
-  void _updateProfile() {
-    // هنا يتم تنفيذ عملية التحديث
-    print("Profile updated");
+  // Update email
+  Future<void> _updateProfile() async {
+    String? emailToUpdate;
+    String? passwordToUpdate;
+
+    if (nameController.text.isNotEmpty) {
+      emailToUpdate = nameController.text.trim();
+    }
+
+    if (passwordController.text.isNotEmpty) {
+      passwordToUpdate = passwordController.text.trim();
+    }
+
+    if (emailToUpdate != null) {
+      // Call the update email API
+      await _updateEmail(emailToUpdate);
+    }
+
+    if (passwordToUpdate != null) {
+      // Call the change password API
+      await _changePassword(passwordToUpdate);
+    }
+
+
   }
 
-  // حذف الحساب مع التأكيد
-  void _deleteAccount() {
-    // هنا يتم تنفيذ عملية حذف الحساب
-    print("Account deleted");
+  Future<void> _updateEmail(String email) async {
+    final response = await http.put(
+      Uri.parse('http://10.0.2.2:3001/updateemail'),
+      headers: {
+        'Authorization': 'Bearer ${widget.savedToken}',
+        'Content-Type': 'application/json'  // Add content type for JSON
+      },
+      body: json.encode({'newEmail': email}),
+    );
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Email updated successfully!')),
+      );
+    } else {
+      _showErrorDialog('Failed to update email');
+    }
   }
 
-  // إظهار رسالة تأكيد عند التحديث
+
+
+// Change password API call
+  Future<void> _changePassword(String newPassword) async {
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:3001/changepassword'), // Use POST instead of PUT
+      headers: {
+        'Authorization': 'Bearer ${widget.savedToken}',
+        'Content-Type': 'application/json', // Add content type for JSON
+      },
+      body: json.encode({'newPassword': newPassword}),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Password changed successfully!')),
+      );
+    } else {
+      _showErrorDialog('Failed to change password');
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
+  }
+
+  Future<void> _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    GoogleSignIn googleSignIn = GoogleSignIn();
+    googleSignIn.disconnect();
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => Loginpage()),
+    );
+  }
+
+  Future<void> _deleteAccount() async {
+    final response = await http.delete(
+      Uri.parse('http://10.0.2.2:3001/deleteuser'),
+      headers: {'Authorization': 'Bearer ${widget.savedToken}'},  // Ensure you're passing the token correctly
+    );
+
+    // Debugging logs
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      // Clear the session and token
+      await _logout();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Account deleted successfully!')),
+      );
+
+      // Add a delay before navigating to ensure the deletion is complete
+      Future.delayed(Duration(seconds: 2), () {
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => Loginpage()),
+              (route) => false,
+        );
+
+        }
+      });
+    } else {
+      _showErrorDialog('Failed to delete account');
+    }
+  }
+
+
+
+  // Show error dialog
+  void _showErrorDialog(String message) {
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  // Show update confirmation dialog
   void _showUpdateConfirmation() {
     showDialog(
       context: context,
@@ -53,7 +181,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
                 _updateProfile();
               },
@@ -65,7 +193,9 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // إظهار رسالة تأكيد عند الحذف
+
+
+  // Show delete confirmation dialog
   void _showDeleteConfirmation() {
     showDialog(
       context: context,
@@ -93,9 +223,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-
   int _selectedIndex = 0;
-
 
   Future<void> _onItemTapped(int index) async {
     setState(() {
@@ -103,28 +231,21 @@ class _SettingsPageState extends State<SettingsPage> {
     });
     switch (index) {
       case 0:
-        await fetchHomepageAndNavigate(context, widget.savedEmail,widget.savedPassword,widget.savedToken, widget.isGoogleSignInEnabled);
+        await fetchHomepageAndNavigate(context, widget.savedEmail, widget.savedPassword, widget.savedToken, widget.isGoogleSignInEnabled);
         break;
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ConversationsPage(widget.savedEmail,widget.savedPassword,widget.savedToken, widget.isGoogleSignInEnabled)),
+          MaterialPageRoute(builder: (context) => ConversationsPage(widget.savedEmail, widget.savedPassword, widget.savedToken, widget.isGoogleSignInEnabled)),
         );
         break;
       case 2:
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => SearchPage()),
-      // );
         break;
       case 3:
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => BrowsePage()),
-      // );
         break;
     }
   }
+
   Future<void> fetchHomepageAndNavigate(
       BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
@@ -146,8 +267,6 @@ class _SettingsPageState extends State<SettingsPage> {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
         }
 
-
-        // If mounted, navigate to the homepage
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -161,23 +280,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _showErrorDialog('An error occurred: $e');
     }
   }
-  void _showErrorDialog(String message) {
-    if (mounted) {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: Text('Error'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -189,14 +292,9 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // حقول إدخال الاسم، اسم المستخدم، وكلمة المرور
             TextField(
               controller: nameController,
-              decoration: InputDecoration(labelText: 'Name'),
-            ),
-            TextField(
-              controller: usernameController,
-              decoration: InputDecoration(labelText: 'Username'),
+              decoration: InputDecoration(labelText: 'Email'),
             ),
             TextField(
               controller: passwordController,
@@ -204,34 +302,17 @@ class _SettingsPageState extends State<SettingsPage> {
               decoration: InputDecoration(labelText: 'Password'),
             ),
             SizedBox(height: 20),
-            // زر التحديث
             ElevatedButton(
-              onPressed: _showUpdateConfirmation, // عرض نافذة التأكيد
-              child: Text(
-                'Update',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-              ),
+              onPressed: _showUpdateConfirmation,
+              child: Text('Update', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
             ),
             SizedBox(height: 10),
-            // زر الحذف
+
             ElevatedButton(
-              onPressed: _showDeleteConfirmation, // عرض نافذة التأكيد
-              child: Text(
-                'Delete Account',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
+              onPressed: _showDeleteConfirmation,
+              child: Text('Delete Account', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             ),
           ],
         ),

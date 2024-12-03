@@ -11,6 +11,7 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'AdminHomepage.dart';
 import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
+import 'Searchpage.dart';
 import 'chatwithspecificperson.dart'; // Ensure you have this import for DateFormat
 
 
@@ -240,19 +241,19 @@ class _ConversationsPageState extends State<ConversationsPage> {
     });
     switch (index) {
       case 0:
-        await fetchHomepageAndNavigate(context,widget.savedEmail, widget.savedPassword,widget.jwtToken, false);
+        await fetchHomepageAndNavigate(context, widget.savedEmail, widget.savedPassword, widget.jwtToken, false);
         break;
       case 1:
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ConversationsPage(widget.savedEmail, widget.savedPassword,widget.jwtToken, false)),
+          MaterialPageRoute(builder: (context) => ConversationsPage( widget.savedEmail, widget.savedPassword, widget.jwtToken, false)),
         );
         break;
       case 2:
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => SearchPage()),
-      // );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => SearchPage(widget.savedEmail, widget.savedPassword, widget.jwtToken, false)),
+        );
         break;
       case 3:
       // Navigator.push(

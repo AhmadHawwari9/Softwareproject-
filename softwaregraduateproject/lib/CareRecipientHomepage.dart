@@ -19,6 +19,7 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'Myfiles.dart';
 import 'PdfReader.dart';
 import 'Reportsshowtocaregiver.dart';
+import 'Searchpage.dart';
 import 'Settingspage.dart';
 import 'UserProfilePage.dart';
 import 'Card1.dart';
@@ -343,16 +344,16 @@ class _HomepageState extends State<CareRecipientHomepage> {
         await fetchHomepageAndNavigate(context, email!, password!, token!, false);
         break;
       case 1:
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => ConversationsPage(email!,password!,token!,false)),
         );
         break;
       case 2:
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => SearchPage()),
-      // );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => SearchPage(email!,password!,token!,false)),
+        );
         break;
       case 3:
       // Navigator.push(
@@ -516,7 +517,6 @@ class _HomepageState extends State<CareRecipientHomepage> {
 
   List<Map<String, dynamic>> careRecipients1 = [];
 
-  // Fetch care recipients with token
   Future<void> fetchCareRecipients() async {
     const String url = 'http://10.0.2.2:3001/getCareRecipients'; // Adjust URL if needed
 
@@ -528,21 +528,35 @@ class _HomepageState extends State<CareRecipientHomepage> {
         },
       );
 
+      // Log the status and response for debugging
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
 
+        // Log the response data
+        print('Response Data: $responseData');
+
         // Extract the 'data' field from the response
-        setState(() {
-          careRecipients = List<Map<String, dynamic>>.from(responseData['data']);
-        });
+        if (responseData.containsKey('data')) {
+          setState(() {
+            careRecipients = List<Map<String, dynamic>>.from(responseData['data']);
+          });
+        } else {
+          throw Exception('Missing "data" in response');
+        }
       } else {
-        throw Exception('Failed to fetch care recipients');
+        throw Exception('Failed to fetch care recipients. Status code: ${response.statusCode}');
       }
     } catch (error) {
       print('Error: $error');
-      throw Exception('Error: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
     }
   }
+
 
   Widget _buildInputCard(BuildContext context, String label, String hint, IconData icon, TextEditingController controller) {
     return Container(
@@ -689,11 +703,7 @@ class _HomepageState extends State<CareRecipientHomepage> {
                 await fetchHomepageAndNavigate(context, email!, password!, token!, false);  // Passing the context to the function
               },
             ),
-            ListTile(
-              leading: Icon(Icons.local_hospital),
-              title: Text('My Doctor'),
-              onTap: () {},
-            ),
+
             ListTile(
               leading: Icon(Icons.settings),
               title: Text("Settings"),
