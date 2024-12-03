@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 02 ديسمبر 2024 الساعة 13:10
+-- Generation Time: 03 ديسمبر 2024 الساعة 15:40
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -44,11 +44,7 @@ CREATE TABLE `caregiverrequesttoadmin` (
 --
 
 INSERT INTO `caregiverrequesttoadmin` (`Request_id`, `First_name`, `Last_name`, `Email`, `Age`, `Password`, `Type_oftheuser`, `image_id`, `cv_id`) VALUES
-(7, 'ahmad', 'haw', 'jh6@gmail.com', 30, '$2b$10$DbpMW88uhkS8/DbwyGytjeIptcXeouYQh6OJnqKnnDuPY0oWUla6u', 'Caregiver', 215, 216),
-(10, 'ahmad', 'haw', 'jh8@gmail.com', 30, '$2b$10$9I3gFnsecSwzU4iR3f5H8eo8hiZr5gILJXGiEX470V1x1AEBZCCWq', 'Caregiver', 221, 222),
-(11, 'ahmad', 'haw', 'jh7@gmail.com', 30, '$2b$10$w1/hV2SAnKpxpC6jE4hQLO0TS4PeeSwHRc7czSZ5u47102FZG1mwW', 'Caregiver', 223, 224),
-(12, 'jh', 'k', 'jk@gmail.com', 30, '$2b$10$A0m6SG1yCgcjhJRkjp9jWemeGJh8nY7fKW9JnvUcHdxgNTl8aLeGe', 'Care giver', 225, 226),
-(13, 'jh', 'k', 'jk1@gmail.com', 30, '$2b$10$z3lRuaIdTwrIE1PgpdmCE.HDwst12d9i8vpBye2Phv3qw0ae558Ke', 'Care giver', 227, 228);
+(20, 'ahmad', 'haw', 'jh11@gmail.com', 30, '$2b$10$.nYS/XLHEHtvGJx8gjiUhOTyKq5Pxo5N17ddg9gcTPgLR4VJDObLO', 'Caregiver', 241, 242);
 
 -- --------------------------------------------------------
 
@@ -67,9 +63,7 @@ CREATE TABLE `carerecipientlist` (
 --
 
 INSERT INTO `carerecipientlist` (`CareRecipientList_id`, `Care_giverid`, `carerecipient_id`) VALUES
-(1, 84, 83),
-(2, 84, 82),
-(3, 84, 81);
+(1, 84, 83);
 
 -- --------------------------------------------------------
 
@@ -252,7 +246,21 @@ INSERT INTO `filemannager` (`file_id`, `old_name`, `new_name`, `folder`, `path`)
 (225, 'hardware presentation-1733121334977.pdf', 'hardware presentation-1733121334977-1733140382026.pdf', './public/Uploade', 'Uploade/hardware presentation-1733121334977-1733140382026.pdf'),
 (226, 'hardware presentation-1733121334977.pdf', 'hardware presentation-1733121334977-1733140385998.pdf', './public/Uploade', 'Uploade/hardware presentation-1733121334977-1733140385998.pdf'),
 (227, 'reportform.pdf', 'reportform-1733140443614.pdf', './public/Uploade', 'Uploade/reportform-1733140443614.pdf'),
-(228, 'reportform.pdf', 'reportform-1733140444164.pdf', './public/Uploade', 'Uploade/reportform-1733140444164.pdf');
+(228, 'reportform.pdf', 'reportform-1733140444164.pdf', './public/Uploade', 'Uploade/reportform-1733140444164.pdf'),
+(229, '1.png', '1-1733215144818.png', './public/Uploade', 'Uploade/1-1733215144818.png'),
+(230, 'hardware presentation.pdf', 'hardware presentation-1733215144968.pdf', './public/Uploade', 'Uploade/hardware presentation-1733215144968.pdf'),
+(231, '1.png', '1-1733215156709.png', './public/Uploade', 'Uploade/1-1733215156709.png'),
+(232, 'hardware presentation.pdf', 'hardware presentation-1733215156719.pdf', './public/Uploade', 'Uploade/hardware presentation-1733215156719.pdf'),
+(233, '1.png', '1-1733215162390.png', './public/Uploade', 'Uploade/1-1733215162390.png'),
+(234, 'hardware presentation.pdf', 'hardware presentation-1733215162392.pdf', './public/Uploade', 'Uploade/hardware presentation-1733215162392.pdf'),
+(235, '1.png', '1-1733215167568.png', './public/Uploade', 'Uploade/1-1733215167568.png'),
+(236, 'hardware presentation.pdf', 'hardware presentation-1733215167571.pdf', './public/Uploade', 'Uploade/hardware presentation-1733215167571.pdf'),
+(237, '1.png', '1-1733215174334.png', './public/Uploade', 'Uploade/1-1733215174334.png'),
+(238, 'hardware presentation.pdf', 'hardware presentation-1733215174335.pdf', './public/Uploade', 'Uploade/hardware presentation-1733215174335.pdf'),
+(239, '1.png', '1-1733215179523.png', './public/Uploade', 'Uploade/1-1733215179523.png'),
+(240, 'hardware presentation.pdf', 'hardware presentation-1733215179523.pdf', './public/Uploade', 'Uploade/hardware presentation-1733215179523.pdf'),
+(241, '1.png', '1-1733215183809.png', './public/Uploade', 'Uploade/1-1733215183809.png'),
+(242, 'hardware presentation.pdf', 'hardware presentation-1733215183809.pdf', './public/Uploade', 'Uploade/hardware presentation-1733215183809.pdf');
 
 -- --------------------------------------------------------
 
@@ -381,13 +389,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`User_id`, `First_name`, `Last_name`, `Email`, `Age`, `Password`, `Type_oftheuser`, `image_id`, `Bio`, `cv_id`) VALUES
 (76, 'Ahmad', 'Hawwari', 'ahaw@gmail.com', 22, '$2b$10$tcQq1I1cWR.SIbgzWHTJSugIIjQXASttRE/rlr7POq0AADM/ub.Ey', 'Admin', 56, NULL, 0),
-(80, 'v', 'v', 'v@gmail.com', 89, '$2b$10$mClfY/ieqKUcfgtdxEEE7elxNxxABlQSYGyztGeW3v7pHCrtvXqQS', 'Care recipient', 60, NULL, 0),
-(81, 'n', 'n', 'n@gmail.com', 56, '$2b$10$ymrOe0fFhgwEG76Gv6d5seTd0.KQQ0PQ7Gyf3SuYuAeSyxcTmwmR.', 'Care recipient', 61, NULL, 0),
-(82, 'o', 'ol', 'o@gmail.com', 56, '$2b$10$8/UBq/IhAXNhVbYsG2mouuGVS8MpaiovpgK0jxkh5LShgKi4Lu.hW', 'Care recipient', 62, NULL, 0),
-(83, 'bg', 'bg', 'bg@gmail.com', 55, '$2b$10$1CF1dKlL0JxOB6G4lqvedebia/ICotjtyrQ1C8JpKM2a9GaQZC.9u', 'Care recipient', 178, 'I am bg !!!!!', 0),
-(84, 'ahmad', 'hawwari', 'ahmadhawwari1092@gmail.com', 22, '$2b$10$WqzfGZKWrhJW8tu72oDhYOuov3hAHII.GmE2XiJ9eZbvSFiHnAxmK', 'Care giver', 64, 'I am a care Giver !', 0),
-(85, 's', 's', 's@gmail.com', 55, '$2b$10$HanD0Zn3crVwctR06jHKqOuuw.0MSnQWxHXArvwGxSEekqkLKHM5m', 'Care recipient', 65, NULL, 0),
-(88, 'ahmad', 'haw', 'jh5@gmail.com', 30, '$2b$10$1Ce0vIaOGSG3Cx2lGoib1.zWHqnn79IE46Iq9o9ymgqv4No1mhdxS', 'Caregiver', 213, NULL, 214);
+(83, 'bg', 'bg', 'bg@gmail.com', 55, '$2b$10$LIHM8PR57GTh3V./3jo5fuNDwaTIZXF90vLv2jLVdisyLqACLigMC', 'Care recipient', 178, 'I am bg !!!!!', 0),
+(84, 'ahmad', 'hawwari', 'ahmadhawwari1092@gmail.com', 22, '$2b$10$WqzfGZKWrhJW8tu72oDhYOuov3hAHII.GmE2XiJ9eZbvSFiHnAxmK', 'Care giver', 64, 'I am a care Giver !', 0);
 
 --
 -- Indexes for dumped tables
@@ -453,7 +456,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `caregiverrequesttoadmin`
 --
 ALTER TABLE `caregiverrequesttoadmin`
-  MODIFY `Request_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `Request_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `carerecipientlist`
@@ -465,7 +468,7 @@ ALTER TABLE `carerecipientlist`
 -- AUTO_INCREMENT for table `filemannager`
 --
 ALTER TABLE `filemannager`
-  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=229;
+  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=243;
 
 --
 -- AUTO_INCREMENT for table `mymedicalreports`
@@ -483,7 +486,7 @@ ALTER TABLE `schedule`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `User_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
+  MODIFY `User_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- قيود الجداول المُلقاة.
