@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 03 ديسمبر 2024 الساعة 15:40
+-- Generation Time: 07 ديسمبر 2024 الساعة 13:04
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -332,7 +332,9 @@ CREATE TABLE `mymedicalreports` (
 
 INSERT INTO `mymedicalreports` (`report_id`, `user_id`, `filemannager_id`, `Date`, `Heartrate`, `FastingBloodSugar`, `Haemoglobin`, `whitebloodcells`, `Bloodpressure`, `HDL`, `LDL`) VALUES
 (64, 83, 201, '21/12/2024', '75', '90', '13.5', '5200', '120/80', '55', '100'),
-(65, 83, 202, '21/12/2024', '75', '90', '13.5', '5200', '120/80', '55', '100');
+(65, 83, 202, '21/12/2024', '75', '90', '13.5', '5200', '120/80', '55', '100'),
+(66, 83, 204, '21/10/2025', '75', '90', '13.5', '5200', '120/80', '55', '100'),
+(67, 83, 204, '21/11/2024', '75', '90', '13.5', '5200', '120/80', '55', '100');
 
 -- --------------------------------------------------------
 
@@ -343,7 +345,7 @@ INSERT INTO `mymedicalreports` (`report_id`, `user_id`, `filemannager_id`, `Date
 CREATE TABLE `schedule` (
   `id` int(10) NOT NULL,
   `Name` varchar(255) NOT NULL,
-  `Date` varchar(255) NOT NULL,
+  `Date` date DEFAULT NULL,
   `Time` varchar(255) NOT NULL,
   `scedual_id` int(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -353,16 +355,16 @@ CREATE TABLE `schedule` (
 --
 
 INSERT INTO `schedule` (`id`, `Name`, `Date`, `Time`, `scedual_id`) VALUES
-(84, 'b ', '22/12/2024', '12:00', 1),
-(84, 'S S', '22/12/2024', '11:00', 2),
-(84, 'ol o', '21/12/2024', '13:00 ', 3),
-(84, 'n n', '21/12/2024', '12:00', 4),
-(84, 'b b', '21/11/2024', '11:00', 7),
-(84, 'n n', '2024-12-01', '10:00', 11),
-(84, 'm m', '20/12/2024', '10:30', 12),
-(84, 'n n', '21/1/2025', '11:30', 13),
-(84, 'n n', '22/1/2025', '11:00', 14),
-(84, 'm m', '21/1/2025', '10:00', 15);
+(84, 'n n', '2024-12-01', '12:00', 4),
+(84, 'b b', '2024-12-01', '11:00', 7),
+(84, 'n 1', '2024-12-12', '11:30', 13),
+(84, 'n n', '2024-12-01', '11:00', 14),
+(84, 'm m', '2024-12-01', '10:00', 15),
+(84, 'bg', '2024-12-01', '10:30', 48),
+(84, 'bg', '2024-12-01', '10:00', 49),
+(84, 'ahmad', '2024-12-01', '15:30', 50),
+(84, 'ha', '2024-12-12', '14:00', 51),
+(84, 'n 2', '2024-12-12', '15:00', 53);
 
 -- --------------------------------------------------------
 
@@ -474,13 +476,13 @@ ALTER TABLE `filemannager`
 -- AUTO_INCREMENT for table `mymedicalreports`
 --
 ALTER TABLE `mymedicalreports`
-  MODIFY `report_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+  MODIFY `report_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- AUTO_INCREMENT for table `schedule`
 --
 ALTER TABLE `schedule`
-  MODIFY `scedual_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `scedual_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
 
 --
 -- AUTO_INCREMENT for table `users`
