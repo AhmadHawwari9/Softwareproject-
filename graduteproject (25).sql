@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 09 ديسمبر 2024 الساعة 09:27
+-- Generation Time: 09 ديسمبر 2024 الساعة 15:13
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -324,6 +324,7 @@ CREATE TABLE `messages` (
 --
 
 INSERT INTO `messages` (`id`, `sender_id`, `receiver_id`, `message`, `timestamp`, `is_read`, `img_id`, `Audio_id`) VALUES
+(0, 76, 83, 'hi', '2024-12-09 14:10:21', 1, NULL, NULL),
 (54, 84, 83, 'hello', '2024-11-14 11:10:15', 1, NULL, NULL),
 (55, 84, 83, 'hello', '2024-11-14 11:10:17', 1, NULL, NULL),
 (82, 84, 83, 'كيف حالك؟', '2024-11-16 14:21:31', 1, NULL, NULL),
