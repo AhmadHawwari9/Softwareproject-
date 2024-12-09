@@ -22,9 +22,6 @@ import 'Reportsshowtocaregiver.dart';
 import 'Searchpage.dart';
 import 'Settingspage.dart';
 import 'UserProfilePage.dart';
-import 'Card1.dart';
-import 'card2.dart';
-import 'card3.dart';
 
 class CareRecipientHomepage extends StatefulWidget {
   final String savedEmail;
@@ -266,6 +263,7 @@ class _HomepageState extends State<CareRecipientHomepage> {
       );
     }
   }
+
 
 
   Future<void> fetchHomepageData() async {

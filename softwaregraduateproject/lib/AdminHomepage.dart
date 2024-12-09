@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:softwaregraduateproject/Addarticalfortheadmin.dart';
 import 'package:softwaregraduateproject/settingspagefortheadmin.dart';
 import 'AdminHomepage.dart';
 import 'CareGiverHomepage.dart';
@@ -26,9 +27,10 @@ import 'Reportsshowtocaregiver.dart';
 import 'Searchpage.dart';
 import 'Settingspage.dart';
 import 'UserProfilePage.dart';
-import 'Card1.dart';
-import 'card2.dart';
-import 'card3.dart';
+
+
+
+bool mayarticaldeleted=false;
 
 class AdminHomepage extends StatefulWidget {
   final String savedEmail;
@@ -60,11 +62,15 @@ class _HomepageState extends State<AdminHomepage> {
   bool movingForward = true;
   final ScrollController _scrollController = ScrollController();
 
+
   List<dynamic> scheduleData = []; // Holds the data from the database
   bool isLoading = false;
 
   List<Map<String, dynamic>> careRecipients = [];
   List<dynamic> users = [];
+  Timer? timer;
+
+
   @override
   void initState() {
     super.initState();
@@ -77,6 +83,7 @@ class _HomepageState extends State<AdminHomepage> {
       await _fetchConversations();  // Fetch conversations if needed
       await getAccessToken();  // Get access token
       await fetchUsers();  // Fetch users after getting the access token
+      fetchArticles();
       await getToken();  // Get token if needed
       await fetchCaregiversData();
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -85,18 +92,70 @@ class _HomepageState extends State<AdminHomepage> {
           print(message.notification!.body);
         }
       });
+      startScrolling();
     } catch (e) {
       print('Error during initialization: $e');
     }
   }
 
 
+  int articleCount = 0;  // To store the count of articles
+  List<Map<String, dynamic>> articles = [];  // To store the list of articles
+
   @override
   void dispose() {
     _scrollController.dispose();
+    timer?.cancel();
     super.dispose();
   }
 
+  Future<void> fetchArticles() async {
+    final response = await http.get(Uri.parse('http://10.0.2.2:3001/articles'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);  // Decode the response body
+
+      setState(() {
+        articleCount = data['count'];  // Set the count
+        // Cast the 'articles' key to a List<Map<String, dynamic>>
+        articles = List<Map<String, dynamic>>.from(data['articles']);
+      });
+    } else {
+      throw Exception('Failed to load articles');
+    }
+  }
+
+
+  void startScrolling() {
+    timer = Timer.periodic(Duration(seconds: 2), (timer) {
+      // Check if the widget is still mounted before calling setState
+      if (!mounted) {
+        timer.cancel(); // Cancel the timer if the widget is disposed
+        return;
+      }
+
+      setState(() {
+        if (movingForward) {
+          currentCardIndex = (currentCardIndex + 1) % articleCount;
+        } else {
+          currentCardIndex = (currentCardIndex - 1 + articleCount) % articleCount;
+        }
+      });
+
+      _scrollController.animateTo(
+        currentCardIndex * 280.0,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+
+      // Ensure scrolling goes to the last card
+      if (currentCardIndex == articleCount - 1) {
+        movingForward = false;  // Start moving backward after reaching the last card
+      } else if (currentCardIndex == 0) {
+        movingForward = true;  // Start moving forward after reaching the first card
+      }
+    });
+  }
 
 
   Future<void> fetchSchedule() async {
@@ -779,6 +838,16 @@ class _HomepageState extends State<AdminHomepage> {
               },
             ),
             ListTile(
+              leading: Icon(Icons.settings),
+              title: Text("New Artical"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AddArticlePage()),
+                );
+              },
+            ),
+            ListTile(
               leading: Icon(Icons.local_hospital),
               title: Text('My Doctor'),
               onTap: () {},
@@ -811,6 +880,44 @@ class _HomepageState extends State<AdminHomepage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.all(5),
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: List.generate(articles.length, (index) {
+                    var article = articles[index];
+
+                    // Ensure 'image_path' is a String, provide a default empty string if null
+                    String relativeImagePath = article['image_path'] ?? ''; // If null, use an empty string
+
+                    // If the 'image_path' is not empty, construct the photo URL
+                    String photoUrl = '';
+                    if (relativeImagePath.isNotEmpty) {
+                      photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+                    }
+
+                    if(mayarticaldeleted){
+                      fetchArticles();
+                    }
+
+                    return buildCard(
+                      index,
+                      article['title'], // Dynamic title
+                      photoUrl.isNotEmpty ? photoUrl : 'http://example.com/default-image.jpg', // Dynamic image URL or fallback image
+                      CardPage(article), // Dynamic page for each article
+                    );
+                  }),
+                ),
+              ),
+            ),
+
+
+
+
+
+
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
@@ -871,26 +978,22 @@ class _HomepageState extends State<AdminHomepage> {
                           DataCell(
                             Container(
                               width: 80,  // Reduced width for the cell
-                              child: Flexible(
-                                child: Text(
-                                  user['Email'],
-                                  style: TextStyle(fontSize: 12),
-                                  overflow: TextOverflow.visible,
-                                  softWrap: true,  // Allow text to wrap to the next line
-                                ),
+                              child: Text(
+                                user['Email'],
+                                style: TextStyle(fontSize: 12),
+                                overflow: TextOverflow.visible,
+                                softWrap: true,  // Allow text to wrap to the next line
                               ),
                             ),
                           ),
                           DataCell(
                             Container(
                               width: 80,  // Reduced width for the cell
-                              child: Flexible(
-                                child: Text(
-                                  user['Type_oftheuser'],
-                                  style: TextStyle(fontSize: 12),
-                                  overflow: TextOverflow.visible,
-                                  softWrap: true,  // Allow text to wrap to the next line
-                                ),
+                              child: Text(
+                                user['Type_oftheuser'],
+                                style: TextStyle(fontSize: 12),
+                                overflow: TextOverflow.visible,
+                                softWrap: true,  // Allow text to wrap to the next line
                               ),
                             ),
                           ),
@@ -915,8 +1018,6 @@ class _HomepageState extends State<AdminHomepage> {
                 ),
               ),
             ),
-
-
 
 
 
@@ -979,7 +1080,8 @@ class _HomepageState extends State<AdminHomepage> {
                       String fileName = filePath.replaceFirst('Uploade/', ''); // Remove 'Upload/' prefix
                       return DataRow(cells: [
                         DataCell(
-                          Expanded(
+                          Container(
+                            constraints: BoxConstraints(maxWidth: 120), // Add constraints to control width
                             child: Text(
                               caregiver['Email'],
                               style: TextStyle(fontSize: 10),
@@ -989,45 +1091,43 @@ class _HomepageState extends State<AdminHomepage> {
                           ),
                         ),
                         DataCell(
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () async {
-                                // Download and open PDF
-                                String pdfPath = await downloadPdf(filePath);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PdfViewerPage(pdfPath: pdfPath),
+                          GestureDetector(
+                            onTap: () async {
+                              // Download and open PDF
+                              String pdfPath = await downloadPdf(filePath);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PdfViewerPage(pdfPath: pdfPath),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),  // Reduced padding for smaller button
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.picture_as_pdf,
+                                    color: Colors.red,
+                                    size: 20,  // Smaller icon size
                                   ),
-                                );
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),  // Reduced padding for smaller button
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.picture_as_pdf,
-                                      color: Colors.red,
-                                      size: 20,  // Smaller icon size
+                                  SizedBox(width: 4),  // Reduced space between icon and text
+                                  // Allow the text (PDF name) to wrap inside the button
+                                  Container(
+                                    constraints: BoxConstraints(maxWidth: 60),  // Set a smaller max width for the container
+                                    child: Text(
+                                      fileName,  // Display the file name without the 'Upload/' prefix
+                                      style: TextStyle(color: Colors.black, fontSize: 10),  // Reduced font size for smaller text
+                                      softWrap: true,  // Allow text to wrap to a new line
+                                      overflow: TextOverflow.visible, // Allow text to go to new line
                                     ),
-                                    SizedBox(width: 4),  // Reduced space between icon and text
-                                    // Allow the text (PDF name) to wrap inside the button
-                                    Container(
-                                      constraints: BoxConstraints(maxWidth: 60),  // Set a smaller max width for the container
-                                      child: Text(
-                                        fileName,  // Display the file name without the 'Upload/' prefix
-                                        style: TextStyle(color: Colors.black, fontSize: 10),  // Reduced font size for smaller text
-                                        softWrap: true,  // Allow text to wrap to a new line
-                                        overflow: TextOverflow.visible, // Allow text to go to new line
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -1057,6 +1157,8 @@ class _HomepageState extends State<AdminHomepage> {
                 ),
               ),
             )
+
+
 
 
 
@@ -1123,8 +1225,8 @@ class _HomepageState extends State<AdminHomepage> {
           child: Stack(
             children: [
               Positioned.fill(
-                child: Image.asset(
-                  assetPath,
+                child: Image.network(
+                  assetPath, // Dynamic image source
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,
@@ -1223,3 +1325,130 @@ class PdfViewerPage extends StatelessWidget {
   }
 }
 
+
+class CardPage extends StatelessWidget {
+  final dynamic article;
+
+  CardPage(this.article);
+
+  // Function to delete the article (This will need to call an API)
+  Future<void> deleteArticleFromApi(String articleId) async {
+    final response = await http.delete(
+      Uri.parse('http://10.0.2.2:3001/articles/$articleId'),
+    );
+
+    if (response.statusCode == 200) {
+      print('Article deleted successfully');
+      mayarticaldeleted=true;
+
+    } else {
+      print('Failed to delete article');
+    }
+  }
+
+  Future<void> deleteArticle(BuildContext context) async {
+    // Display confirmation dialog before deleting
+    bool? confirmDelete = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Deletion'),
+          content: Text('Are you sure you want to delete this article?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(false);  // Close dialog and return false
+              },
+            ),
+            TextButton(
+              child: Text('Delete'),
+              onPressed: () {
+                Navigator.of(context).pop(true);  // Close dialog and return true
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    // If confirmed, proceed to delete (here you would call your API)
+    if (confirmDelete == true) {
+      // Ensure the id is a string
+      String articleId = article['id'].toString();  // Convert to string
+
+      // Call the API to delete the article
+      await deleteArticleFromApi(articleId);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Article deleted successfully'),
+      ));
+    }
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    // Extract the relative image path from the article data
+    String relativeImagePath = article['image_path'];
+
+    // Construct the full image URL using the relative image path
+    String photoUrl = '';
+    if (relativeImagePath.isNotEmpty) {
+      photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(article['title']),
+        backgroundColor: Colors.indigoAccent,
+        actions: [
+          // Enhanced delete button with tooltip
+          Tooltip(
+            message: 'Delete Article',
+            child: IconButton(
+              icon: Icon(
+                Icons.delete_forever, // A more visually striking delete icon
+                color: Colors.redAccent,
+                size: 45, // Slightly larger size for better visibility
+              ),
+              onPressed: () => deleteArticle(context),
+            ),
+          ),
+        ],
+      ),
+
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Display the image dynamically using the constructed photo URL
+            Center(
+              child: Image.network(
+                photoUrl.isNotEmpty ? photoUrl : 'http://example.com/default-image.jpg', // Use constructed URL or fallback image
+                height: 250,
+                fit: BoxFit.cover,
+              ),
+            ),
+            SizedBox(height: 20),
+            // Title for the article
+            Text(
+              article['title'],
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 10),
+
+            // Article content dynamically
+            Text(
+              article['content'],  // Dynamic content
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

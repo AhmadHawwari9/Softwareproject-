@@ -22,9 +22,7 @@ import 'Reportsshowtocaregiver.dart';
 import 'Searchpage.dart';
 import 'Settingspage.dart';
 import 'UserProfilePage.dart';
-import 'Card1.dart';
-import 'card2.dart';
-import 'card3.dart';
+
 import 'package:table_calendar/table_calendar.dart';
 
 
@@ -56,7 +54,7 @@ class _HomepageState extends State<CareGiverHomepage> {
   // Carousel card variables
   int currentCardIndex = 0;
   bool movingForward = true;
-  late Timer timer;
+   Timer? timer;
   final ScrollController _scrollController = ScrollController();
 
   List<dynamic> scheduleData = []; // Holds the data from the database
@@ -65,11 +63,13 @@ class _HomepageState extends State<CareGiverHomepage> {
   List<Map<String, dynamic>> careRecipients = [
   ];
 
+
   @override
   void initState() {
     super.initState();
     _loadCredentials();
     _fetchConversations();
+    fetchArticles();
     fetchCareRecipients();
     fetchSchedule();
     getAccessToken();
@@ -82,13 +82,48 @@ class _HomepageState extends State<CareGiverHomepage> {
       }
     });
 
-    // Start the timer for card carousel
+    startScrolling();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    timer?.cancel();
+    super.dispose();
+  }
+
+  int articleCount = 0;  // To store the count of articles
+  List<Map<String, dynamic>> articles = [];  // To store the list of articles
+
+  Future<void> fetchArticles() async {
+    final response = await http.get(Uri.parse('http://10.0.2.2:3001/articles'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);  // Decode the response body
+
+      setState(() {
+        articleCount = data['count'];  // Set the count
+        // Cast the 'articles' key to a List<Map<String, dynamic>>
+        articles = List<Map<String, dynamic>>.from(data['articles']);
+      });
+    } else {
+      throw Exception('Failed to load articles');
+    }
+  }
+
+  void startScrolling() {
     timer = Timer.periodic(Duration(seconds: 2), (timer) {
+      // Check if the widget is still mounted before calling setState
+      if (!mounted) {
+        timer.cancel(); // Cancel the timer if the widget is disposed
+        return;
+      }
+
       setState(() {
         if (movingForward) {
-          currentCardIndex = (currentCardIndex + 1) % 3;
+          currentCardIndex = (currentCardIndex + 1) % articleCount;
         } else {
-          currentCardIndex = (currentCardIndex - 1 + 3) % 3;
+          currentCardIndex = (currentCardIndex - 1 + articleCount) % articleCount;
         }
       });
 
@@ -98,20 +133,14 @@ class _HomepageState extends State<CareGiverHomepage> {
         curve: Curves.easeInOut,
       );
 
-      if (currentCardIndex == 2) movingForward = false;
-      else if (currentCardIndex == 0) movingForward = true;
+      // Ensure scrolling goes to the last card
+      if (currentCardIndex == articleCount - 1) {
+        movingForward = false;  // Start moving backward after reaching the last card
+      } else if (currentCardIndex == 0) {
+        movingForward = true;  // Start moving forward after reaching the first card
+      }
     });
   }
-
-  @override
-  void dispose() {
-    timer.cancel();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-
-
   Future<void> fetchSchedule() async {
     final url = Uri.parse('http://10.0.2.2:3001/ScheduleforCaregiver'); // Your API URL to get all schedule data
     try {
@@ -137,6 +166,7 @@ class _HomepageState extends State<CareGiverHomepage> {
       print('Error: $e');
     }
   }
+
 
 
   Future<void> _fetchConversations() async {
@@ -986,28 +1016,43 @@ class _HomepageState extends State<CareGiverHomepage> {
         ),
       ),
 
-
-
-
       body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Card Carousel
             Padding(
               padding: const EdgeInsets.all(5),
               child: SingleChildScrollView(
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: [
-                    buildCard(0, "Keep Your Heart Healthy", "imgs/istockphoto-1266230179-612x612.jpg", Card1Page()),
-                    buildCard(1, "8 Tips for Healthy Eating", "imgs/healthy-food-restaurants-640b5d1e9e8fc.png", Card2Page()),
-                    buildCard(2, "8 Brain Health Tips", "imgs/how-the-human-brain-decides-what-to-remember.jpg", Card3Page()),
-                  ],
+                  children: List.generate(articles.length, (index) {
+                    var article = articles[index];
+
+                    // Using 'image_path' directly from the response
+                    String relativeImagePath = article['image_path'];
+
+                    // If the 'image_path' is not null or empty, construct the photo URL
+                    String photoUrl = '';
+                    if (relativeImagePath.isNotEmpty) {
+                      photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+                    }
+
+                    // Return the card with the photo URL
+                    return buildCard(
+                      index,
+                      article['title'], // Dynamic title
+                      photoUrl.isNotEmpty ? photoUrl : 'http://example.com/default-image.jpg', // Dynamic image URL or fallback image
+                      CardPage(article), // Dynamic page for each article
+                    );
+                  }),
                 ),
               ),
             ),
+
+
+
+
             SizedBox(height: 22),
             // Title Text above the table
             Text(
@@ -1018,7 +1063,6 @@ class _HomepageState extends State<CareGiverHomepage> {
                 color: Colors.blueAccent,
               ),
             ),
-
 
             SingleChildScrollView(
               scrollDirection: Axis.vertical,  // Vertical scroll for the entire body
@@ -1197,7 +1241,6 @@ class _HomepageState extends State<CareGiverHomepage> {
             ),
 
 
-
             SizedBox(height:25),
 
             // Title Text above the table
@@ -1368,8 +1411,8 @@ class _HomepageState extends State<CareGiverHomepage> {
           child: Stack(
             children: [
               Positioned.fill(
-                child: Image.asset(
-                  assetPath,
+                child: Image.network(
+                  assetPath, // Dynamic image source
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,
@@ -1447,3 +1490,59 @@ Future<void> sendMessage(String title) async {
 }
 
 
+class CardPage extends StatelessWidget {
+  final dynamic article;
+
+  CardPage(this.article);
+
+  @override
+  Widget build(BuildContext context) {
+    // Extract the relative image path from the article data
+    String relativeImagePath = article['image_path'];
+
+    // Construct the full image URL using the relative image path
+    String photoUrl = '';
+    if (relativeImagePath.isNotEmpty) {
+      photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(article['title']),
+        backgroundColor: Colors.indigoAccent,
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Display the image dynamically using the constructed photo URL
+            Center(
+              child: Image.network(
+                photoUrl.isNotEmpty ? photoUrl : 'http://example.com/default-image.jpg', // Use constructed URL or fallback image
+                height: 250,
+                fit: BoxFit.cover,
+              ),
+            ),
+            SizedBox(height: 20),
+            // Title for the article
+            Text(
+              article['title'],
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 10),
+
+            // Article content dynamically
+            Text(
+              article['content'],  // Dynamic content
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
