@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 07 ديسمبر 2024 الساعة 13:04
+-- Generation Time: 09 ديسمبر 2024 الساعة 09:27
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,29 @@ SET time_zone = "+00:00";
 --
 -- Database: `graduteproject`
 --
+
+-- --------------------------------------------------------
+
+--
+-- بنية الجدول `articles`
+--
+
+CREATE TABLE `articles` (
+  `id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `content` text NOT NULL,
+  `image_path` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- إرجاع أو استيراد بيانات الجدول `articles`
+--
+
+INSERT INTO `articles` (`id`, `title`, `content`, `image_path`, `created_at`) VALUES
+(1, 'Overview', 'Heart disease is the leading cause of death for both men and women in the United States. Take steps today to lower your risk of heart disease.\n\nTo help prevent heart disease, you can:\n\n• Eat a heart-healthy diet\n• Get active\n• Stay at a healthy weight\n• Quit smoking and stay away from secondhand smoke\n• Control your cholesterol, blood glucose (sugar), and blood pressure\n• Drink alcohol only in moderation\n• Manage stress\n• Get enough sleep\n\nAm I at risk for heart disease?\n\nAnyone can get heart disease, but you’re at higher risk if you:\n\n• Have high cholesterol, high blood pressure, or diabetes\n• Smoke\n• Have overweight or obesity\n• Don\'t get enough physical activity\n• Don\'t eat a healthy diet\n• Had a condition called preeclampsia during pregnancy\n\nYour age and family history also affect your risk for heart disease. Your risk is higher if:\n\n• You’re a woman over age 55\n• You’re a man over age 45\n• Your father or brother had heart disease before age 55\n• Your mother or sister had heart disease before age 65\n\nBut the good news is there\'s a lot you can do to prevent heart disease.\n\nWhat Is Heart Disease?\n\nWhen people talk about heart disease, they’re usually talking about coronary heart disease (CHD). It’s also sometimes called coronary artery disease (CAD). This is the most common type of heart disease.\n\nWhen someone has CHD, the coronary arteries (tubes) that take blood to the heart are narrow or blocked, which makes it hard for oxygen-rich blood to get to the heart. This happens when cholesterol and fatty material, called plaque, build up inside the arteries.\n\nSeveral things can lead to plaque building up inside your arteries, including:\n\n• Too much cholesterol in the blood\n• High blood pressure\n• Smoking\n• Too much sugar in the blood because of diabetes\n\nWhen plaque blocks an artery, it’s hard for blood to flow to the heart. A blocked artery can cause chest pain or a heart attack. Learn more about CHD.', 'Uploade/istockphoto-1266230179-612x612-new.jpg', '2024-12-08 07:05:10'),
+(2, '8 Tips for Healthy Eating', 'These 8 practical tips cover the basics of healthy eating and can help you make healthier choices.\n\n1. Base your meals on higher fibre starchy carbohydrates\nStarchy carbohydrates should make up just over a third of the food you eat. They include potatoes, bread, rice, pasta, and cereals. Choose higher fibre or wholegrain varieties for extra health benefits.\n\n2. Eat lots of fruit and veg\nEat at least 5 portions of a variety of fruit and veg every day. Fresh, frozen, canned, dried, or juiced all count towards your daily intake.\n\n3. Eat more fish, including a portion of oily fish\nFish is a good source of protein and contains many vitamins and minerals. Aim for at least 2 portions of fish a week, including at least 1 portion of oily fish.\n\n4. Cut down on saturated fat and sugar\nLimit your intake of saturated fat to prevent health issues. Regularly consuming sugary foods increases the risk of obesity and tooth decay.\n\n5. Eat less salt: no more than 6g a day for adults\nConsuming too much salt can raise blood pressure. Try reducing your salt intake to reduce the risk of heart disease or stroke.\n\n6. Get active and be a healthy weight\nRegular exercise helps reduce the risk of serious health conditions. Being active is key for your overall health and wellbeing.\n\n7. Do not get thirsty\nStay hydrated by drinking 6 to 8 glasses of water a day. This helps keep your body functioning at its best.\n\n8. Do not skip breakfast\nA healthy breakfast is important to start your day right. It provides the energy and nutrients needed for good health.\n\nFollow these tips and make healthier choices every day!', 'Uploade/healthy-food-restaurants-640b5d1e9e8fc.png', '2024-12-08 07:06:17'),
+(3, 'Brain Health Tips', 'The brain controls thought, movement, and emotion. Use the following brain health tips to help protect it.\n\nAt 3 pounds, the brain isn’t very large, but it is a powerhouse. Those 3 pounds hold your personality and all your memories. The brain coordinates your thoughts, emotions, and movements.\n\nBillions of nerve cells in your brain make it all possible. Called neurons, these brain cells send information to the rest of your body. If they aren’t working properly, your muscles may not move smoothly, and you might lose feeling in parts of your body. Your thinking could slow.\n\nThe brain doesn’t replace neurons that are damaged or destroyed. So it’s important to take care of them. Head injuries, drug use, and health conditions like Alzheimer’s and Parkinson’s disease can cause brain cell damage or loss.\n\nDeveloping brain health habits is a key way to keep your brain healthy. That includes following safety measures and keeping your brain active and engaged. Try these brain health tips:\n\n1. Work up a sweat\nPeople who are physically active are more likely to keep their minds sharp. Regular physical activity also helps improve balance, flexibility, strength, energy, and mood. Research suggests that exercise may lower the risk of developing Alzheimer’s disease.\n\n2. Protect your head\nA brain injury can have a significant long-term impact on a person’s life. To protect your brain, always wear a helmet when doing an activity where there’s a risk of head injuries.\n\n3. Take care of your health\nSome medical conditions like diabetes, heart disease, and high blood pressure can increase the risk of brain problems. Follow your healthcare professional’s directions to manage them.\n\n4. Meet up with friends\nSocial interaction helps ward off depression and stress, which can worsen memory loss. Social isolation has been linked to a higher risk of cognitive decline.\n\n5. Get a good night’s rest\nSleep is essential for brain function and memory. Aim for 7 to 9 hours of sleep each night to improve cognitive function and prevent mental decline.\n\n6. Make a salad\nEating a healthy diet, such as the MIND diet, can help improve mental focus and slow cognitive decline. This diet includes leafy greens, berries, nuts, and fish, while limiting butter and sweets.\n\n7. Challenge your brain\nJust like physical exercise, mental activities such as crossword puzzles, reading, or learning an instrument help keep your brain sharp.\n\n8. Be careful with medicines and limit alcohol\nSubstances like alcohol and drugs can interfere with brain function. Limit alcohol intake to up to one drink a day for women and two for men, and always follow medicine directions carefully.\n\n', 'Uploade/how-the-human-brain-decides-what-to-remember.jpg', '2024-12-08 07:08:22');
 
 -- --------------------------------------------------------
 
@@ -260,7 +283,24 @@ INSERT INTO `filemannager` (`file_id`, `old_name`, `new_name`, `folder`, `path`)
 (239, '1.png', '1-1733215179523.png', './public/Uploade', 'Uploade/1-1733215179523.png'),
 (240, 'hardware presentation.pdf', 'hardware presentation-1733215179523.pdf', './public/Uploade', 'Uploade/hardware presentation-1733215179523.pdf'),
 (241, '1.png', '1-1733215183809.png', './public/Uploade', 'Uploade/1-1733215183809.png'),
-(242, 'hardware presentation.pdf', 'hardware presentation-1733215183809.pdf', './public/Uploade', 'Uploade/hardware presentation-1733215183809.pdf');
+(242, 'hardware presentation.pdf', 'hardware presentation-1733215183809.pdf', './public/Uploade', 'Uploade/hardware presentation-1733215183809.pdf'),
+(243, 'healthy-food-restaurants-640b5d1e9e8fc.png', 'healthy-food-restaurants-640b5d1e9e8fc-new.png', './public/Uploade', 'Uploade\\healthy-food-restaurants-640b5d1e9e8fc-new.png1730720054577.jpg'),
+(244, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-new.jpg', './public/Uploade', 'Uploade\\istockphoto-1266230179-612x612-new.jpg'),
+(247, 'how-the-human-brain-decides-what-to-remember.jpg', 'how-the-human-brain-decides-what-to-remember-new.jpg', './public/Uploade', 'Uploade\\how-the-human-brain-decides-what-to-remember-new.jpg'),
+(248, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-1733666925344.jpg', './public/Uploade', 'Uploade/istockphoto-1266230179-612x612-1733666925344.jpg'),
+(249, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-1733666976612.jpg', './public/Uploade', 'Uploade/istockphoto-1266230179-612x612-1733666976612.jpg'),
+(250, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-1733667928591.jpg', './public/Uploade', 'Uploade/istockphoto-1266230179-612x612-1733667928591.jpg'),
+(251, 'avatar-3637425_1280.png', 'avatar-3637425_1280-1733668951769.png', './public/Uploade', 'Uploade/avatar-3637425_1280-1733668951769.png'),
+(252, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-1733669167635.jpg', './public/Uploade', 'Uploade/istockphoto-1266230179-612x612-1733669167635.jpg'),
+(253, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-1733669251463.jpg', './public/Uploade', 'Uploade/istockphoto-1266230179-612x612-1733669251463.jpg'),
+(254, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-1733669270515.jpg', './public/Uploade', 'Uploade/istockphoto-1266230179-612x612-1733669270515.jpg'),
+(255, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-1733669422426.jpg', './public/Uploade', 'Uploade/istockphoto-1266230179-612x612-1733669422426.jpg'),
+(256, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-1733669488855.jpg', './public/Uploade', 'Uploade/istockphoto-1266230179-612x612-1733669488855.jpg'),
+(257, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-1733669581099.jpg', './public/Uploade', 'Uploade/istockphoto-1266230179-612x612-1733669581099.jpg'),
+(258, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-1733669743916.jpg', './public/Uploade', 'Uploade/istockphoto-1266230179-612x612-1733669743916.jpg'),
+(259, 'avatar-3637425_1280.png', 'avatar-3637425_1280-1733670034315.png', './public/Uploade', 'Uploade/avatar-3637425_1280-1733670034315.png'),
+(260, 'avatar-3637425_1280.png', 'avatar-3637425_1280-1733670084670.png', './public/Uploade', 'Uploade/avatar-3637425_1280-1733670084670.png'),
+(261, 'avatar-3637425_1280.png', 'avatar-3637425_1280-1733732726938.png', './public/Uploade', 'Uploade/avatar-3637425_1280-1733732726938.png');
 
 -- --------------------------------------------------------
 
@@ -399,6 +439,12 @@ INSERT INTO `users` (`User_id`, `First_name`, `Last_name`, `Email`, `Age`, `Pass
 --
 
 --
+-- Indexes for table `articles`
+--
+ALTER TABLE `articles`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `caregiverrequesttoadmin`
 --
 ALTER TABLE `caregiverrequesttoadmin`
@@ -455,6 +501,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `articles`
+--
+ALTER TABLE `articles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+
+--
 -- AUTO_INCREMENT for table `caregiverrequesttoadmin`
 --
 ALTER TABLE `caregiverrequesttoadmin`
@@ -470,7 +522,7 @@ ALTER TABLE `carerecipientlist`
 -- AUTO_INCREMENT for table `filemannager`
 --
 ALTER TABLE `filemannager`
-  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=243;
+  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=262;
 
 --
 -- AUTO_INCREMENT for table `mymedicalreports`
