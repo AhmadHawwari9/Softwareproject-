@@ -759,6 +759,21 @@ class _HomepageState extends State<AdminHomepage> {
             );
           },
         ),
+
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.notifications,
+              color: Colors.white, // White color for the icon
+              size: 30.0, // Increase the size of the icon
+            ),
+            onPressed: () {
+              // Handle notification button press
+              print('Notifications pressed');
+            },
+          ),
+        ],
+
       ),
       drawer: Drawer(
         child: ListView(
@@ -1315,6 +1330,7 @@ class PdfViewerPage extends StatelessWidget {
       appBar: AppBar(
         title: Text('PDF Viewer'),
         backgroundColor: Colors.blueAccent, // Keep consistent theme
+
       ),
       body: Center(
         child: PDFView(

@@ -25,6 +25,7 @@ class _SearchPageState extends State<SearchPage> {
   List<Map<String, dynamic>> _users = [];
   List<Map<String, dynamic>> _filteredUsers = [];
   int _selectedIndex = 0;
+  String _selectedType = "All";
 
   @override
   void initState() {
@@ -36,7 +37,15 @@ class _SearchPageState extends State<SearchPage> {
     const String url = 'http://10.0.2.2:3001/getUsersforsearch';
 
     try {
-      final response = await http.get(Uri.parse(url));
+      final String token = widget.savedToken;
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
@@ -52,7 +61,7 @@ class _SearchPageState extends State<SearchPage> {
                 'type': user['Type_oftheuser'] ?? 'Unknown',
                 'bio': user['Bio'] ?? '',
                 'photoUrl': user['image_path'] ?? '',
-                'id': user['User_id'].toString(), // Convert User_id to a string
+                'id': user['User_id'].toString(),
               };
             }).toList();
 
@@ -71,11 +80,26 @@ class _SearchPageState extends State<SearchPage> {
 
   void _onSearchChanged() {
     setState(() {
-      _filteredUsers = _users
-          .where((user) =>
-          user['name'].toLowerCase().contains(_searchController.text.toLowerCase()))
-          .toList();
+      _applyFilters();
     });
+  }
+
+  void _onFilterChanged(String selectedType) {
+    setState(() {
+      _selectedType = selectedType;
+      _applyFilters();
+    });
+  }
+
+  void _applyFilters() {
+    _filteredUsers = _users.where((user) {
+      final matchesSearch = user['name']
+          .toLowerCase()
+          .contains(_searchController.text.toLowerCase());
+      final matchesType = _selectedType == "All" || user['type'] == _selectedType;
+
+      return matchesSearch && matchesType;
+    }).toList();
   }
 
   Future<void> _onItemTapped(int index) async {
@@ -187,6 +211,17 @@ class _SearchPageState extends State<SearchPage> {
               onChanged: (value) => _onSearchChanged(),
               style: TextStyle(color: Colors.black87),
             ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: ["All", "Care recipient", "Care giver", "Admin"]
+                  .map((type) => ChoiceChip(
+                label: Text(type),
+                selected: _selectedType == type,
+                onSelected: (isSelected) => _onFilterChanged(type),
+              ))
+                  .toList(),
+            ),
             SizedBox(height: 20),
             Expanded(
               child: _filteredUsers.isNotEmpty
@@ -197,12 +232,15 @@ class _SearchPageState extends State<SearchPage> {
                     onTap: () {
                       final selectedUserId = _filteredUsers[index]['id'];
 
-                      if (selectedUserId != null && selectedUserId is String && selectedUserId.isNotEmpty) {
+                      if (selectedUserId != null &&
+                          selectedUserId is String &&
+                          selectedUserId.isNotEmpty) {
                         print('Tapped on user with ID: $selectedUserId');
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => UserDetailsPage(id: selectedUserId),
+                            builder: (context) =>
+                                UserDetailsPage(id: selectedUserId,savedToken:widget.savedToken),
                           ),
                         );
                       } else {
@@ -210,35 +248,37 @@ class _SearchPageState extends State<SearchPage> {
                         _showErrorDialog('Invalid user data. Please try again.');
                       }
                     },
-
                     child: Card(
-                      margin: EdgeInsets.symmetric(vertical: 10),  // Reduced margin for smaller cards
+                      margin: EdgeInsets.symmetric(vertical: 10),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10), // Reduced corner radius
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      elevation: 5, // Reduced elevation for smaller cards
+                      elevation: 5,
                       child: ListTile(
-                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10), // Reduced padding
+                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                         leading: CircleAvatar(
-                          backgroundImage: _filteredUsers[index]['photoUrl'] != null && _filteredUsers[index]['photoUrl'].isNotEmpty
-                              ? NetworkImage('http://10.0.2.2:3001/${_filteredUsers[index]['photoUrl'].startsWith('/') ? _filteredUsers[index]['photoUrl'].substring(1) : _filteredUsers[index]['photoUrl']}')
-                              : NetworkImage('https://via.placeholder.com/150'), // Fallback image
-                          child: _filteredUsers[index]['photoUrl'] == null || _filteredUsers[index]['photoUrl'].isEmpty
-                              ? Icon(Icons.person, color: Colors.white) // Placeholder icon if no image
+                          backgroundImage: _filteredUsers[index]['photoUrl'] != null &&
+                              _filteredUsers[index]['photoUrl'].isNotEmpty
+                              ? NetworkImage(
+                              'http://10.0.2.2:3001/${_filteredUsers[index]['photoUrl'].startsWith('/') ? _filteredUsers[index]['photoUrl'].substring(1) : _filteredUsers[index]['photoUrl']}')
+                              : NetworkImage('https://via.placeholder.com/150'),
+                          child: _filteredUsers[index]['photoUrl'] == null ||
+                              _filteredUsers[index]['photoUrl'].isEmpty
+                              ? Icon(Icons.person, color: Colors.white)
                               : null,
                           backgroundColor: Colors.blue,
                         ),
                         title: Text(
                           _filteredUsers[index]['name'],
                           style: TextStyle(
-                            fontSize: 16, // Decreased font size for smaller text
-                            fontWeight: FontWeight.w500, // Slightly lighter weight
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                             color: Colors.blue,
                           ),
                         ),
                         subtitle: Text(
                           _filteredUsers[index]['type'],
-                          style: TextStyle(color: Colors.grey, fontSize: 14), // Reduced font size
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ),
                     ),
