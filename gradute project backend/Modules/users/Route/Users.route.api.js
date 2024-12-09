@@ -34,6 +34,8 @@ const{createCaregiverUsingPost,getCaregiver,moveCaregiverToUser,deleteCaregiverR
 const {updateEmailController,changePassword,deletemyaccount}=require('../Controller/Settings.controller');
 const {getUsersfromsearch,getUserById}=require('../Controller/search.controller');
 const{getScheduleByDate}=require('../Controller/scheduleforcaregiver.Controller');
+const articleController = require('../Controller/articals.controller');
+
 const router = express.Router();
 
 const uploade = require('../../fileMannager/helper/multerobj');
@@ -104,5 +106,9 @@ router.delete('/deleteuser',authonitication, deletemyaccount);
 //search
 router.get('/getUsersforsearch', getUsersfromsearch);
 router.get('/getUsersforsearch/:id', getUserById);
+
+router.get('/articles', articleController.getArticles);
+router.delete('/articles/:id', articleController.deleteArticle);
+router.post('/addnewArticle', uploade.single('photo'),articleController.addArticle);
 
 module.exports = router;
