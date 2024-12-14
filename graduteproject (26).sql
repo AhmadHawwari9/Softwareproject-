@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 09 ديسمبر 2024 الساعة 15:13
+-- Generation Time: 14 ديسمبر 2024 الساعة 09:45
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -86,7 +86,7 @@ CREATE TABLE `carerecipientlist` (
 --
 
 INSERT INTO `carerecipientlist` (`CareRecipientList_id`, `Care_giverid`, `carerecipient_id`) VALUES
-(1, 84, 83);
+(26, 84, 83);
 
 -- --------------------------------------------------------
 
@@ -380,6 +380,20 @@ INSERT INTO `mymedicalreports` (`report_id`, `user_id`, `filemannager_id`, `Date
 -- --------------------------------------------------------
 
 --
+-- بنية الجدول `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `Notifications_id` int(10) NOT NULL,
+  `Sender_id` int(10) NOT NULL,
+  `reciver_id` int(10) NOT NULL,
+  `typeofnotifications` varchar(255) NOT NULL,
+  `is_read` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- بنية الجدول `schedule`
 --
 
@@ -483,6 +497,14 @@ ALTER TABLE `mymedicalreports`
   ADD KEY `fileid` (`filemannager_id`);
 
 --
+-- Indexes for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`Notifications_id`),
+  ADD KEY `senderid11` (`Sender_id`),
+  ADD KEY `reciverid11` (`reciver_id`);
+
+--
 -- Indexes for table `schedule`
 --
 ALTER TABLE `schedule`
@@ -517,7 +539,7 @@ ALTER TABLE `caregiverrequesttoadmin`
 -- AUTO_INCREMENT for table `carerecipientlist`
 --
 ALTER TABLE `carerecipientlist`
-  MODIFY `CareRecipientList_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `CareRecipientList_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `filemannager`
@@ -530,6 +552,12 @@ ALTER TABLE `filemannager`
 --
 ALTER TABLE `mymedicalreports`
   MODIFY `report_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+
+--
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `Notifications_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
 
 --
 -- AUTO_INCREMENT for table `schedule`
@@ -566,6 +594,12 @@ ALTER TABLE `carerecipientlist`
 --
 ALTER TABLE `mymedicalreports`
   ADD CONSTRAINT `fileid` FOREIGN KEY (`filemannager_id`) REFERENCES `filemannager` (`file_id`);
+
+--
+-- قيود الجداول `notifications`
+--
+ALTER TABLE `notifications`
+  ADD CONSTRAINT `reciverid11` FOREIGN KEY (`reciver_id`) REFERENCES `users` (`User_id`);
 
 --
 -- قيود الجداول `schedule`

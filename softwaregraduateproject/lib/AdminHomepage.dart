@@ -22,8 +22,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart';
 import 'Myfiles.dart';
+import 'Notificationpage.dart';
 import 'PdfReader.dart';
 import 'Reportsshowtocaregiver.dart';
+import 'Searchcaregievrpage.dart';
 import 'Searchpage.dart';
 import 'Settingspage.dart';
 import 'UserProfilePage.dart';
@@ -451,7 +453,7 @@ class _HomepageState extends State<AdminHomepage> {
       case 2:
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => SearchPage(email!,password!,token!,false)),
+        MaterialPageRoute(builder: (context) => SearchPageCaregiver(email!,password!,token!,false)),
       );
         break;
       case 3:
@@ -742,6 +744,7 @@ class _HomepageState extends State<AdminHomepage> {
       throw e;
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -764,12 +767,15 @@ class _HomepageState extends State<AdminHomepage> {
           IconButton(
             icon: Icon(
               Icons.notifications,
-              color: Colors.white, // White color for the icon
-              size: 30.0, // Increase the size of the icon
+              color: Colors.white,
+              size: 30.0,
             ),
             onPressed: () {
-              // Handle notification button press
-              print('Notifications pressed');
+              // Navigate to the Notifications Page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationsPage(widget.savedToken)),
+              );
             },
           ),
         ],
@@ -861,11 +867,6 @@ class _HomepageState extends State<AdminHomepage> {
                   MaterialPageRoute(builder: (context) => AddArticlePage()),
                 );
               },
-            ),
-            ListTile(
-              leading: Icon(Icons.local_hospital),
-              title: Text('My Doctor'),
-              onTap: () {},
             ),
             ListTile(
               leading: Icon(Icons.settings),

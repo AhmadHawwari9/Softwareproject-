@@ -16,7 +16,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart';
+import 'MyDoctors.dart';
 import 'Myfiles.dart';
+import 'Notificationpage.dart';
 import 'PdfReader.dart';
 import 'Reportsshowtocaregiver.dart';
 import 'Searchpage.dart';
@@ -627,12 +629,15 @@ class _HomepageState extends State<CareRecipientHomepage> {
           IconButton(
             icon: Icon(
               Icons.notifications,
-              color: Colors.white, // White color for the icon
-              size: 30.0, // Increase the size of the icon
+              color: Colors.white,
+              size: 30.0,
             ),
             onPressed: () {
-              // Handle notification button press
-              print('Notifications pressed');
+              // Navigate to the Notifications Page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationsPage(widget.savedToken)),
+              );
             },
           ),
         ],
@@ -713,6 +718,17 @@ class _HomepageState extends State<CareRecipientHomepage> {
               title: Text("Home"),
               onTap: () async {
                 await fetchHomepageAndNavigate(context, email!, password!, token!, false);  // Passing the context to the function
+              },
+            ),
+
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text("My Care Givers"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CareGiversScreen(widget.savedToken)),
+                );
               },
             ),
 

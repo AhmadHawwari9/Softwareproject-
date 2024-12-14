@@ -17,8 +17,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart';
 import 'Myfiles.dart';
+import 'Notificationpage.dart';
 import 'PdfReader.dart';
 import 'Reportsshowtocaregiver.dart';
+import 'Searchcaregievrpage.dart';
 import 'Searchpage.dart';
 import 'Settingspage.dart';
 import 'UserProfilePage.dart';
@@ -403,7 +405,7 @@ class _HomepageState extends State<CareGiverHomepage> {
       case 2:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => SearchPage(email!,password!,token!,false)),
+          MaterialPageRoute(builder: (context) => SearchPageCaregiver(email!,password!,token!,false)),
         );
         break;
       case 3:
@@ -898,6 +900,23 @@ class _HomepageState extends State<CareGiverHomepage> {
     }).toList());
   }
 
+  Future<List> fetchNotifications() async {
+    final url = 'http://10.0.2.2:3001/notifications';
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer ${widget.savedToken} ',  // Add token to the request headers
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['notifications'];
+    } else {
+      throw Exception('Failed to load notifications');
+    }
+  }
 
 
 
@@ -922,15 +941,19 @@ class _HomepageState extends State<CareGiverHomepage> {
           IconButton(
             icon: Icon(
               Icons.notifications,
-              color: Colors.white, // White color for the icon
-              size: 30.0, // Increase the size of the icon
+              color: Colors.white,
+              size: 30.0,
             ),
             onPressed: () {
-              // Handle notification button press
-              print('Notifications pressed');
+              // Navigate to the Notifications Page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationsPage(widget.savedToken)),
+              );
             },
           ),
         ],
+
 
       ),
       drawer: Drawer(
@@ -1560,3 +1583,4 @@ class CardPage extends StatelessWidget {
     );
   }
 }
+

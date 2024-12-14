@@ -35,6 +35,9 @@ const {updateEmailController,changePassword,deletemyaccount}=require('../Control
 const {getUsersfromsearch,getUserById}=require('../Controller/search.controller');
 const{getScheduleByDate}=require('../Controller/scheduleforcaregiver.Controller');
 const articleController = require('../Controller/articals.controller');
+const {sendFollowRequest,getUserNotifications,fetchUserNotifications,deleteFollowRequest,approveFollowRequest,
+    removeFollowRequest1,fetchCareGiversForRecipient,sendUnfollowRequest,
+    deleteUnfollowRequest,getUnfollowNotifications,deleteNotification}=require('../Controller/follow.controller');
 
 const router = express.Router();
 
@@ -110,5 +113,21 @@ router.get('/getUsersforsearch/:id', getUserById);
 router.get('/articles', articleController.getArticles);
 router.delete('/articles/:id', articleController.deleteArticle);
 router.post('/addnewArticle', uploade.single('photo'),articleController.addArticle);
+
+
+//follow
+router.post('/follow', authonitication, sendFollowRequest);
+router.get('/notifications',authonitication , getUserNotifications);
+router.get('/notificationssender', authonitication, fetchUserNotifications);
+router.delete('/Deletefollowrequest/:receiverId',authonitication , deleteFollowRequest);
+router.post('/approveFollowRequest', authonitication, approveFollowRequest);
+router.delete('/deleteFollowRequest', authonitication, removeFollowRequest1);
+router.get('/caregivers', authonitication, fetchCareGiversForRecipient);
+router.post('/unfollow', authonitication, sendUnfollowRequest);
+router.delete('/DeleteUnfollowRequest/:receiverId', authonitication, deleteUnfollowRequest);
+router.get('/getUnfollowNotifications', authonitication, getUnfollowNotifications);
+
+router.delete('/deleteNotificationunfollowrequest/:senderId',authonitication , deleteNotification);
+
 
 module.exports = router;
