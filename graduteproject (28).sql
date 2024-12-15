@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 14 ديسمبر 2024 الساعة 09:45
+-- Generation Time: 15 ديسمبر 2024 الساعة 13:17
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -80,13 +80,6 @@ CREATE TABLE `carerecipientlist` (
   `Care_giverid` int(10) NOT NULL,
   `carerecipient_id` int(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
---
--- إرجاع أو استيراد بيانات الجدول `carerecipientlist`
---
-
-INSERT INTO `carerecipientlist` (`CareRecipientList_id`, `Care_giverid`, `carerecipient_id`) VALUES
-(26, 84, 83);
 
 -- --------------------------------------------------------
 
@@ -388,8 +381,17 @@ CREATE TABLE `notifications` (
   `Sender_id` int(10) NOT NULL,
   `reciver_id` int(10) NOT NULL,
   `typeofnotifications` varchar(255) NOT NULL,
-  `is_read` int(10) NOT NULL
+  `is_read` int(10) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- إرجاع أو استيراد بيانات الجدول `notifications`
+--
+
+INSERT INTO `notifications` (`Notifications_id`, `Sender_id`, `reciver_id`, `typeofnotifications`, `is_read`, `created_at`) VALUES
+(125, 84, 83, 'approve_follow_request', 1, '2024-12-15 10:40:44'),
+(127, 83, 84, 'approve_unfollow_request', 1, '2024-12-15 10:42:36');
 
 -- --------------------------------------------------------
 
@@ -539,7 +541,7 @@ ALTER TABLE `caregiverrequesttoadmin`
 -- AUTO_INCREMENT for table `carerecipientlist`
 --
 ALTER TABLE `carerecipientlist`
-  MODIFY `CareRecipientList_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `CareRecipientList_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `filemannager`
@@ -557,7 +559,7 @@ ALTER TABLE `mymedicalreports`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `Notifications_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
+  MODIFY `Notifications_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=128;
 
 --
 -- AUTO_INCREMENT for table `schedule`
