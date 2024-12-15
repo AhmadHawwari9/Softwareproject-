@@ -14,7 +14,7 @@ const { authonitication } = require('../../../middlware/logger.authonitication')
 const { homepagecontroller } = require("../Controller/homepage");
 const { createUsersUsingGoogleSignIn } = require("../Controller/SignInwithGoogle.controller");
 
-const {markMessageAsRead}=require('../Controller/Message.Controller');
+const {markMessageAsRead,fetchUnreadMessageCount}=require('../Controller/Message.Controller');
 const { sendMessage, getMessagesWithUser, getAllConversations } = require('../Controller/Message.Controller');
 const { messageValidation } = require('../Validation/Message.Validation');
 const userController = require('../Controller/imageshow.controller');
@@ -37,7 +37,10 @@ const{getScheduleByDate}=require('../Controller/scheduleforcaregiver.Controller'
 const articleController = require('../Controller/articals.controller');
 const {sendFollowRequest,getUserNotifications,fetchUserNotifications,deleteFollowRequest,approveFollowRequest,
     removeFollowRequest1,fetchCareGiversForRecipient,sendUnfollowRequest,
-    deleteUnfollowRequest,getUnfollowNotifications,deleteNotification}=require('../Controller/follow.controller');
+    deleteUnfollowRequest,getUnfollowNotifications,deleteNotification,
+    handleNotificationAndUnfollowRequestDeletion,
+    handleNotificationAndUnfollowRequestDeletionforcarerecipant,fetchNotificationCount,
+    markNotificationsAsRead}=require('../Controller/follow.controller');
 
 const router = express.Router();
 
@@ -57,6 +60,7 @@ router.post('/chat/send', uploade.fields([{ name: 'audio', maxCount: 1 }, { name
 router.get('/chat/receive/:otherUserId', authonitication, getMessagesWithUser); // Get messages with specific user
 router.get('/chat/conversations', authonitication, getAllConversations); // Get all conversations
 router.get('/user/image/:email', userController.getUserImagePath);
+router.get('/unread-message-count', authonitication, fetchUnreadMessageCount);
 
 
 router.post('/chat/conversations/:otherUserId',authonitication, markMessageAsRead);
@@ -126,8 +130,12 @@ router.get('/caregivers', authonitication, fetchCareGiversForRecipient);
 router.post('/unfollow', authonitication, sendUnfollowRequest);
 router.delete('/DeleteUnfollowRequest/:receiverId', authonitication, deleteUnfollowRequest);
 router.get('/getUnfollowNotifications', authonitication, getUnfollowNotifications);
-
 router.delete('/deleteNotificationunfollowrequest/:senderId',authonitication , deleteNotification);
+router.delete('/deleteNotificationAndUnfollowAccept/:senderId', authonitication, handleNotificationAndUnfollowRequestDeletion);
+router.delete('/deleteNotificationAndUnfollowAcceptforcarerecipant/:senderId', authonitication, handleNotificationAndUnfollowRequestDeletionforcarerecipant);
+router.get('/notification-count', authonitication, fetchNotificationCount);
+router.put('/mark-notifications-read', authonitication, markNotificationsAsRead);
+
 
 
 module.exports = router;

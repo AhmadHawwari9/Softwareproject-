@@ -113,11 +113,29 @@ const markMessageAsRead = async (req, res) => {
 
 
 
-
+const fetchUnreadMessageCount = async (req, res) => {
+    const userId = req.user.id;  // Extract receiver_id from the authenticated user
+    
+    try {
+      const unreadMessageCount = await  messageService.getUnreadMessageCountForUser(userId);
+  
+      return res.status(200).json({
+        message: "Unread message count fetched successfully",
+        unreadMessageCount,
+      });
+    } catch (error) {
+      console.error('Error fetching unread message count: ', error);
+      return res.status(500).json({
+        error: "An error occurred while fetching unread message count",
+      });
+    }
+  };
+  
 
 module.exports = {
     sendMessage,
     getMessagesWithUser,
     getAllConversations,
-    markMessageAsRead
+    markMessageAsRead,
+    fetchUnreadMessageCount
 };

@@ -21,35 +21,35 @@ const sendFollowNotification = (sender_id, reciver_id) => {
 
 
 const getNotificationsByUserId = (userId) => {
-    return new Promise((resolve, reject) => {
-      // SQL query with JOIN to fetch the sender and receiver emails
-      const query = `
-        SELECT 
-          n.Notifications_id, 
-          n.Sender_id, 
-          n.reciver_id, 
-          n.typeofnotifications, 
-          n.is_read, 
-          sender.Email AS sender_email, 
-          receiver.Email AS receiver_email
-        FROM notifications n
-        JOIN users sender ON sender.User_id = n.Sender_id
-        JOIN users receiver ON receiver.User_id = n.reciver_id
-        WHERE n.reciver_id = ? AND n.is_read = 0
-      `;
-      const values = [userId];  // Use the user ID as a parameter
-  
-      // Execute the query
-      db.query(query, values, (error, results) => {
-        if (error) {
-          console.error('Error fetching notifications: ', error);
-          return reject({ error: 'Database error' });
-        }
-        resolve(results);  // Resolve the query with the results
-      });
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT 
+        n.Notifications_id, 
+        n.Sender_id, 
+        n.reciver_id, 
+        n.typeofnotifications, 
+        n.is_read, 
+        sender.Email AS sender_email, 
+        receiver.Email AS receiver_email, 
+        n.created_at
+      FROM notifications n
+      JOIN users sender ON sender.User_id = n.Sender_id
+      JOIN users receiver ON receiver.User_id = n.reciver_id
+      WHERE n.reciver_id = ?
+      ORDER BY n.created_at DESC; -- Order by the latest notifications
+    `;
+    const values = [userId];
+
+    db.query(query, values, (error, results) => {
+      if (error) {
+        console.error('Error fetching notifications: ', error);
+        return reject({ error: 'Database error' });
+      }
+      resolve(results);
     });
-  };
-  
+  });
+};
+
 
   const getNotificationsForUser = (userId) => {
     return new Promise((resolve, reject) => {
@@ -61,6 +61,7 @@ const getNotificationsByUserId = (userId) => {
           n.reciver_id, 
           n.typeofnotifications, 
           n.is_read, 
+          n.created_at, -- Include the created_at field
           sender.Email AS sender_email, 
           receiver.Email AS receiver_email
         FROM notifications n
@@ -81,6 +82,7 @@ const getNotificationsByUserId = (userId) => {
       });
     });
   };
+  
   
 
   const removeFollowRequest = (senderId, receiverId) => {
@@ -104,14 +106,17 @@ const getNotificationsByUserId = (userId) => {
   
   const approveFollowRequestService = (senderId, receiverId) => {
     return new Promise((resolve, reject) => {
-        // SQL queries for deleting from `notifications` and inserting into `carerecipientlist`
         const deleteQuery = `
             DELETE FROM notifications 
             WHERE Sender_id = ? AND reciver_id = ? AND typeofnotifications = 'follow'
         `;
-        const insertQuery = `
+        const insertCareRecipientQuery = `
             INSERT INTO carerecipientlist (Care_giverid, carerecipient_id) 
             VALUES (?, ?)
+        `;
+        const insertNotificationQuery = `
+            INSERT INTO notifications (Sender_id, reciver_id, typeofnotifications, is_read) 
+            VALUES (?, ?, 'approve_follow_request', 0)
         `;
 
         // Start a transaction
@@ -128,27 +133,36 @@ const getNotificationsByUserId = (userId) => {
                     return db.rollback(() => reject({ error: 'Database error during delete' }));
                 }
 
-                // Execute insert query
-                db.query(insertQuery, [receiverId, senderId], (insertError, insertResults) => {
-                    if (insertError) {
-                        console.error('Error inserting into carerecipientlist: ', insertError);
+                // Execute insert into carerecipientlist
+                db.query(insertCareRecipientQuery, [receiverId, senderId], (insertCareError, insertCareResults) => {
+                    if (insertCareError) {
+                        console.error('Error inserting into carerecipientlist: ', insertCareError);
                         return db.rollback(() => reject({ error: 'Database error during insert' }));
                     }
 
-                    // Commit the transaction
-                    db.commit((commitError) => {
-                        if (commitError) {
-                            console.error('Error committing transaction: ', commitError);
-                            return db.rollback(() => reject({ error: 'Transaction commit error' }));
+                    // Execute insert notification query
+                    db.query(insertNotificationQuery, [receiverId, senderId], (insertNotifError, insertNotifResults) => {
+                        if (insertNotifError) {
+                            console.error('Error inserting notification: ', insertNotifError);
+                            return db.rollback(() => reject({ error: 'Database error during notification insert' }));
                         }
 
-                        resolve();
+                        // Commit the transaction
+                        db.commit((commitError) => {
+                            if (commitError) {
+                                console.error('Error committing transaction: ', commitError);
+                                return db.rollback(() => reject({ error: 'Transaction commit error' }));
+                            }
+
+                            resolve();
+                        });
                     });
                 });
             });
         });
     });
 };
+
 
 
 const removeFollowRequestService = (senderId, receiverId) => {
@@ -260,9 +274,10 @@ const removeUnfollowNotification = (senderId, receiverId) => {
 const fetchUnfollowNotifications = (userId) => {
   return new Promise((resolve, reject) => {
     const query = `
-      SELECT Notifications_id, Sender_id,reciver_id, typeofnotifications, is_read
+      SELECT Notifications_id, Sender_id, reciver_id, typeofnotifications, is_read, created_at
       FROM notifications
-      WHERE Sender_id = ? AND typeofnotifications = 'unfollow';
+      WHERE Sender_id = ? AND typeofnotifications = 'unfollow'
+      ORDER BY created_at DESC; -- Order by the latest notifications
     `;
 
     db.query(query, [userId], (error, results) => {
@@ -275,6 +290,7 @@ const fetchUnfollowNotifications = (userId) => {
     });
   });
 };
+
 
 const deleteNotificationService = (senderId, receiverId) => {
   return new Promise((resolve, reject) => {
@@ -295,12 +311,164 @@ const deleteNotificationService = (senderId, receiverId) => {
 };
 
 
+const notificationAndUnfollowService = (senderId, receiverId) => {
+  return new Promise((resolve, reject) => {
+    const deleteNotificationQuery = `
+      DELETE FROM notifications
+      WHERE Sender_id = ? AND reciver_id = ? AND typeofnotifications = 'unfollow';
+    `;
+
+    const deleteUnfollowRequestQuery = `
+      DELETE FROM carerecipientlist
+      WHERE Care_giverid = ? AND carerecipient_id = ?;
+    `;
+
+    const insertNotificationQuery = `
+      INSERT INTO notifications (Sender_id, reciver_id, typeofnotifications, is_read) 
+      VALUES (?, ?, 'approve_unfollow_request', 0);
+    `;
+
+    // Start by deleting the unfollow request notification
+    db.query(deleteNotificationQuery, [senderId, receiverId], (notificationError, notificationResults) => {
+      if (notificationError) {
+        console.error('Error deleting notification: ', notificationError);
+        return reject({ error: 'Database error while deleting notification' });
+      }
+
+      // If the notification is successfully deleted, proceed to delete the unfollow request
+      db.query(deleteUnfollowRequestQuery, [receiverId, senderId], (unfollowError, unfollowResults) => {
+        if (unfollowError) {
+          console.error('Error deleting unfollow request: ', unfollowError);
+          return reject({ error: 'Database error while deleting unfollow request' });
+        }
+
+        // Insert a notification for the approval of the unfollow request
+        db.query(insertNotificationQuery, [senderId, receiverId], (insertError, insertResults) => {
+          if (insertError) {
+            console.error('Error inserting approval notification: ', insertError);
+            return reject({ error: 'Database error while inserting approval notification' });
+          }
+
+          // Resolve the promise with all results
+          resolve({
+            notificationResults,
+            unfollowResults,
+            insertResults,
+            affectedRows: notificationResults.affectedRows + unfollowResults.affectedRows + insertResults.affectedRows
+          });
+        });
+      });
+    });
+  });
+};
+
+
+
+const notificationAndUnfollowServiceforcarerecipant = (senderId, receiverId) => {
+  return new Promise((resolve, reject) => {
+    const deleteNotificationQuery = `
+      DELETE FROM notifications
+      WHERE Sender_id = ? AND reciver_id = ? AND typeofnotifications = 'unfollow';
+    `;
+    
+    const deleteUnfollowRequestQuery = `
+      DELETE FROM carerecipientlist
+      WHERE Care_giverid = ? AND carerecipient_id = ?;
+    `;
+
+    const insertNotificationQuery = `
+      INSERT INTO notifications (Sender_id, reciver_id, typeofnotifications, is_read) 
+      VALUES (?, ?, 'approve_unfollow_request', 0);
+    `;
+
+    // Delete the 'unfollow' notification
+    db.query(deleteNotificationQuery, [senderId, receiverId], (notificationError, notificationResults) => {
+      if (notificationError) {
+        console.error('Error deleting notification: ', notificationError);
+        return reject({ error: 'Database error while deleting notification' });
+      }
+
+      // After deleting the notification, proceed to delete the unfollow request
+      db.query(deleteUnfollowRequestQuery, [senderId, receiverId], (unfollowError, unfollowResults) => {
+        if (unfollowError) {
+          console.error('Error deleting unfollow request: ', unfollowError);
+          return reject({ error: 'Database error while deleting unfollow request' });
+        }
+
+        // Insert the 'approve_unfollow_request' notification
+        db.query(insertNotificationQuery, [receiverId, senderId], (insertError, insertResults) => {
+          if (insertError) {
+            console.error('Error inserting approval notification: ', insertError);
+            return reject({ error: 'Database error while inserting approval notification' });
+          }
+
+          // Resolve the promise with all results from the queries
+          resolve({
+            notificationResults,
+            unfollowResults,
+            insertResults,
+            affectedRows: notificationResults.affectedRows + unfollowResults.affectedRows + insertResults.affectedRows
+          });
+        });
+      });
+    });
+  });
+};
+
+
+
+const getNotificationCountForUser = (userId) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT COUNT(*) AS unread_count
+      FROM notifications
+      WHERE reciver_id = ? AND is_read = 0
+    `;
+
+    const values = [userId]; 
+
+    db.query(query, values, (error, results) => {
+      if (error) {
+        console.error('Error fetching notification count: ', error);
+        return reject({ error: 'Database error' });
+      }
+      resolve(results[0].unread_count);
+    });
+  });
+};
+
+const markAllNotificationsAsReadForUser = (userId) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      UPDATE notifications
+      SET is_read = 1
+      WHERE reciver_id = ?
+    `;
+
+    const values = [userId]; // Use user ID as the parameter
+
+    db.query(query, values, (error, results) => {
+      if (error) {
+        console.error('Error updating notifications: ', error);
+        return reject({ error: 'Database error' });
+      }
+
+      resolve(results.affectedRows); // Number of rows updated
+    });
+  });
+};
+
+
 module.exports = { sendFollowNotification,getNotificationsByUserId,
   getNotificationsForUser,removeFollowRequest,approveFollowRequestService,removeFollowRequestService,
   getCareGiversForRecipient,
   sendUnfollowNotification,
   removeUnfollowNotification,
   fetchUnfollowNotifications,
-  deleteNotificationService
+  deleteNotificationService,
+  notificationAndUnfollowService,
+  notificationAndUnfollowServiceforcarerecipant,
+  getNotificationCountForUser,
+  markAllNotificationsAsReadForUser
 };
 

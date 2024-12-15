@@ -74,6 +74,8 @@ class _HomepageState extends State<CareGiverHomepage> {
     fetchArticles();
     fetchCareRecipients();
     fetchSchedule();
+    fetchUnreadMessagesCount();
+    fetchNotificationCount();
     getAccessToken();
     getToken();
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -920,6 +922,119 @@ class _HomepageState extends State<CareGiverHomepage> {
 
 
 
+  Future<void> sendUnfollowRequest(String token, String recipientId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3001/unfollow'), // Replace with your actual API URL
+        headers: {
+          'Authorization': 'Bearer $token', // Add the token to the request header
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'reciver_id': recipientId, // Send the recipient's ID as part of the request body
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // Handle success
+        print('Unfollow request successful');
+      } else {
+        // Handle failure
+        print('Failed to unfollow: ${response.body}');
+      }
+    } catch (e) {
+      print('Error sending unfollow request: $e');
+    }
+  }
+
+
+  Future<void> deleteUnfollowRequest(String token, String recipientId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('http://10.0.2.2:3001/DeleteUnfollowRequest/$recipientId'), // Replace with your actual API URL
+        headers: {
+          'Authorization': 'Bearer $token', // Add the token to the request header
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Handle success
+        print('Unfollow request deleted');
+      } else {
+        // Handle failure
+        print('Failed to delete unfollow request: ${response.body}');
+      }
+    } catch (e) {
+      print('Error deleting unfollow request: $e');
+    }
+  }
+
+  int notificationCount = 0;
+
+  Future<void> fetchNotificationCount() async {
+    final url = 'http://10.0.2.2:3001/notification-count';
+    final headers = {
+      'Authorization': 'Bearer ${widget.savedToken}',
+    };
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          notificationCount = data['notificationCount']; // Update the notification count
+        });
+      } else {
+        print('Failed to fetch notification count: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching notification count: $e');
+    }
+  }
+
+  int unreadMessageCount = 0;
+
+  Future<void> fetchUnreadMessagesCount() async {
+    final url = Uri.parse('http://10.0.2.2:3001/unread-message-count');
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer ${widget.savedToken}', // Send the token in the header
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Response data: $data');  // Debug: print the response body
+
+        // Ensure 'unreadMessageCount' exists and is a valid integer
+        if (data.containsKey('unreadMessageCount') && data['unreadMessageCount'] is int) {
+          setState(() {
+            unreadMessageCount = data['unreadMessageCount'];
+          });
+        } else {
+          print('Unread message count is missing or not an integer.');
+          setState(() {
+            unreadMessageCount = 0;
+          });
+        }
+      } else {
+        print('Failed to load unread message count. Status code: ${response.statusCode}');
+        setState(() {
+          unreadMessageCount = 0; // Default to 0 if the request fails
+        });
+      }
+    } catch (error) {
+      print('Error: $error');
+      setState(() {
+        unreadMessageCount = 0; // Default to 0 in case of error
+      });
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -938,22 +1053,51 @@ class _HomepageState extends State<CareGiverHomepage> {
           },
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications,
-              color: Colors.white,
-              size: 30.0,
-            ),
-            onPressed: () {
-              // Navigate to the Notifications Page
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => NotificationsPage(widget.savedToken)),
-              );
-            },
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.notifications,
+                  color: Colors.white,
+                  size: 30.0,
+                ),
+                onPressed: () async {
+                  setState(() {
+                    notificationCount = 0; // Reset notification count to zero
+                  });
+
+                  // Navigate to the Notifications Page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NotificationsPage(widget.savedToken, false),
+                    ),
+                  );
+                },
+              ),
+              if (notificationCount > 0) // Show badge if there are unread notifications
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$notificationCount', // Unread notifications count
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
-
 
       ),
       drawer: Drawer(
@@ -1298,7 +1442,6 @@ class _HomepageState extends State<CareGiverHomepage> {
                   mainAxisSize: MainAxisSize.min, // Ensure the column size is constrained to its content
                   children: [
                     Container(
-                      // Use an Expanded widget or set a proper height for the container to avoid overflow
                       height: 300, // Increased height for the container to accommodate larger rows
                       child: SingleChildScrollView(
                         scrollDirection: Axis.vertical, // Enable vertical scrolling for the table rows
@@ -1320,7 +1463,7 @@ class _HomepageState extends State<CareGiverHomepage> {
                               headingRowHeight: 40, // Adjust header height
                               dataRowHeight: 60, // Increase the height of each row (adjust as needed)
                               columns: [
-                                DataColumn(label: Text('ID')),
+                                // Removed the ID column
                                 DataColumn(label: Text('Email')),
                                 DataColumn(label: Text('Action')),
                               ],
@@ -1329,55 +1472,93 @@ class _HomepageState extends State<CareGiverHomepage> {
                                 DataRow(cells: [
                                   DataCell(Text('No data available')),
                                   DataCell(Text('')),
-                                  DataCell(Text('')),
                                 ])
                               ]
                                   : careRecipients.map<DataRow>((recipient) {
                                 return DataRow(cells: [
-                                  DataCell(Text(recipient['carerecipient_id'].toString())), // ID
-                                  DataCell(Text(recipient['Email'])), // Email
-                                  DataCell(Row(
-                                    mainAxisAlignment: MainAxisAlignment.start, // Align icons to the start
-                                    children: [
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          foregroundColor: Colors.black,
-                                          backgroundColor: Colors.white, // Text color
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(5), // Rounded corners
-                                          ),
-                                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                        ),
-                                        onPressed: () {
-                                          // Fetch medical reports when the button is pressed
-                                          fetchMedicalReports(
-                                              recipient['carerecipient_id'].toString());
-                                        },
-                                        child: Icon(Icons.picture_as_pdf, color: Colors.red), // PDF icon
-                                      ),
-                                      SizedBox(width: 10), // Space between the icons
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          foregroundColor: Colors.black,
-                                          backgroundColor: Colors.white, // Text color
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(5), // Rounded corners
-                                          ),
-                                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                        ),
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => HistoryPage(
-                                                  recipientId: recipient['carerecipient_id'].toString()),
+                                  // Displaying only the Email
+                                  DataCell(Text(recipient['Email'])),
+                                  DataCell(
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.start, // Align icons to the start
+                                      children: [
+                                        // Button 1 - Medical Report PDF
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            foregroundColor: Colors.black,
+                                            backgroundColor: Colors.white, // Button background color
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(5), // Rounded corners
                                             ),
-                                          );
-                                        },
-                                        child: Icon(Icons.access_time, color: Colors.black), // History icon
-                                      ),
-                                    ],
-                                  )),
+                                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Smaller padding
+                                            minimumSize: Size(40, 30), // Smaller size for the button
+                                          ),
+                                          onPressed: () {
+                                            // Fetch medical reports when the button is pressed
+                                            fetchMedicalReports(
+                                                recipient['carerecipient_id'].toString());
+                                          },
+                                          child: Icon(Icons.picture_as_pdf, color: Colors.red, size: 18), // Smaller PDF icon
+                                        ),
+                                        SizedBox(width: 6), // Space between the buttons
+
+                                        // Button 2 - History Page Navigation
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            foregroundColor: Colors.black,
+                                            backgroundColor: Colors.white, // Button background color
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(5), // Rounded corners
+                                            ),
+                                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Smaller padding
+                                            minimumSize: Size(40, 30), // Smaller size for the button
+                                          ),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => HistoryPage(
+                                                    recipientId: recipient['carerecipient_id'].toString()),
+                                              ),
+                                            );
+                                          },
+                                          child: Icon(Icons.access_time, color: Colors.black, size: 18), // Smaller History icon
+                                        ),
+                                        SizedBox(width: 6), // Space between the buttons
+
+                                        // Button 3 - Unfollow/Requested toggle
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            foregroundColor: Colors.black,
+                                            backgroundColor: Colors.white, // Button background color
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(5), // Rounded corners
+                                            ),
+                                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Smaller padding
+                                            minimumSize: Size(40, 30), // Smaller size for the button
+                                          ),
+                                          onPressed: () {
+                                            if (recipient['isFollowed'] == true) {
+                                              // If it's 'Requested', delete the unfollow request
+                                              deleteUnfollowRequest(widget.savedToken, recipient['carerecipient_id'].toString());
+                                            } else {
+                                              // Otherwise, send an unfollow request
+                                              sendUnfollowRequest(widget.savedToken, recipient['carerecipient_id'].toString());
+                                            }
+
+                                            // Toggle the button state between 'Unfollow' and 'Requested'
+                                            setState(() {
+                                              recipient['isFollowed'] = !(recipient['isFollowed'] ?? false);
+                                            });
+                                          },
+                                          child: Text(
+                                            recipient['isFollowed'] == true ? 'Requested' : 'Unfollow',
+                                            style: TextStyle(color: Colors.blue, fontSize: 14), // Text color
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ]);
                               }).toList(),
                             ),
@@ -1388,7 +1569,12 @@ class _HomepageState extends State<CareGiverHomepage> {
                   ],
                 ),
               ),
-            ),
+            )
+
+
+
+
+
 
           ],
         ),
@@ -1396,20 +1582,43 @@ class _HomepageState extends State<CareGiverHomepage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
+        items: <BottomNavigationBarItem>[
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home, color: Colors.blue),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat, color: Colors.blue),
+            icon: Stack(
+              clipBehavior: Clip.none,  // To allow the badge to overlap the icon
+              children: [
+                const Icon(Icons.chat, color: Colors.blue), // Icon can remain constant
+                if (unreadMessageCount > 0)
+                  Positioned(
+                    top: -4, // Adjust the vertical position of the badge
+                    right: -4, // Adjust the horizontal position of the badge
+                    child: CircleAvatar(
+                      radius: 8, // Reduced radius for a smaller badge
+                      backgroundColor: Colors.red,
+                      child: Text(
+                        unreadMessageCount.toString(), // Dynamically fetch the count
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10, // Reduced font size for the number
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             label: 'Chat',
           ),
-          BottomNavigationBarItem(
+
+
+          const BottomNavigationBarItem(
             icon: Icon(Icons.search, color: Colors.blue),
             label: 'Search',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.menu, color: Colors.blue),
             label: 'Browse',
           ),

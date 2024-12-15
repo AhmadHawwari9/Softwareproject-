@@ -86,6 +86,8 @@ class _HomepageState extends State<AdminHomepage> {
       await getAccessToken();  // Get access token
       await fetchUsers();  // Fetch users after getting the access token
       fetchArticles();
+      fetchUnreadMessagesCount();
+      fetchNotificationCount();
       await getToken();  // Get token if needed
       await fetchCaregiversData();
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -745,6 +747,71 @@ class _HomepageState extends State<AdminHomepage> {
     }
   }
 
+  int notificationCount = 0;
+
+  Future<void> fetchNotificationCount() async {
+    final url = 'http://10.0.2.2:3001/notification-count';
+    final headers = {
+      'Authorization': 'Bearer ${widget.savedToken}',
+    };
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          notificationCount = data['notificationCount']; // Update the notification count
+        });
+      } else {
+        print('Failed to fetch notification count: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching notification count: $e');
+    }
+  }
+
+
+  int unreadMessageCount = 0;
+
+  Future<void> fetchUnreadMessagesCount() async {
+    final url = Uri.parse('http://10.0.2.2:3001/unread-message-count');
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer ${widget.savedToken}', // Send the token in the header
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Response data: $data');  // Debug: print the response body
+
+        // Ensure 'unreadMessageCount' exists and is a valid integer
+        if (data.containsKey('unreadMessageCount') && data['unreadMessageCount'] is int) {
+          setState(() {
+            unreadMessageCount = data['unreadMessageCount'];
+          });
+        } else {
+          print('Unread message count is missing or not an integer.');
+          setState(() {
+            unreadMessageCount = 0;
+          });
+        }
+      } else {
+        print('Failed to load unread message count. Status code: ${response.statusCode}');
+        setState(() {
+          unreadMessageCount = 0; // Default to 0 if the request fails
+        });
+      }
+    } catch (error) {
+      print('Error: $error');
+      setState(() {
+        unreadMessageCount = 0; // Default to 0 in case of error
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -764,19 +831,49 @@ class _HomepageState extends State<AdminHomepage> {
         ),
 
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications,
-              color: Colors.white,
-              size: 30.0,
-            ),
-            onPressed: () {
-              // Navigate to the Notifications Page
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => NotificationsPage(widget.savedToken)),
-              );
-            },
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.notifications,
+                  color: Colors.white,
+                  size: 30.0,
+                ),
+                onPressed: () async {
+                  setState(() {
+                    notificationCount = 0; // Reset notification count to zero
+                  });
+
+                  // Navigate to the Notifications Page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NotificationsPage(widget.savedToken, false),
+                    ),
+                  );
+                },
+              ),
+              if (notificationCount > 0) // Show badge if there are unread notifications
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$notificationCount', // Unread notifications count
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
 
@@ -1189,20 +1286,42 @@ class _HomepageState extends State<AdminHomepage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
+        items: <BottomNavigationBarItem>[
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home, color: Colors.blue),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat, color: Colors.blue),
+            icon: Stack(
+              clipBehavior: Clip.none,  // To allow the badge to overlap the icon
+              children: [
+                const Icon(Icons.chat, color: Colors.blue), // Icon can remain constant
+                if (unreadMessageCount > 0)
+                  Positioned(
+                    top: -4, // Adjust the vertical position of the badge
+                    right: -4, // Adjust the horizontal position of the badge
+                    child: CircleAvatar(
+                      radius: 8, // Reduced radius for a smaller badge
+                      backgroundColor: Colors.red,
+                      child: Text(
+                        unreadMessageCount.toString(), // Dynamically fetch the count
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10, // Reduced font size for the number
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             label: 'Chat',
           ),
-          BottomNavigationBarItem(
+
+          const BottomNavigationBarItem(
             icon: Icon(Icons.search, color: Colors.blue),
             label: 'Search',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.menu, color: Colors.blue),
             label: 'Browse',
           ),

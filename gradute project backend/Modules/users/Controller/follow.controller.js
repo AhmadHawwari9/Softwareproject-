@@ -2,7 +2,10 @@ const { sendFollowNotification ,getNotificationsByUserId,
   getNotificationsForUser,removeFollowRequest,approveFollowRequestService,
   removeFollowRequestService,getCareGiversForRecipient,
   sendUnfollowNotification,
-  removeUnfollowNotification,fetchUnfollowNotifications,deleteNotificationService} = require('../service/follow.service');
+  removeUnfollowNotification,fetchUnfollowNotifications,deleteNotificationService,
+  notificationAndUnfollowService,
+  notificationAndUnfollowServiceforcarerecipant,getNotificationCountForUser,
+  markAllNotificationsAsReadForUser} = require('../service/follow.service');
 
 const sendFollowRequest = async (req, res) => {
   const {  reciver_id} = req.body; // The user to be followed
@@ -218,10 +221,100 @@ const deleteNotification = async (req, res) => {
   }
 };
 
+const handleNotificationAndUnfollowRequestDeletion = async (req, res) => {
+  const senderId = req.params.senderId; 
+  const receiverId = req.user.id; 
+
+  try {
+    const result = await notificationAndUnfollowService(senderId, receiverId);
+
+    if (result.affectedRows > 0) {
+      return res.status(200).json({
+        message: 'Notification and unfollow request deleted successfully',
+      });
+    } else {
+      return res.status(404).json({
+        message: 'Notification or unfollow request not found or already deleted',
+      });
+    }
+  } catch (error) {
+    console.error('Error during notification and unfollow deletion: ', error);
+    return res.status(500).json({
+      error: 'An error occurred while deleting the notification and unfollow request',
+    });
+  }
+};
+
+
+const handleNotificationAndUnfollowRequestDeletionforcarerecipant = async (req, res) => {
+  const senderId = req.params.senderId; 
+  const receiverId = req.user.id; 
+
+  try {
+    const result = await notificationAndUnfollowServiceforcarerecipant(senderId, receiverId);
+
+    if (result.affectedRows > 0) {
+      return res.status(200).json({
+        message: 'Notification and unfollow request deleted successfully',
+      });
+    } else {
+      return res.status(404).json({
+        message: 'Notification or unfollow request not found or already deleted',
+      });
+    }
+  } catch (error) {
+    console.error('Error during notification and unfollow deletion: ', error);
+    return res.status(500).json({
+      error: 'An error occurred while deleting the notification and unfollow request',
+    });
+  }
+};
+
+const fetchNotificationCount = async (req, res) => {
+  const userId = req.user.id; 
+
+  try {
+    const notificationCount = await getNotificationCountForUser(userId);
+
+    return res.status(200).json({
+      message: "Notification count fetched successfully",
+      notificationCount,
+    });
+  } catch (error) {
+    console.error('Error fetching notification count: ', error);
+    return res.status(500).json({
+      error: "An error occurred while fetching notification count",
+    });
+  }
+};
+
+const markNotificationsAsRead = async (req, res) => {
+  const userId = req.user.id; 
+
+  try {
+    const updatedRows = await markAllNotificationsAsReadForUser(userId);
+
+    return res.status(200).json({
+      message: "Notifications marked as read successfully",
+      updatedRows, 
+    });
+  } catch (error) {
+    console.error('Error marking notifications as read: ', error);
+    return res.status(500).json({
+      error: "An error occurred while marking notifications as read",
+    });
+  }
+};
+
+
 module.exports = { sendFollowRequest ,getUserNotifications,fetchUserNotifications,deleteFollowRequest,approveFollowRequest,removeFollowRequest1,
   fetchCareGiversForRecipient,
   sendUnfollowRequest,
   deleteUnfollowRequest,
   getUnfollowNotifications,
-  deleteNotification
+  deleteNotification,
+  handleNotificationAndUnfollowRequestDeletion,
+  handleNotificationAndUnfollowRequestDeletionforcarerecipant,
+  fetchNotificationCount,
+  markNotificationsAsRead
 };

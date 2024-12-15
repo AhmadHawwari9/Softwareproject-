@@ -193,6 +193,27 @@ const getUnreadMessages = async (userId) => {
     });
 };
 
+const getUnreadMessageCountForUser = (userId) => {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT COUNT(*) AS unread_count
+        FROM messages
+        WHERE receiver_id = ? AND is_read = 0
+      `;
+  
+      const values = [userId];  // Use the userId from the authenticated request
+  
+      db.query(query, values, (error, results) => {
+        if (error) {
+          console.error('Error fetching unread message count: ', error);
+          return reject({ error: 'Database error' });
+        }
+        resolve(results[0].unread_count);  // Return the count of unread messages
+      });
+    });
+  };
+  
+
 
 module.exports = {
     sendMessageToDb,
@@ -202,5 +223,6 @@ module.exports = {
     hasUnreadMessages,
     updateMessagesAsRead,
     getUnreadMessagesCount,
-    getUnreadMessages
+    getUnreadMessages,
+    getUnreadMessageCountForUser
 };
