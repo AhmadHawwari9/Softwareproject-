@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 15 ديسمبر 2024 الساعة 13:17
+-- Generation Time: 17 ديسمبر 2024 الساعة 17:28
 -- إصدار الخادم: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -80,6 +80,13 @@ CREATE TABLE `carerecipientlist` (
   `Care_giverid` int(10) NOT NULL,
   `carerecipient_id` int(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- إرجاع أو استيراد بيانات الجدول `carerecipientlist`
+--
+
+INSERT INTO `carerecipientlist` (`CareRecipientList_id`, `Care_giverid`, `carerecipient_id`) VALUES
+(38, 84, 83);
 
 -- --------------------------------------------------------
 
@@ -235,7 +242,6 @@ INSERT INTO `filemannager` (`file_id`, `old_name`, `new_name`, `folder`, `path`)
 (198, 'reportform.pdf-1732956564268.pdf', 'reportform-1732956564588.pdf', './public/Uploade', 'Uploade/reportform-1732956564588.pdf'),
 (199, 'reportform.pdf-1732956900587.pdf', 'reportform-1732956900848.pdf', './public/Uploade', 'Uploade/reportform-1732956900848.pdf'),
 (200, 'reportform.pdf-1732957143815.pdf', 'reportform-1732957144207.pdf', './public/Uploade', 'Uploade/reportform-1732957144207.pdf'),
-(201, 'reportform.pdf-1732957246880.pdf', 'reportform-1732957247289.pdf', './public/Uploade', 'Uploade/reportform-1732957247289.pdf'),
 (202, 'reportform.pdf-1732957471963.pdf', 'reportform-1732957472234.pdf', './public/Uploade', 'Uploade/reportform-1732957472234.pdf'),
 (203, '1.png', '1-1733121334926.png', './public/Uploade', 'Uploade/1-1733121334926.png'),
 (204, 'hardware presentation.pdf', 'hardware presentation-1733121334977.pdf', './public/Uploade', 'Uploade/hardware presentation-1733121334977.pdf'),
@@ -293,7 +299,11 @@ INSERT INTO `filemannager` (`file_id`, `old_name`, `new_name`, `folder`, `path`)
 (258, 'istockphoto-1266230179-612x612.jpg', 'istockphoto-1266230179-612x612-1733669743916.jpg', './public/Uploade', 'Uploade/istockphoto-1266230179-612x612-1733669743916.jpg'),
 (259, 'avatar-3637425_1280.png', 'avatar-3637425_1280-1733670034315.png', './public/Uploade', 'Uploade/avatar-3637425_1280-1733670034315.png'),
 (260, 'avatar-3637425_1280.png', 'avatar-3637425_1280-1733670084670.png', './public/Uploade', 'Uploade/avatar-3637425_1280-1733670084670.png'),
-(261, 'avatar-3637425_1280.png', 'avatar-3637425_1280-1733732726938.png', './public/Uploade', 'Uploade/avatar-3637425_1280-1733732726938.png');
+(261, 'avatar-3637425_1280.png', 'avatar-3637425_1280-1733732726938.png', './public/Uploade', 'Uploade/avatar-3637425_1280-1733732726938.png'),
+(262, 'reportform-1732957247289.pdf-1734434858563.pdf', 'reportform-1732957247289-1734434858473.pdf', './public/Uploade', 'Uploade/reportform-1732957247289-1734434858473.pdf'),
+(263, 'reportform-1732957247289.pdf-1734434882419.pdf', 'reportform-1732957247289-1734434882284.pdf', './public/Uploade', 'Uploade/reportform-1732957247289-1734434882284.pdf'),
+(264, 'hardware presentation-1733215183809.pdf-1734445499396.pdf', 'hardware presentation-1733215183809-1734445500148.pdf', './public/Uploade', 'Uploade/hardware presentation-1733215183809-1734445500148.pdf'),
+(265, 'reportform-1732957472234.pdf-1734445513899.pdf', 'reportform-1732957472234-1734445514617.pdf', './public/Uploade', 'Uploade/reportform-1732957472234-1734445514617.pdf');
 
 -- --------------------------------------------------------
 
@@ -317,7 +327,6 @@ CREATE TABLE `messages` (
 --
 
 INSERT INTO `messages` (`id`, `sender_id`, `receiver_id`, `message`, `timestamp`, `is_read`, `img_id`, `Audio_id`) VALUES
-(0, 76, 83, 'hi', '2024-12-09 14:10:21', 1, NULL, NULL),
 (54, 84, 83, 'hello', '2024-11-14 11:10:15', 1, NULL, NULL),
 (55, 84, 83, 'hello', '2024-11-14 11:10:17', 1, NULL, NULL),
 (82, 84, 83, 'كيف حالك؟', '2024-11-16 14:21:31', 1, NULL, NULL),
@@ -334,11 +343,14 @@ INSERT INTO `messages` (`id`, `sender_id`, `receiver_id`, `message`, `timestamp`
 (108, 83, 84, 'Uploade/recording-1732012074909.wav', '2024-11-19 12:27:54', 1, NULL, 104),
 (109, 83, 84, 'Uploade/recording-1732013443083.wav', '2024-11-19 12:50:43', 1, NULL, 105),
 (110, 83, 84, 'Uploade/recording-1732015724622.wav', '2024-11-19 13:28:44', 1, NULL, 106),
-(111, 83, 84, 'Uploade/recording-1732016416885.wav', '2024-11-19 13:40:16', 1, NULL, 107),
-(112, 83, 84, 'Uploade/recording-1732103511956.wav', '2024-11-20 13:51:52', 1, NULL, 108),
-(113, 83, 84, 'hi', '2024-11-20 13:52:06', 1, NULL, NULL),
-(114, 83, 84, 'Uploade/man-male-young-person-icon_24877-30218-1732103538951.jpg', '2024-11-20 13:52:19', 1, 109, NULL),
-(115, 83, 84, 'Uploade/recording-1732115807530.wav', '2024-11-20 14:21:47', 1, NULL, 110);
+(111, 83, 84, 'Uploade/recording-1732016416885.wav', '2024-11-19 13:40:16', 0, NULL, 107),
+(112, 83, 84, 'Uploade/recording-1732103511956.wav', '2024-11-20 13:51:52', 0, NULL, 108),
+(113, 83, 84, 'hi', '2024-11-20 13:52:06', 0, NULL, NULL),
+(114, 83, 84, 'Uploade/man-male-young-person-icon_24877-30218-1732103538951.jpg', '2024-11-20 13:52:19', 0, 109, NULL),
+(115, 83, 84, 'Uploade/recording-1732115807530.wav', '2024-11-20 14:21:47', 0, NULL, 110),
+(116, 83, 76, 'hi', '2024-12-17 14:25:07', 0, NULL, NULL),
+(117, 83, 84, 'hi', '2024-12-17 14:25:20', 0, NULL, NULL),
+(118, 83, 84, 'hello', '2024-12-17 15:09:00', 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -365,10 +377,13 @@ CREATE TABLE `mymedicalreports` (
 --
 
 INSERT INTO `mymedicalreports` (`report_id`, `user_id`, `filemannager_id`, `Date`, `Heartrate`, `FastingBloodSugar`, `Haemoglobin`, `whitebloodcells`, `Bloodpressure`, `HDL`, `LDL`) VALUES
-(64, 83, 201, '21/12/2024', '75', '90', '13.5', '5200', '120/80', '55', '100'),
 (65, 83, 202, '21/12/2024', '75', '90', '13.5', '5200', '120/80', '55', '100'),
 (66, 83, 204, '21/10/2025', '75', '90', '13.5', '5200', '120/80', '55', '100'),
-(67, 83, 204, '21/11/2024', '75', '90', '13.5', '5200', '120/80', '55', '100');
+(67, 83, 204, '21/11/2024', '75', '90', '13.5', '5200', '120/80', '55', '100'),
+(68, 83, 262, '21/12/2024', '75', '90', '13.5', '5200', '120/80', '55', '100'),
+(69, 83, 263, '21/12/2024', '75', '90', '13.5', '5200', '120/80', '55', '100'),
+(70, 83, 264, '', '', '', '', '', '', '', ''),
+(71, 83, 265, '21/12/2024', '75', '90', '13.5', '5200', '120/80', '55', '100');
 
 -- --------------------------------------------------------
 
@@ -391,7 +406,8 @@ CREATE TABLE `notifications` (
 
 INSERT INTO `notifications` (`Notifications_id`, `Sender_id`, `reciver_id`, `typeofnotifications`, `is_read`, `created_at`) VALUES
 (125, 84, 83, 'approve_follow_request', 1, '2024-12-15 10:40:44'),
-(127, 83, 84, 'approve_unfollow_request', 1, '2024-12-15 10:42:36');
+(127, 83, 84, 'approve_unfollow_request', 1, '2024-12-15 10:42:36'),
+(129, 84, 83, 'approve_follow_request', 1, '2024-12-16 11:51:20');
 
 -- --------------------------------------------------------
 
@@ -541,25 +557,31 @@ ALTER TABLE `caregiverrequesttoadmin`
 -- AUTO_INCREMENT for table `carerecipientlist`
 --
 ALTER TABLE `carerecipientlist`
-  MODIFY `CareRecipientList_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `CareRecipientList_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `filemannager`
 --
 ALTER TABLE `filemannager`
-  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=262;
+  MODIFY `file_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=266;
+
+--
+-- AUTO_INCREMENT for table `messages`
+--
+ALTER TABLE `messages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=119;
 
 --
 -- AUTO_INCREMENT for table `mymedicalreports`
 --
 ALTER TABLE `mymedicalreports`
-  MODIFY `report_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+  MODIFY `report_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `Notifications_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=128;
+  MODIFY `Notifications_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=131;
 
 --
 -- AUTO_INCREMENT for table `schedule`
