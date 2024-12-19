@@ -293,8 +293,11 @@ class _SettingsPageState extends State<SettingsPageforadmin> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: Text('Settings',style: TextStyle(color: Colors.white),),
         backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

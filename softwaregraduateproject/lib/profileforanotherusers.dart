@@ -312,14 +312,16 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
   }
 
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
-        backgroundColor: Colors.blueAccent,
+        title: Text('Profile',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
         elevation: 0,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -329,7 +331,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
         height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blueAccent, Colors.lightBlueAccent],
+            colors: [Colors.teal, Colors.teal],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -392,7 +394,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                       context,
                       label: 'Message',
                       icon: FontAwesomeIcons.commentDots,
-                      color: Colors.blue,
+                      color: Colors.teal,
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -423,12 +425,12 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                 ? Icons.check
                 : Icons.person_add,
             color: hasUnfollowRequest
-                ? Colors.blue
+                ? Colors.teal
                 : isRequested
-                ? Colors.blue
+                ? Colors.teal
                 : isFollowing
-                ? Colors.blue
-                : Colors.blueAccent,
+                ? Colors.teal
+                : Colors.teal,
             onPressed: _toggleFollowRequest,
           ),
 
@@ -469,7 +471,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            Icon(icon, size: 30, color: Colors.blueAccent),
+            Icon(icon, size: 30, color: Colors.teal),
             SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -479,7 +481,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blueAccent,
+                    color: Colors.teal,
                   ),
                 ),
                 SizedBox(height: 4),

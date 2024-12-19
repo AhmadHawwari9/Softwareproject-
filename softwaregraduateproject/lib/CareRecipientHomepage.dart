@@ -9,7 +9,9 @@ import 'AdminHomepage.dart';
 import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
 import 'Conversations.dart';
+import 'DoctorPage.dart';
 import 'Historypage.dart';
+import 'HospitalPage.dart';
 import 'Login.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -18,8 +20,10 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart';
 import 'MyDoctors.dart';
 import 'Myfiles.dart';
+import 'Noti.dart';
 import 'Notificationpage.dart';
 import 'PdfReader.dart';
+import 'PharmaceuticalPage.dart';
 import 'Reportsshowtocaregiver.dart';
 import 'Searchpage.dart';
 import 'Settingspage.dart';
@@ -214,6 +218,7 @@ class _HomepageState extends State<CareRecipientHomepage> {
       print('Error loading service account JSON: $e');
     }
   }
+
   Future<void> fetchHomepageAndNavigate(
       BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
@@ -591,13 +596,11 @@ class _HomepageState extends State<CareRecipientHomepage> {
   }
 
 
-  Widget _buildFeatureButton(String label, IconData icon) {
+  Widget _buildFeatureButton(String label, IconData icon, String page) {
     return SizedBox(
       height: 60,
       child: ElevatedButton.icon(
-        onPressed: () {
-          print('$label button pressed');
-        },
+        onPressed: () => _navigateTo(page),
         icon: Icon(icon, color: Colors.white),
         label: Text(label, style: TextStyle(color: Colors.white)),
         style: ElevatedButton.styleFrom(
@@ -608,6 +611,25 @@ class _HomepageState extends State<CareRecipientHomepage> {
         ),
       ),
     );
+  }
+
+  void _navigateTo(String page) {
+    if (page == 'settings') {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsPage(widget.savedEmail,widget.savedPassword,widget.savedToken,widget.isGoogleSignInEnabled)));
+    } else if (page == 'doctor') {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => DoctorPage()));
+    } else if (page == 'pharmaceutical') {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => PharmaceuticalPage()));
+    } else if (page == 'hospital') {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => HospitalsPage()));
+    }else if(page=='PDFReaderApp'){
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PDFReaderApp(jwtToken:widget.savedToken),
+        ),
+      );
+    }
   }
   int notificationCount = 0;
   Future<void> fetchNotificationCount() async {
@@ -622,6 +644,9 @@ class _HomepageState extends State<CareRecipientHomepage> {
         final data = json.decode(response.body);
         setState(() {
           notificationCount = data['notificationCount']; // Update the notification count
+          if(notificationCount>0){
+            Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $notificationCount Notifications",fln:flutterLocalNotificationsPlugin );
+          }
         });
       } else {
         print('Failed to fetch notification count: ${response.statusCode}');
@@ -652,6 +677,9 @@ class _HomepageState extends State<CareRecipientHomepage> {
         if (data.containsKey('unreadMessageCount') && data['unreadMessageCount'] is int) {
           setState(() {
             unreadMessageCount = data['unreadMessageCount'];
+            if(unreadMessageCount>0){
+              Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $unreadMessageCount Messages",fln:flutterLocalNotificationsPlugin );
+            }
           });
         } else {
           print('Unread message count is missing or not an integer.');
@@ -677,12 +705,12 @@ class _HomepageState extends State<CareRecipientHomepage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Home"),
-        backgroundColor: Colors.indigoAccent,
+        title: Text("Home",style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: Icon(Icons.menu),
+              icon: Icon(Icons.menu,color: Colors.white,),
               onPressed: () {
                 // Open the Drawer when the menu icon is pressed
                 Scaffold.of(context).openDrawer();
@@ -746,7 +774,7 @@ class _HomepageState extends State<CareRecipientHomepage> {
             UserAccountsDrawerHeader(
               accountName: null, // Remove the name field
               accountEmail: Padding(
-                padding: EdgeInsets.only(bottom: 35), // Adjust padding as needed
+                padding: EdgeInsets.only(bottom: 30), // Adjust padding as needed
                 child: GestureDetector(
                   onTap: () {
                     // Navigate to another page when email is tapped
@@ -784,7 +812,7 @@ class _HomepageState extends State<CareRecipientHomepage> {
                           ? Icon(
                         Icons.person,
                         size: 50,
-                        color: Colors.blue,
+                        color: Colors.teal,
                       ) // Fallback icon if no image URL
                           : null,
                     ),
@@ -792,7 +820,7 @@ class _HomepageState extends State<CareRecipientHomepage> {
                 ),
               ),
               decoration: BoxDecoration(
-                color: Colors.blue, // Set the background color of the header to blue
+                color: Colors.teal, // Set the background color of the header to blue
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
@@ -823,6 +851,16 @@ class _HomepageState extends State<CareRecipientHomepage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => CareGiversScreen(widget.savedToken)),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.picture_as_pdf_rounded,),
+              title: Text("My Medical Reports"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PdfFilesPage( jwtToken: widget.savedToken,)),
                 );
               },
             ),
@@ -875,7 +913,7 @@ class _HomepageState extends State<CareRecipientHomepage> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
                     child: Image.asset(
-                      'images/human-heart-gray-background-3d-illustration-3d-rendering_1057-35869.avif',
+                      'imgs/human-heart-gray-background-3d-illustration-3d-rendering_1057-35869.avif',
                       height: 380,
                       fit: BoxFit.contain,
                     ),
@@ -928,13 +966,13 @@ class _HomepageState extends State<CareRecipientHomepage> {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: _buildFeatureButton('Hospitals', Icons.local_hospital),
+                      child: _buildFeatureButton('Hospitals', Icons.local_hospital, 'hospital'),
                     ),
                   ),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: _buildFeatureButton('Medications', Icons.medication),
+                      child: _buildFeatureButton('Medications', Icons.medication, 'pharmaceutical'),
                     ),
                   ),
                 ],
@@ -946,13 +984,13 @@ class _HomepageState extends State<CareRecipientHomepage> {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: _buildFeatureButton('Reports', Icons.description),
+                      child: _buildFeatureButton('Reports', Icons.description, 'PDFReaderApp'),
                     ),
                   ),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: _buildFeatureButton('Doctor', Icons.person),
+                      child: _buildFeatureButton('Doctor', Icons.person, 'doctor'),
                     ),
                   ),
                 ],
@@ -966,14 +1004,14 @@ class _HomepageState extends State<CareRecipientHomepage> {
         onTap: _onItemTapped,
         items: <BottomNavigationBarItem>[
           const BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.blue),
+            icon: Icon(Icons.home, color: Colors.teal),
             label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Stack(
               clipBehavior: Clip.none,  // To allow the badge to overlap the icon
               children: [
-                const Icon(Icons.chat, color: Colors.blue), // Icon can remain constant
+                const Icon(Icons.chat, color: Colors.teal), // Icon can remain constant
                 if (unreadMessageCount > 0)
                   Positioned(
                     top: -4, // Adjust the vertical position of the badge
@@ -996,11 +1034,11 @@ class _HomepageState extends State<CareRecipientHomepage> {
           ),
 
           const BottomNavigationBarItem(
-            icon: Icon(Icons.search, color: Colors.blue),
+            icon: Icon(Icons.search, color: Colors.teal),
             label: 'Search',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.menu, color: Colors.blue),
+            icon: Icon(Icons.menu, color: Colors.teal),
             label: 'Browse',
           ),
         ],
@@ -1027,7 +1065,7 @@ class _HomepageState extends State<CareRecipientHomepage> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.blue.withOpacity(0.7),
+              color: Colors.teal.withOpacity(0.7),
               blurRadius: 15,
               offset: Offset(0, 10),
             ),

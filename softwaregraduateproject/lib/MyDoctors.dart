@@ -57,8 +57,11 @@ class _CareGiversScreenState extends State<CareGiversScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Doctors'),
-        backgroundColor: Colors.indigoAccent,
+        title: Text('My Doctors',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator()) // Show loading spinner
@@ -90,7 +93,7 @@ class _CareGiversScreenState extends State<CareGiversScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.indigoAccent,
+                    color: Colors.teal,
                   ),
                 ),
                 subtitle: Text(

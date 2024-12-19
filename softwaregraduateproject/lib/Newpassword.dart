@@ -76,7 +76,7 @@ class _NewPasswordState extends State<NewPassword> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Set New Password"),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.teal,
       ),
       body: SingleChildScrollView(  // Wrap the entire body with SingleChildScrollView
         padding: EdgeInsets.all(0.0),
@@ -109,7 +109,7 @@ class _NewPasswordState extends State<NewPassword> {
                       ),
                       Text(
                         "${widget.email}",
-                        style: TextStyle(fontSize: 20, color: Colors.lightBlue),
+                        style: TextStyle(fontSize: 20, color: Colors.teal),
                       ),
                       SizedBox(height: 20),
                       TextFormField(
@@ -190,7 +190,7 @@ class _NewPasswordState extends State<NewPassword> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: MaterialButton(
-                          color: Colors.lightBlue,
+                          color: Colors.teal,
                           onPressed: () async {
                             setState(() {
                               _validationErrors.clear();

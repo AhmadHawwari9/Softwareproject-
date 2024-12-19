@@ -22,6 +22,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart';
 import 'Myfiles.dart';
+import 'Noti.dart';
 import 'Notificationpage.dart';
 import 'PdfReader.dart';
 import 'Reportsshowtocaregiver.dart';
@@ -87,6 +88,9 @@ class _HomepageState extends State<AdminHomepage> {
       await fetchUsers();  // Fetch users after getting the access token
       fetchArticles();
       fetchUnreadMessagesCount();
+      setState(() {
+        filteredUsers = users;  // Initialize filteredUsers with all users
+      });
       fetchNotificationCount();
       await getToken();  // Get token if needed
       await fetchCaregiversData();
@@ -761,6 +765,9 @@ class _HomepageState extends State<AdminHomepage> {
         final data = json.decode(response.body);
         setState(() {
           notificationCount = data['notificationCount']; // Update the notification count
+          if(notificationCount>0){
+            Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $notificationCount Notifications",fln:flutterLocalNotificationsPlugin );
+          }
         });
       } else {
         print('Failed to fetch notification count: ${response.statusCode}');
@@ -769,7 +776,6 @@ class _HomepageState extends State<AdminHomepage> {
       print('Error fetching notification count: $e');
     }
   }
-
 
   int unreadMessageCount = 0;
 
@@ -791,6 +797,9 @@ class _HomepageState extends State<AdminHomepage> {
         if (data.containsKey('unreadMessageCount') && data['unreadMessageCount'] is int) {
           setState(() {
             unreadMessageCount = data['unreadMessageCount'];
+            if(unreadMessageCount>0){
+              Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $unreadMessageCount Messages",fln:flutterLocalNotificationsPlugin );
+            }
           });
         } else {
           print('Unread message count is missing or not an integer.');
@@ -812,16 +821,34 @@ class _HomepageState extends State<AdminHomepage> {
     }
   }
 
+  TextEditingController searchController = TextEditingController();
+  List<dynamic> filteredUsers = [];
+  void _filterUsers(String query) {
+    final filteredList = users.where((user) {
+      final email = user['Email'].toLowerCase();
+      final userType = user['Type_oftheuser'].toLowerCase();
+      final searchQuery = query.toLowerCase();
+
+      // Check if the email or user type contains the search query
+      return email.contains(searchQuery) || userType.contains(searchQuery);
+    }).toList();
+
+    setState(() {
+      filteredUsers = filteredList;
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Home"),
-        backgroundColor: Colors.indigoAccent,
+        title: Text("Home",style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: Icon(Icons.menu),
+              icon: Icon(Icons.menu,color: Colors.white,),
               onPressed: () {
                 // Open the Drawer when the menu icon is pressed
                 Scaffold.of(context).openDrawer();
@@ -886,7 +913,7 @@ class _HomepageState extends State<AdminHomepage> {
             UserAccountsDrawerHeader(
               accountName: null, // Remove the name field
               accountEmail: Padding(
-                padding: EdgeInsets.only(bottom: 35), // Adjust padding as needed
+                padding: EdgeInsets.only(bottom: 30), // Adjust padding as needed
                 child: GestureDetector(
                   onTap: () {
                     // Navigate to another page when email is tapped
@@ -924,7 +951,7 @@ class _HomepageState extends State<AdminHomepage> {
                           ? Icon(
                         Icons.person,
                         size: 50,
-                        color: Colors.blue,
+                        color: Colors.teal,
                       ) // Fallback icon if no image URL
                           : null,
                     ),
@@ -932,7 +959,7 @@ class _HomepageState extends State<AdminHomepage> {
                 ),
               ),
               decoration: BoxDecoration(
-                color: Colors.blue, // Set the background color of the header to blue
+                color: Colors.teal, // Set the background color of the header to blue
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
@@ -1035,9 +1062,49 @@ class _HomepageState extends State<AdminHomepage> {
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 'All Users',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: TextField(
+                controller: searchController,
+                onChanged: (query) {
+                  setState(() {
+                    filteredUsers = users.where((user) {
+                      final email = '${user['Email']} '.toLowerCase();
+                      return email.contains(query.toLowerCase());
+                    }).toList();
+                  });
+                },
+                style: TextStyle(color: Colors.teal, fontSize: 16),  // Text style for the input
+                decoration: InputDecoration(
+                  labelText: 'Search User',
+                  labelStyle: TextStyle(
+                    color: Colors.teal,
+                    fontWeight: FontWeight.bold,  // Bold label
+                  ),
+                  contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),  // Padding for content
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30.0), // Rounded corners
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30.0),  // Rounded corners for focused state
+                    borderSide: BorderSide(color: Colors.teal, width: 2), // Teal focused border
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30.0),  // Rounded corners for enabled state
+                    borderSide: BorderSide(color: Colors.teal, width: 1.5), // Thinner border
+                  ),
+                  prefixIcon: Icon(Icons.search, color: Colors.teal),  // Prefix icon color
+                  filled: true,  // Fill the background of the TextField
+                  fillColor: Colors.teal.withOpacity(0.1),  // Light teal background color
+                  focusColor: Colors.teal,  // Focused color
+                ),
+              ),
+            ),
+
+
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Card(
@@ -1047,7 +1114,7 @@ class _HomepageState extends State<AdminHomepage> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.vertical,
                     child: DataTable(
-                      headingRowColor: MaterialStateColor.resolveWith((states) => Colors.blueAccent),
+                      headingRowColor: MaterialStateColor.resolveWith((states) => Colors.teal),
                       dataRowHeight: 80,  // Increased row height
                       headingRowHeight: 60,  // Increased heading row height
                       columns: [
@@ -1085,8 +1152,8 @@ class _HomepageState extends State<AdminHomepage> {
                           ),
                         ),
                       ],
-                      rows: users.isNotEmpty
-                          ? users.map<DataRow>((user) {
+                      rows: filteredUsers.isNotEmpty
+                          ? filteredUsers.map<DataRow>((user) {
                         return DataRow(cells: [
                           DataCell(
                             Container(
@@ -1138,7 +1205,7 @@ class _HomepageState extends State<AdminHomepage> {
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 'Pending Doctors',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: Colors.teal),
               ),
             ),
 
@@ -1150,7 +1217,7 @@ class _HomepageState extends State<AdminHomepage> {
                   scrollDirection: Axis.vertical,
                   child: DataTable(
                     headingRowColor: MaterialStateColor.resolveWith(
-                          (states) => Colors.blueAccent,
+                          (states) => Colors.teal,
                     ),
                     dataRowHeight: 100,  // Increased row height
                     columns: [
@@ -1288,14 +1355,14 @@ class _HomepageState extends State<AdminHomepage> {
         onTap: _onItemTapped,
         items: <BottomNavigationBarItem>[
           const BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.blue),
+            icon: Icon(Icons.home, color: Colors.teal),
             label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Stack(
               clipBehavior: Clip.none,  // To allow the badge to overlap the icon
               children: [
-                const Icon(Icons.chat, color: Colors.blue), // Icon can remain constant
+                const Icon(Icons.chat, color: Colors.teal), // Icon can remain constant
                 if (unreadMessageCount > 0)
                   Positioned(
                     top: -4, // Adjust the vertical position of the badge
@@ -1318,11 +1385,11 @@ class _HomepageState extends State<AdminHomepage> {
           ),
 
           const BottomNavigationBarItem(
-            icon: Icon(Icons.search, color: Colors.blue),
+            icon: Icon(Icons.search, color: Colors.teal),
             label: 'Search',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.menu, color: Colors.blue),
+            icon: Icon(Icons.menu, color: Colors.teal),
             label: 'Browse',
           ),
         ],
@@ -1449,7 +1516,7 @@ class PdfViewerPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('PDF Viewer'),
-        backgroundColor: Colors.blueAccent, // Keep consistent theme
+        backgroundColor: Colors.teal, // Keep consistent theme
 
       ),
       body: Center(
@@ -1535,8 +1602,11 @@ class CardPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(article['title']),
-        backgroundColor: Colors.indigoAccent,
+        title: Text(article['title'],style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
         actions: [
           // Enhanced delete button with tooltip
           Tooltip(

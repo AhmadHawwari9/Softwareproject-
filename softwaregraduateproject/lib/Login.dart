@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,10 +8,16 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'Forgetpassword.dart';
+import 'Noti.dart';
 import 'Signup.dart';  // Import SignUp Page
 import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
 import 'AdminHomepage.dart';
+
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+FlutterLocalNotificationsPlugin();
+
 
 class Loginpage extends StatefulWidget {
   @override
@@ -31,6 +38,7 @@ class _LoginPageState extends State<Loginpage> {
   @override
   void initState() {
     super.initState();
+    Noti.initialize(flutterLocalNotificationsPlugin);
     _checkLoginStatus(); // Check if the user is logged in
   }
 
@@ -211,7 +219,7 @@ class _LoginPageState extends State<Loginpage> {
                 padding: const EdgeInsets.all(16.0),
                 child: TextFormField(
                   decoration: InputDecoration(
-                    icon: Icon(Icons.person),
+                    icon: Icon(Icons.person,color: Colors.teal,),
                     labelText: 'Email',
                   ),
                   validator: (value) {
@@ -227,11 +235,11 @@ class _LoginPageState extends State<Loginpage> {
                 child: TextFormField(
                   obscureText: !_isPasswordVisible,
                   decoration: InputDecoration(
-                    icon: Icon(Icons.lock),
+                    icon: Icon(Icons.lock,color: Colors.teal,),
                     labelText: 'Password',
                     suffixIcon: IconButton(
                       icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,color: Colors.teal,),
                       onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                     ),
                   ),
@@ -251,7 +259,7 @@ class _LoginPageState extends State<Loginpage> {
                     context,
                     MaterialPageRoute(builder: (context) => Forgetpassword()),
                   ),
-                  child: Text('Forget Password?'),
+                  child: Text('Forget Password?',style: TextStyle(color: Colors.teal),),
                 ),
               ),
 
@@ -266,7 +274,7 @@ class _LoginPageState extends State<Loginpage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  backgroundColor: Colors.blue, // Button color
+                  backgroundColor: Colors.teal, // Button color
                   foregroundColor: Colors.white, // Text color
                 ),
                 onPressed: () async {
@@ -310,7 +318,7 @@ class _LoginPageState extends State<Loginpage> {
                   context,
                   MaterialPageRoute(builder: (context) => Signup()), // Navigate to SignUp page
                 ),
-                child: Text('Don\'t have an account? Sign up here'),
+                child: Text('Don\'t have an account? Sign up here',style: TextStyle(color: Colors.teal),),
               ),
             ],
           ),

@@ -234,8 +234,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notifications'),
-        backgroundColor: Colors.blue,
+        title: Text('Notifications',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: FutureBuilder<List>(
         future: Future.wait([followNotifications, unfollowNotifications]),
@@ -282,7 +285,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         child: ListTile(
                           leading: CircleAvatar(
                             radius: 25,
-                            backgroundColor: Colors.blue,
+                            backgroundColor: Colors.teal,
                             child: CircularProgressIndicator(),
                           ),
                           title: Text(notificationType == 'follow'
@@ -300,7 +303,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         child: ListTile(
                           leading: CircleAvatar(
                             radius: 25,
-                            backgroundColor: Colors.blue,
+                            backgroundColor: Colors.teal,
                             child: Icon(Icons.error, color: Colors.white),
                           ),
                           title: Text(notificationType == 'follow'
@@ -325,7 +328,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         child: ListTile(
                           leading: CircleAvatar(
                             radius: 25,
-                            backgroundColor: Colors.blue,
+                            backgroundColor: Colors.teal,
                             backgroundImage: photoUrl.isNotEmpty
                                 ? NetworkImage(photoUrl)
                                 : null,
@@ -397,7 +400,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                               ),
                             ],
                           ),
-                          tileColor: isUnread ? Colors.blue[50] : Colors.white,
+                          tileColor: isUnread ? Colors.teal[50] : Colors.white,
                           onTap: () {
                             print('Notification tapped: ${notification['Notifications_id']}');
                           },

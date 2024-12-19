@@ -92,7 +92,7 @@ class _AddArticlePageState extends State<AddArticlePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Add New Article'),
-        backgroundColor: Colors.indigoAccent,
+        backgroundColor: Colors.teal,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
@@ -168,7 +168,7 @@ class _AddArticlePageState extends State<AddArticlePage> {
                   onPressed: _isSubmitting ? null : _submitArticle,
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 16.0),
-                    backgroundColor: Colors.indigoAccent,
+                    backgroundColor: Colors.teal,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),

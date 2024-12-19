@@ -177,9 +177,16 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: Text(widget.userEmail),
+        backgroundColor: Colors.teal,
+        title: Text(
+          widget.userEmail,
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
+
       body: Column(
         children: [
           Expanded(
@@ -258,7 +265,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 },
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: isSentByMe ? Colors.blue[200] : Colors.grey[300],
+                                    color: isSentByMe ? Colors.teal[200] : Colors.grey[300],
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [BoxShadow(blurRadius: 4, color: Colors.black12)],
                                   ),
@@ -296,7 +303,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
                             if (!hasImage && !hasAudio && isSentByMe)
                               IconButton(
-                                icon: Icon(Icons.volume_up, color: Colors.blue),
+                                icon: Icon(Icons.volume_up, color: Colors.teal),
                                 onPressed: () => _speak(message['message'] ?? ''),
                               ),
                             if (!hasImage && !hasAudio)
@@ -304,7 +311,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 child: Container(
                                   padding: EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: isSentByMe ? Colors.blue : Colors.grey[300],
+                                    color: isSentByMe ? Colors.teal : Colors.grey[300],
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -315,7 +322,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               ),
                             if (!hasImage && !hasAudio && !isSentByMe)
                               IconButton(
-                                icon: Icon(Icons.volume_up, color: Colors.blue),
+                                icon: Icon(Icons.volume_up, color: Colors.teal),
                                 onPressed: () => _speak(message['message'] ?? ''),
                               ),
                             if (hasImage && messagePhotoUrl != null)
@@ -383,7 +390,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.camera_alt, color: Colors.blue),
+                  icon: Icon(Icons.camera_alt, color: Colors.teal),
                   onPressed: pickFile,
                 ),
                 if (_image == null)
@@ -403,7 +410,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
 
                 IconButton(
-                  icon: Icon( isRecording? Icons.stop:Icons.mic, color: Colors.blue),
+                  icon: Icon( isRecording? Icons.stop:Icons.mic, color: Colors.teal),
                   onPressed: ()async {
                     try {
                       if (isRecording) {
@@ -431,7 +438,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.send, color: Colors.blue),
+                  icon: Icon(Icons.send, color: Colors.teal),
                   onPressed: _sendMessage,
                 ),
               ],

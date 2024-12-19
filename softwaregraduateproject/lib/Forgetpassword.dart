@@ -49,7 +49,7 @@ class _ForgetpasswordState extends State<Forgetpassword> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Forget Password"),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.teal,
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -103,7 +103,7 @@ class _ForgetpasswordState extends State<Forgetpassword> {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
                               child: MaterialButton(
-                                color: Colors.lightBlue,
+                                color: Colors.teal,
                                 onPressed: () async {
                                   final userData = {
                                     'email': email,

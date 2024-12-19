@@ -116,7 +116,7 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Caregiver Application"),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.teal,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -126,7 +126,7 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Colors.blueAccent,
+                color: Colors.teal,
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
@@ -165,7 +165,7 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Colors.blueAccent, width: 2),
+                  border: Border.all(color: Colors.teal, width: 2),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black12,
@@ -178,11 +178,11 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
                     ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.upload_file, size: 50, color: Colors.blueAccent),
+                    Icon(Icons.upload_file, size: 50, color: Colors.teal),
                     SizedBox(height: 10),
                     Text(
                       "Tap to upload a file",
-                      style: TextStyle(fontSize: 16, color: Colors.blueAccent),
+                      style: TextStyle(fontSize: 16, color: Colors.teal),
                     ),
                   ],
                 )
@@ -191,11 +191,11 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
                   children: [
                     _isImageFile(_selectedFile!.path)
                         ? Image.file(_selectedFile!, height: 100, width: 100, fit: BoxFit.cover)
-                        : Icon(Icons.insert_drive_file, size: 50, color: Colors.blueAccent),
+                        : Icon(Icons.insert_drive_file, size: 50, color: Colors.teal),
                     SizedBox(height: 10),
                     Text(
                       _selectedFile!.path.split('/').last,
-                      style: TextStyle(fontSize: 16, color: Colors.blueAccent),
+                      style: TextStyle(fontSize: 16, color: Colors.teal),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -207,7 +207,7 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
               onPressed: _isLoading ? null : submitApplication,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                backgroundColor: Colors.blueAccent,
+                backgroundColor: Colors.teal,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),

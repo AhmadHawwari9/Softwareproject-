@@ -37,7 +37,7 @@ class ResponsePage extends StatelessWidget {
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0),
         child: Card(
-          color: Colors.lightBlueAccent.shade100,
+          color: Colors.teal.shade100,
           elevation: 5,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -49,19 +49,19 @@ class ResponsePage extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.tips_and_updates, color: Colors.blueAccent, size: 30),
+                    Icon(Icons.tips_and_updates, color: Colors.teal, size: 30),
                     SizedBox(width: 8),
                     Text(
                       'General Health Tips',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
-                        color: Colors.blueAccent,
+                        color: Colors.teal,
                       ),
                     ),
                   ],
                 ),
-                Divider(color: Colors.blueAccent),
+                Divider(color: Colors.teal),
                 SizedBox(height: 8),
                 _buildTipRow('💧', 'Drink plenty of water to stay hydrated.'),
                 _buildTipRow('🏃', 'Exercise regularly to maintain health.'),
@@ -77,8 +77,11 @@ class ResponsePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Analysis Result'),
-        backgroundColor: Colors.blueAccent,
+        title: Text('Analysis Result',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -243,7 +246,7 @@ class ResponsePage extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
-                      color: Colors.blueAccent,
+                      color: Colors.teal,
                     ),
                   ),
                   SizedBox(height: 4),

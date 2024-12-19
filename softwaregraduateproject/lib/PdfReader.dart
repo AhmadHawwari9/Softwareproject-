@@ -15,17 +15,13 @@ import 'ResponsePage.dart';
 class PDFReaderApp extends StatelessWidget {
   final String jwtToken;
   PDFReaderApp({required this.jwtToken});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: PDFReaderScreen(jwtToken: jwtToken),
-    );
+    return PDFReaderScreen(jwtToken: jwtToken);
   }
 }
+
 
 class PDFReaderScreen extends StatefulWidget {
   final String jwtToken;  // Add this field to hold the token
@@ -267,9 +263,12 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Medical PDF Reader'),
-        backgroundColor: Colors.blue,
+        title: Text('Medical PDF Reader',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
         automaticallyImplyLeading: true,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -291,8 +290,8 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
                     SizedBox(height: 20),
                     ElevatedButton.icon(
                       onPressed: _downloadForm,
-                      icon: Icon(Icons.download),
-                      label: Text('Download Form'),
+                      icon: Icon(Icons.download,color: Colors.teal,),
+                      label: Text('Download Form',style: TextStyle(color: Colors.teal),),
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
@@ -309,8 +308,8 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
             // PDF Pick and Extract Section
             ElevatedButton.icon(
               onPressed: _pickAndExtractPDF,
-              icon: Icon(Icons.picture_as_pdf),
-              label: Text('Pick and Extract PDF'),
+              icon: Icon(Icons.picture_as_pdf,color: Colors.teal,),
+              label: Text('Pick and Extract PDF',style:TextStyle(color: Colors.teal),),
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(

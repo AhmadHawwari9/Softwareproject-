@@ -59,8 +59,11 @@ class _VerifycodeState extends State<Verifycode> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Verify Code"),
-        backgroundColor: Colors.blue,
+        title: Text("Verify Code",style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: SingleChildScrollView(  // Add SingleChildScrollView here
         child: Padding(
@@ -96,7 +99,7 @@ class _VerifycodeState extends State<Verifycode> {
                         ),
                         Text(
                           "${widget.email}",
-                          style: TextStyle(fontSize: 20, color: Colors.lightBlue),
+                          style: TextStyle(fontSize: 20, color: Colors.teal),
                         ),
                         SizedBox(height: 20),
                         TextFormField(
@@ -158,7 +161,7 @@ class _VerifycodeState extends State<Verifycode> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: MaterialButton(
-                            color: Colors.lightBlue,
+                            color: Colors.teal,
                             onPressed: () async {
                               if (_formKey.currentState!.validate()) {
                                 final userData = {

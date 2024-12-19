@@ -5,9 +5,13 @@ const getCareRecipientsByCareGiverId = (careGiverId) => {
     const query = `
       SELECT 
         carerecipientlist.carerecipient_id, 
-        users.Email 
+        users.Email,
+        users.Type_oftheuser,
+        users.image_id,
+        filemannager.path AS image_path
       FROM carerecipientlist 
       INNER JOIN users ON carerecipientlist.carerecipient_id = users.User_id 
+      LEFT JOIN filemannager ON users.image_id = filemannager.file_id
       WHERE carerecipientlist.Care_giverid = ?
     `;
 
@@ -20,5 +24,6 @@ const getCareRecipientsByCareGiverId = (careGiverId) => {
     });
   });
 };
+
 
 module.exports = { getCareRecipientsByCareGiverId };

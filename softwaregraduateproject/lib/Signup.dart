@@ -222,8 +222,11 @@ class _SignupState extends State<Signup> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Sign Up to SafeAging"),
-        backgroundColor: Colors.blue,
+        title: Text("Sign Up to SafeAging",style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: SingleChildScrollView(
         child: Form(
@@ -392,7 +395,7 @@ class _SignupState extends State<Signup> {
                             ),
                           ),
                           RadioListTile(
-                            activeColor: Colors.blue,
+                            activeColor: Colors.teal,
                             title: Text("Care giver"),
                             value: "Care giver",
                             groupValue: selectedRole,
@@ -403,7 +406,7 @@ class _SignupState extends State<Signup> {
                             },
                           ),
                           RadioListTile(
-                            activeColor: Colors.blue,
+                            activeColor: Colors.teal,
                             title: Text("Care recipient"),
                             value: "Care recipient",
                             groupValue: selectedRole,
@@ -434,7 +437,7 @@ class _SignupState extends State<Signup> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: Colors.blueAccent, width: 2),
+                          border: Border.all(color: Colors.teal, width: 2),
                           image: _image != null
                               ? DecorationImage(image: FileImage(_image!), fit: BoxFit.cover)
                               : null,
@@ -445,14 +448,14 @@ class _SignupState extends State<Signup> {
                           children: [
                             Icon(
                               Icons.cloud_upload,
-                              color: Colors.blueAccent,
+                              color: Colors.teal,
                               size: 40,
                             ),
                             SizedBox(height: 8),
                             Text(
                               "Upload Photo",
                               style: TextStyle(
-                                color: Colors.blueAccent,
+                                color: Colors.teal,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -475,7 +478,7 @@ class _SignupState extends State<Signup> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: MaterialButton(
-                            color: Colors.lightBlue,
+                            color: Colors.teal,
                             onPressed: () async {
                               if (_formKey.currentState!.validate()) {
                                 print('First Name: ${firstName ?? 'null'}');

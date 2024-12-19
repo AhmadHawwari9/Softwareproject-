@@ -88,9 +88,12 @@ class _UserDetailsPageState extends State<UserDetailsPageforcaregiver> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
-        backgroundColor: Colors.blueAccent,
+        title: Text('Profile',style: TextStyle(color: Colors.teal),),
+        backgroundColor: Colors.teal,
         elevation: 0,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -101,7 +104,7 @@ class _UserDetailsPageState extends State<UserDetailsPageforcaregiver> {
         height: double.infinity,  // Ensures it takes the full height
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blueAccent, Colors.lightBlueAccent],
+            colors: [Colors.teal, Colors.teal],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -171,7 +174,7 @@ class _UserDetailsPageState extends State<UserDetailsPageforcaregiver> {
                         context,
                         label: 'Message',
                         icon: FontAwesomeIcons.commentDots,
-                        color: Colors.blue,
+                        color: Colors.teal,
                         onPressed: () {
                           // Navigate to the ChatScreen
                           Navigator.push(
@@ -225,7 +228,7 @@ class _UserDetailsPageState extends State<UserDetailsPageforcaregiver> {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            Icon(icon, size: 30, color: Colors.blueAccent),
+            Icon(icon, size: 30, color: Colors.teal),
             SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,7 +238,7 @@ class _UserDetailsPageState extends State<UserDetailsPageforcaregiver> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blueAccent,
+                    color: Colors.teal,
                   ),
                 ),
                 SizedBox(height: 4),

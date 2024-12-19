@@ -90,7 +90,7 @@ class _PdfFilesPageState extends State<PdfFilesPage> {
               children: [
                 Icon(
                   Icons.delete_forever, // Elegant delete icon
-                  color: Colors.blue, // Soft purple for elegance
+                  color: Colors.teal, // Soft purple for elegance
                   size: 60.0,
                 ),
                 SizedBox(height: 16.0),
@@ -99,7 +99,7 @@ class _PdfFilesPageState extends State<PdfFilesPage> {
                   style: TextStyle(
                     fontSize: 22.0,
                     fontWeight: FontWeight.bold,
-                    color: Colors.indigo, // Deep indigo for the title
+                    color: Colors.teal, // Deep indigo for the title
                   ),
                 ),
                 SizedBox(height: 12.0),
@@ -117,7 +117,7 @@ class _PdfFilesPageState extends State<PdfFilesPage> {
                         Navigator.of(context).pop(); // Close the dialog
                       },
                       style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white, backgroundColor: Colors.blue, // White text for contrast
+                        foregroundColor: Colors.white, backgroundColor: Colors.teal, // White text for contrast
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.0),
                         ),
@@ -153,14 +153,15 @@ class _PdfFilesPageState extends State<PdfFilesPage> {
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Medical Reports'),
-        backgroundColor: Colors.blueAccent, // Set a custom color for the app bar
+        title: Text('My Medical Reports',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal, // Set a custom color for the app bar
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: files.isEmpty
           ? Center(child: CircularProgressIndicator()) // Styled loading indicator
@@ -305,7 +306,7 @@ class PdfViewerPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('PDF Viewer'),
-        backgroundColor: Colors.blueAccent, // Keep consistent theme
+        backgroundColor: Colors.teal, // Keep consistent theme
       ),
       body: Center(
         child: PDFView(

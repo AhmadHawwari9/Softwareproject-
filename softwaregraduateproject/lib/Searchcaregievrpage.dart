@@ -97,11 +97,15 @@ class _SearchPageState extends State<SearchPageCaregiver> {
       final matchesSearch = user['name']
           .toLowerCase()
           .contains(_searchController.text.toLowerCase());
-      final matchesType = _selectedType == "All" || user['type'] == _selectedType;
+
+      // Convert "Admin" to "Report" for filtering
+      final userType = user['type'] == "Admin" ? "Report" : user['type'];
+      final matchesType = _selectedType == "All" || userType == _selectedType;
 
       return matchesSearch && matchesType;
     }).toList();
   }
+
 
   Future<void> _onItemTapped(int index) async {
     setState(() {
@@ -188,9 +192,12 @@ class _SearchPageState extends State<SearchPageCaregiver> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Search Users'),
-        backgroundColor: Colors.indigoAccent,
+        title: Text('Search Users',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
         elevation: 5,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
@@ -200,10 +207,10 @@ class _SearchPageState extends State<SearchPageCaregiver> {
               controller: _searchController,
               decoration: InputDecoration(
                 labelText: 'Search Users',
-                labelStyle: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                prefixIcon: Icon(Icons.search, color: Colors.blue),
+                labelStyle: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+                prefixIcon: Icon(Icons.search, color: Colors.teal),
                 filled: true,
-                fillColor: Colors.blue.withOpacity(0.1),
+                fillColor: Colors.teal.withOpacity(0.1),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30.0),
                   borderSide: BorderSide.none,
@@ -215,7 +222,7 @@ class _SearchPageState extends State<SearchPageCaregiver> {
             SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: ["All", "Care recipient", "Care giver", "Admin"]
+              children: ["All", "Care recipient", "Care giver", "Report"]
                   .map((type) => ChoiceChip(
                 label: Text(type),
                 selected: _selectedType == type,
@@ -267,18 +274,18 @@ class _SearchPageState extends State<SearchPageCaregiver> {
                               _filteredUsers[index]['photoUrl'].isEmpty
                               ? Icon(Icons.person, color: Colors.white)
                               : null,
-                          backgroundColor: Colors.blue,
+                          backgroundColor: Colors.teal,
                         ),
                         title: Text(
                           _filteredUsers[index]['name'],
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
-                            color: Colors.blue,
+                            color: Colors.teal,
                           ),
                         ),
                         subtitle: Text(
-                          _filteredUsers[index]['type'],
+                          _filteredUsers[index]['type'] == "Admin" ? "Admin" : _filteredUsers[index]['type'],
                           style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ),
@@ -301,19 +308,19 @@ class _SearchPageState extends State<SearchPageCaregiver> {
         onTap: _onItemTapped,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.blue),
+            icon: Icon(Icons.home, color: Colors.teal),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat, color: Colors.blue),
+            icon: Icon(Icons.chat, color: Colors.teal),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search, color: Colors.blue),
+            icon: Icon(Icons.search, color: Colors.teal),
             label: 'Search',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.menu, color: Colors.blue),
+            icon: Icon(Icons.menu, color: Colors.teal),
             label: 'Browse',
           ),
         ],

@@ -51,8 +51,11 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Medical History'),
-        backgroundColor: Colors.blue,
+        title: Text('Medical History',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: SingleChildScrollView( // Enable vertical scrolling
         child: Padding(
@@ -66,7 +69,7 @@ class _HistoryPageState extends State<HistoryPage> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blueAccent,
+                  color: Colors.teal,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -158,7 +161,7 @@ class _HistoryPageState extends State<HistoryPage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             gradient: LinearGradient(
-              colors: [Colors.blue, Colors.blueAccent],
+              colors: [Colors.teal, Colors.teal],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -213,9 +216,12 @@ class DetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('$title History'),
-        backgroundColor: Colors.blueAccent,
+        title: Text('$title History',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
         elevation: 4,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: ListView.builder(
         itemCount: groupedData.length,
@@ -231,7 +237,7 @@ class DetailPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blueAccent,
+                    color: Colors.teal,
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -245,7 +251,7 @@ class DetailPage extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w600,
-                          color: Colors.blue,
+                          color: Colors.teal,
                         ),
                       ),
                       SizedBox(height: 8),

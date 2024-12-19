@@ -162,9 +162,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("Profile"),
-        backgroundColor: Colors.blue,
+        title: const Text("Profile",style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
         elevation: 0,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: userDataFuture,
@@ -256,7 +259,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             width: double.infinity,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.blue, Colors.blueAccent],
+                colors: [Colors.teal, Colors.teal],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -294,7 +297,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       bottom: 10,
                       right: 10,
                       child: IconButton(
-                        icon: const Icon(Icons.camera_alt, color: Colors.blue, size: 30),
+                        icon: const Icon(Icons.camera_alt, color: Colors.teal, size: 30),
                         onPressed: widget.pickImage,
                       ),
                     ),
@@ -330,7 +333,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
             child: Card(
               elevation: 8,
-              shadowColor: Colors.blueAccent,
+              shadowColor: Colors.teal,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -347,11 +350,11 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue,
+                            color: Colors.teal,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
+                          icon: const Icon(Icons.edit, color: Colors.teal),
                           onPressed: () {
                             showDialog(
                               context: context,
@@ -408,7 +411,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
             child: Card(
               elevation: 8,
-              shadowColor: Colors.blueAccent,
+              shadowColor: Colors.teal,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -422,7 +425,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                        color: Colors.teal,
                       ),
                     ),
                     Text(
@@ -430,7 +433,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       style: const TextStyle(fontSize: 16),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      icon: const Icon(Icons.edit, color: Colors.teal),
                       onPressed: () {
                         showDialog(
                           context: context,
@@ -481,7 +484,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
             child: Card(
               elevation: 8,
-              shadowColor: Colors.blueAccent,
+              shadowColor: Colors.teal,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -495,7 +498,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                        color: Colors.teal,
                       ),
                     ),
                     const SizedBox(width: 10),

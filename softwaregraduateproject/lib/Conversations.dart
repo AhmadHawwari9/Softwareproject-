@@ -268,8 +268,11 @@ class _ConversationsPageState extends State<ConversationsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: Text('Chats'),
+        backgroundColor: Colors.teal,
+        title: Text('Chats',style: TextStyle(color: Colors.white),),
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
@@ -354,19 +357,19 @@ class _ConversationsPageState extends State<ConversationsPage> {
         onTap: _onItemTapped,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.blue),
+            icon: Icon(Icons.home, color: Colors.teal),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat, color: Colors.blue),
+            icon: Icon(Icons.chat, color: Colors.teal),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search, color: Colors.blue),
+            icon: Icon(Icons.search, color: Colors.teal),
             label: 'Search',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.menu, color: Colors.blue),
+            icon: Icon(Icons.menu, color: Colors.teal),
             label: 'Browse',
           ),
         ],

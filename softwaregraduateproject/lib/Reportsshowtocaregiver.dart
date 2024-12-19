@@ -13,8 +13,11 @@ class MedicalReportsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Medical Reports'),
-        backgroundColor: Colors.blueAccent,
+        title: Text('Medical Reports',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: files.isEmpty
           ? Center(child: Text('No files available', style: TextStyle(fontSize: 18.0)))
@@ -122,8 +125,11 @@ class PdfViewerPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('PDF Viewer'),
-        backgroundColor: Colors.blueAccent, // Keep consistent theme
+        title: Text('PDF Viewer',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal, // Keep consistent theme
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: Center(
         child: PDFView(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:softwaregraduateproject/profileforanotherusers.dart';
+import 'package:softwaregraduateproject/profileforanotherusersforcaregiver.dart';
 import 'dart:convert';
 
 import 'AdminHomepage.dart';
@@ -96,11 +97,18 @@ class _SearchPageState extends State<SearchPage> {
       final matchesSearch = user['name']
           .toLowerCase()
           .contains(_searchController.text.toLowerCase());
-      final matchesType = _selectedType == "All" || user['type'] == _selectedType;
+
+      // Convert "Report" filter to "Admin" for filtering
+      final userType = _selectedType == "Report" && user['type'] == "Admin"
+          ? "Report"
+          : user['type'];
+
+      final matchesType = _selectedType == "All" || userType == _selectedType;
 
       return matchesSearch && matchesType;
     }).toList();
   }
+
 
   Future<void> _onItemTapped(int index) async {
     setState(() {
@@ -187,8 +195,8 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Search Users'),
-        backgroundColor: Colors.indigoAccent,
+        title: Text('Search Users',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
         elevation: 5,
       ),
       body: Padding(
@@ -199,10 +207,10 @@ class _SearchPageState extends State<SearchPage> {
               controller: _searchController,
               decoration: InputDecoration(
                 labelText: 'Search Users',
-                labelStyle: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                prefixIcon: Icon(Icons.search, color: Colors.blue),
+                labelStyle: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+                prefixIcon: Icon(Icons.search, color: Colors.teal),
                 filled: true,
-                fillColor: Colors.blue.withOpacity(0.1),
+                fillColor: Colors.teal.withOpacity(0.1),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30.0),
                   borderSide: BorderSide.none,
@@ -214,7 +222,7 @@ class _SearchPageState extends State<SearchPage> {
             SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: ["All", "Care recipient", "Care giver", "Admin"]
+              children: ["All", "Care recipient", "Care giver", "Report"]
                   .map((type) => ChoiceChip(
                 label: Text(type),
                 selected: _selectedType == type,
@@ -231,21 +239,39 @@ class _SearchPageState extends State<SearchPage> {
                   return GestureDetector(
                     onTap: () {
                       final selectedUserId = _filteredUsers[index]['id'];
+                      final selectedUserType = _filteredUsers[index]['type']; // Get the user type
 
                       if (selectedUserId != null &&
                           selectedUserId is String &&
                           selectedUserId.isNotEmpty) {
                         print('Tapped on user with ID: $selectedUserId');
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                UserDetailsPage(id: selectedUserId,savedToken:widget.savedToken),
-                          ),
-                        );
+
+                        // Check if the user type is "Care giver" and navigate accordingly
+                        if (selectedUserType == 'Care giver') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  UserDetailsPage(id: selectedUserId,
+                                      savedToken: widget.savedToken),
+                            ),
+                          );
+
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  UserDetailsPageforcaregiver(
+                                      id: selectedUserId,
+                                      savedToken: widget.savedToken),
+                            ),
+                          );
+                        }
                       } else {
                         print('User ID is null or invalid');
-                        _showErrorDialog('Invalid user data. Please try again.');
+                        _showErrorDialog(
+                            'Invalid user data. Please try again.');
                       }
                     },
                     child: Card(
@@ -266,18 +292,18 @@ class _SearchPageState extends State<SearchPage> {
                               _filteredUsers[index]['photoUrl'].isEmpty
                               ? Icon(Icons.person, color: Colors.white)
                               : null,
-                          backgroundColor: Colors.blue,
+                          backgroundColor: Colors.teal,
                         ),
                         title: Text(
                           _filteredUsers[index]['name'],
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
-                            color: Colors.blue,
+                            color: Colors.teal,
                           ),
                         ),
                         subtitle: Text(
-                          _filteredUsers[index]['type'],
+                          _filteredUsers[index]['type'] == "Admin" ? "Admin" : _filteredUsers[index]['type'],
                           style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ),
@@ -300,19 +326,19 @@ class _SearchPageState extends State<SearchPage> {
         onTap: _onItemTapped,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.blue),
+            icon: Icon(Icons.home, color: Colors.teal),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat, color: Colors.blue),
+            icon: Icon(Icons.chat, color: Colors.teal),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search, color: Colors.blue),
+            icon: Icon(Icons.search, color: Colors.teal),
             label: 'Search',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.menu, color: Colors.blue),
+            icon: Icon(Icons.menu, color: Colors.teal),
             label: 'Browse',
           ),
         ],

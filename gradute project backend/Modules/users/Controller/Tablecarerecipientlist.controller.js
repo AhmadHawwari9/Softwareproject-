@@ -4,7 +4,7 @@ const getCareRecipients = async (req, res) => {
   try {
     const careGiverId = req.user.id; // Extract `Care_giverid` from authenticated user
 
-    // Fetch the care recipients' emails for this caregiver
+    // Fetch the care recipients' details for this caregiver
     const recipients = await careRecipientService.getCareRecipientsByCareGiverId(careGiverId);
 
     if (recipients.length === 0) {
@@ -17,5 +17,6 @@ const getCareRecipients = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 module.exports = { getCareRecipients };

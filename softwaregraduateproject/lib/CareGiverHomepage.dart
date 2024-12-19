@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -17,6 +18,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart';
 import 'Myfiles.dart';
+import 'Noti.dart';
 import 'Notificationpage.dart';
 import 'PdfReader.dart';
 import 'Reportsshowtocaregiver.dart';
@@ -74,6 +76,14 @@ class _HomepageState extends State<CareGiverHomepage> {
     fetchArticles();
     fetchCareRecipients();
     fetchSchedule();
+    fetchCareRecipients().then((_) {
+      setState(() {
+        // Populate the filtered list with all recipients by default
+        filteredRecipients = List.from(careRecipients);
+      });
+    }).catchError((error) {
+      print('Error fetching care recipients: $error');
+    });
     fetchUnreadMessagesCount();
     fetchNotificationCount();
     getAccessToken();
@@ -984,6 +994,10 @@ class _HomepageState extends State<CareGiverHomepage> {
         final data = json.decode(response.body);
         setState(() {
           notificationCount = data['notificationCount']; // Update the notification count
+          if(notificationCount>0){
+            sendMessage("SafeAging");
+            Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $notificationCount Notifications",fln:flutterLocalNotificationsPlugin );
+          }
         });
       } else {
         print('Failed to fetch notification count: ${response.statusCode}');
@@ -1013,6 +1027,10 @@ class _HomepageState extends State<CareGiverHomepage> {
         if (data.containsKey('unreadMessageCount') && data['unreadMessageCount'] is int) {
           setState(() {
             unreadMessageCount = data['unreadMessageCount'];
+            if(unreadMessageCount>0){
+              sendMessage("SafeAging");
+              Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $unreadMessageCount Messages",fln:flutterLocalNotificationsPlugin );
+            }
           });
         } else {
           print('Unread message count is missing or not an integer.');
@@ -1033,18 +1051,34 @@ class _HomepageState extends State<CareGiverHomepage> {
       });
     }
   }
+  List<Map<String, dynamic>> filteredRecipients = [];
 
 
+  void filterRecipients(String query) {
+    setState(() {
+      filteredRecipients = careRecipients.where((recipient) {
+        final email = recipient['Email'].toLowerCase();
+        return email.contains(query.toLowerCase());
+      }).toList();
+    });
+  }
+
+
+  TextEditingController searchController = TextEditingController();
+  List<dynamic> filteredUsers = [];
+
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Home"),
-        backgroundColor: Colors.indigoAccent,
+        title: Text("Home",style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: Icon(Icons.menu),
+              icon: Icon(Icons.menu,color: Colors.white,),
               onPressed: () {
                 // Open the Drawer when the menu icon is pressed
                 Scaffold.of(context).openDrawer();
@@ -1108,7 +1142,7 @@ class _HomepageState extends State<CareGiverHomepage> {
             UserAccountsDrawerHeader(
               accountName: null, // Remove the name field
               accountEmail: Padding(
-                padding: EdgeInsets.only(bottom: 35), // Adjust padding as needed
+                padding: EdgeInsets.only(bottom: 30), // Adjust padding as needed
                 child: GestureDetector(
                   onTap: () {
                     // Navigate to another page when email is tapped
@@ -1146,7 +1180,7 @@ class _HomepageState extends State<CareGiverHomepage> {
                           ? Icon(
                         Icons.person,
                         size: 50,
-                        color: Colors.blue,
+                        color: Colors.teal,
                       ) // Fallback icon if no image URL
                           : null,
                     ),
@@ -1154,7 +1188,7 @@ class _HomepageState extends State<CareGiverHomepage> {
                 ),
               ),
               decoration: BoxDecoration(
-                color: Colors.blue, // Set the background color of the header to blue
+                color: Colors.teal, // Set the background color of the header to blue
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
@@ -1241,7 +1275,7 @@ class _HomepageState extends State<CareGiverHomepage> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.blueAccent,
+                color: Colors.teal,
               ),
             ),
 
@@ -1265,11 +1299,11 @@ class _HomepageState extends State<CareGiverHomepage> {
                         },
                         calendarStyle: CalendarStyle(
                           todayDecoration: BoxDecoration(
-                            color: Colors.blueAccent,
+                            color: Colors.teal,
                             shape: BoxShape.circle,
                           ),
                           selectedDecoration: BoxDecoration(
-                            color: Colors.blue,
+                            color: Colors.teal,
                             shape: BoxShape.circle,
                           ),
                           outsideDaysVisible: false,
@@ -1299,7 +1333,7 @@ class _HomepageState extends State<CareGiverHomepage> {
                         onPressed: _showAddScheduleDialog,
                         child: Text('Add New Schedule'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
+                          backgroundColor: Colors.teal,
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         ),
@@ -1318,12 +1352,12 @@ class _HomepageState extends State<CareGiverHomepage> {
                           : SingleChildScrollView( // Added scroll for the DataTable rows
                         child: DataTableTheme(
                           data: DataTableThemeData(
-                            headingRowColor: MaterialStateProperty.all(Colors.blue),
+                            headingRowColor: MaterialStateProperty.all(Colors.teal),
                             headingTextStyle: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
-                            dataRowColor: MaterialStateProperty.all(Colors.lightBlue.shade50),
+                            dataRowColor: MaterialStateProperty.all(Colors.teal.shade50),
                             dataTextStyle: TextStyle(
                               color: Colors.black87,
                             ),
@@ -1430,139 +1464,125 @@ class _HomepageState extends State<CareGiverHomepage> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue,
+                color: Colors.teal,
               ),
             ),
             SizedBox(height: 16), // Space between title and table
 
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: TextField(
+                controller: searchController,
+                onChanged: filterRecipients, // Use the filter function
+                style: TextStyle(color: Colors.teal, fontSize: 16),
+                decoration: InputDecoration(
+                  labelText: 'Search Care Recipients',
+                  labelStyle: TextStyle(
+                    color: Colors.teal,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                    borderSide: BorderSide(color: Colors.teal, width: 2),
+                  ),
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+            ),
+
             SingleChildScrollView(
               child: Card(
-                elevation: 4, // Card shadow effect
+                elevation: 8, // Enhanced shadow effect for better depth
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12), // Softer rounded corners for the card
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min, // Ensure the column size is constrained to its content
                   children: [
                     Container(
-                      height: 300, // Increased height for the container to accommodate larger rows
+                      height: 300, // Height for the scrollable container
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.teal.shade100, Colors.teal.shade300], // Gradient background
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        border: Border.all(color: Colors.teal.shade700, width: 2), // Border with darker teal
+                        borderRadius: BorderRadius.circular(12), // Rounded corners
+                      ),
                       child: SingleChildScrollView(
-                        scrollDirection: Axis.vertical, // Enable vertical scrolling for the table rows
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal, // Enable horizontal scrolling for wide tables
-                          child: DataTableTheme(
-                            data: DataTableThemeData(
-                              headingRowColor: MaterialStateProperty.all(Colors.blue), // Header background color
-                              headingTextStyle: TextStyle(
-                                color: Colors.white, // Header text color
-                                fontWeight: FontWeight.bold,
-                              ),
-                              dataRowColor: MaterialStateProperty.all(Colors.lightBlue.shade50), // Row background color
-                              dataTextStyle: TextStyle(
-                                color: Colors.black87, // Row text color
+                        child: Column(
+                          children: filteredRecipients.isEmpty
+                              ? [
+                            Padding(
+                              padding: const EdgeInsets.all(20.0), // Add padding for the "No data" message
+                              child: Text(
+                                'No care recipients available',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey[600],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
-                            child: DataTable(
-                              headingRowHeight: 40, // Adjust header height
-                              dataRowHeight: 60, // Increase the height of each row (adjust as needed)
-                              columns: [
-                                // Removed the ID column
-                                DataColumn(label: Text('Email')),
-                                DataColumn(label: Text('Action')),
-                              ],
-                              rows: careRecipients.isEmpty
-                                  ? [
-                                DataRow(cells: [
-                                  DataCell(Text('No data available')),
-                                  DataCell(Text('')),
-                                ])
-                              ]
-                                  : careRecipients.map<DataRow>((recipient) {
-                                return DataRow(cells: [
-                                  // Displaying only the Email
-                                  DataCell(Text(recipient['Email'])),
-                                  DataCell(
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start, // Align icons to the start
-                                      children: [
-                                        // Button 1 - Medical Report PDF
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            foregroundColor: Colors.black,
-                                            backgroundColor: Colors.white, // Button background color
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(5), // Rounded corners
-                                            ),
-                                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Smaller padding
-                                            minimumSize: Size(40, 30), // Smaller size for the button
-                                          ),
-                                          onPressed: () {
-                                            // Fetch medical reports when the button is pressed
-                                            fetchMedicalReports(
-                                                recipient['carerecipient_id'].toString());
-                                          },
-                                          child: Icon(Icons.picture_as_pdf, color: Colors.red, size: 18), // Smaller PDF icon
-                                        ),
-                                        SizedBox(width: 6), // Space between the buttons
-
-                                        // Button 2 - History Page Navigation
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            foregroundColor: Colors.black,
-                                            backgroundColor: Colors.white, // Button background color
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(5), // Rounded corners
-                                            ),
-                                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Smaller padding
-                                            minimumSize: Size(40, 30), // Smaller size for the button
-                                          ),
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => HistoryPage(
-                                                    recipientId: recipient['carerecipient_id'].toString()),
-                                              ),
-                                            );
-                                          },
-                                          child: Icon(Icons.access_time, color: Colors.black, size: 18), // Smaller History icon
-                                        ),
-                                        SizedBox(width: 6), // Space between the buttons
-
-                                        // Button 3 - Unfollow/Requested toggle
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            foregroundColor: Colors.black,
-                                            backgroundColor: Colors.white, // Button background color
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(5), // Rounded corners
-                                            ),
-                                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Smaller padding
-                                            minimumSize: Size(40, 30), // Smaller size for the button
-                                          ),
-                                          onPressed: () {
-                                            if (recipient['isFollowed'] == true) {
-                                              // If it's 'Requested', delete the unfollow request
-                                              deleteUnfollowRequest(widget.savedToken, recipient['carerecipient_id'].toString());
-                                            } else {
-                                              // Otherwise, send an unfollow request
-                                              sendUnfollowRequest(widget.savedToken, recipient['carerecipient_id'].toString());
-                                            }
-
-                                            // Toggle the button state between 'Unfollow' and 'Requested'
-                                            setState(() {
-                                              recipient['isFollowed'] = !(recipient['isFollowed'] ?? false);
-                                            });
-                                          },
-                                          child: Text(
-                                            recipient['isFollowed'] == true ? 'Requested' : 'Unfollow',
-                                            style: TextStyle(color: Colors.blue, fontSize: 14), // Text color
-                                          ),
-                                        ),
-                                      ],
+                          ]
+                              : filteredRecipients.map<Widget>((recipient) {
+                            return GestureDetector(
+                              onTap: () {
+                                // Navigate to the details page when card is clicked
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RecipientDetailsPage(
+                                      recipientId: recipient['carerecipient_id'].toString(),
+                                      recipientEmail: recipient['Email'],
                                     ),
                                   ),
-                                ]);
-                              }).toList(),
-                            ),
-                          ),
+                                );
+                              },
+                              child: Card(
+                                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                elevation: 4, // Slight elevation for individual tiles
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10), // Rounded corners for each tile
+                                ),
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                                  leading: CircleAvatar(
+                                    backgroundImage: NetworkImage(
+                                      'http://10.0.2.2:3001/${recipient['image_path']}',
+                                    ),
+                                    radius: 30, // Circular design
+                                  ),
+                                  title: Text(
+                                    recipient['Email'],
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.teal.shade800,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    recipient['Type_oftheuser'],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                  trailing: Icon(
+                                    Icons.arrow_forward_ios, // Add an arrow for better UX
+                                    color: Colors.teal.shade700,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
                     ),
@@ -1570,8 +1590,6 @@ class _HomepageState extends State<CareGiverHomepage> {
                 ),
               ),
             )
-
-
 
 
 
@@ -1584,14 +1602,14 @@ class _HomepageState extends State<CareGiverHomepage> {
         onTap: _onItemTapped,
         items: <BottomNavigationBarItem>[
           const BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.blue),
+            icon: Icon(Icons.home, color: Colors.teal),
             label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Stack(
               clipBehavior: Clip.none,  // To allow the badge to overlap the icon
               children: [
-                const Icon(Icons.chat, color: Colors.blue), // Icon can remain constant
+                const Icon(Icons.chat, color: Colors.teal), // Icon can remain constant
                 if (unreadMessageCount > 0)
                   Positioned(
                     top: -4, // Adjust the vertical position of the badge
@@ -1608,6 +1626,7 @@ class _HomepageState extends State<CareGiverHomepage> {
                       ),
                     ),
                   ),
+
               ],
             ),
             label: 'Chat',
@@ -1615,11 +1634,11 @@ class _HomepageState extends State<CareGiverHomepage> {
 
 
           const BottomNavigationBarItem(
-            icon: Icon(Icons.search, color: Colors.blue),
+            icon: Icon(Icons.search, color: Colors.teal),
             label: 'Search',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.menu, color: Colors.blue),
+            icon: Icon(Icons.menu, color: Colors.teal),
             label: 'Browse',
           ),
         ],
@@ -1646,7 +1665,7 @@ class _HomepageState extends State<CareGiverHomepage> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.blue.withOpacity(0.7),
+              color: Colors.teal.withOpacity(0.7),
               blurRadius: 15,
               offset: Offset(0, 10),
             ),
@@ -1691,14 +1710,16 @@ class _HomepageState extends State<CareGiverHomepage> {
   }
 
 }
-Future<void> sendMessage(String title) async {
-  // Access token from Firebase (ensure it's valid and updated)
-  const accessToken =
-      'Bearer  ya29.c.c0ASRK0Gbaz8XYJgAUHolvuSYpPD8A7IYu2jBZVf7hdLLoe4Obksl1SgxDNOTM4pvLoc9B1YDIubYsD2Zyfhjm5jMvOR7ZVL5rZhLutdefa3tG6ja68R0bN1cGPm6VgcUOfoEjJwdAcQM_bpcuUkQewFW_sbGXe5mNd4dHe3of8VJ1pzKHke5X8rYttw3a_gSMnqD_b9mqpw228PRHbmGgfMPZFkAAJc7px7s2Z9BnfIY0YFh3JGvKVWdGOrWOgzToyRl46qsvE9iBZBpu_Rl7P-qyXgK7tJGQCNm4Q-J03m0L5OyS3tr93jo2N7xAHfeG0Jnob7uLCea7ofEym222LFoJrLtW9sDOqPxCURoNBppdsAiul95qCz82G385K4QzzbVfaOtJu9kQIOlI3Ra81da5hlutiSlfQdVYMkYwxpBSO5RFr644fSee2OwSmtuM-4nymZOk8mWIrlvIY6O8dlpZu66QcQ2Qjj-IfUjnfbIi1idW1087Siiyzk2Q4hYmiky-ubXSsw38yBXS0U0s-drwRl4p-4oxMFFiSgW1ktxROhxixp3xZ1SocfxUIf5x3nntn2ogw6YU7SotuWBJ9r77RWII87y2mp49fbu6cvM2OF-lh0SWjsn7y1ORuuxw9t2yOMtSMXJQ_cwZYdi98xr8ednineXykxXcQ0Fc02jyu1gbn8Ij_43fO2lIarIYFU6JhMhvs246z6ww11W9b68oiO5zlWzfl8gFebgvWv4k_e-B1WejSytdi6pFkV7ZzoamiztmyxfF9hl2pxpixQO-Ze2jQaVziuRzcV-r4uqFo9eVk2QIo9O1Z998YdJIIhzB-bkzvOXfRM28ruzFajFlwjf2tv4uqz_t49dfk-mXRVgs2nuRBjX5S0FrccpV-zozpwIJYsiI_1o8B34I62_15q_zr3mOy8dXFj0_eF44y5g46Fr4ZYgIotuyfFyw2OffBdfy6inpyVkMZUXwg9Ynp30ln0edIy8Yxt4J';
 
-  // Replace with your actual FCM API endpoint and receiver token
-  const fcmEndpoint = 'https://fcm.googleapis.com/v1/projects/softwareproject-e838c/messages:send';
-  const receiverToken = 'crJ1lj5kR-O_ylFMbzC07q:APA91bERmz7BnHAGchWSP_7XKxoR3BjBuzPFEBnSTLovqA5fJezf9jq0ZwrgHNo_fYUIZjrLoNFpsqG7FnF5wtzy--QEsRuKBCHKEI7hGVRL9jFG93ssSKQ';
+
+Future<void> sendMessage(String title) async {
+  const accessToken =
+      'Bearer ya29.c.c0ASRK0GZ228tBpIJVFKGFDU5BRXqbr05UzUocSNhtm6ZtYL3O_iynrS2egT1ILTplhpsgjb2cS6Ya6aWVDPqLRIlGdH2SbqcjUX737pknkHJ-_4j3VlKZLl9pZvhBSY7vryLyjdpEMrH2LZ4FAsRPCBPYNyj1LnOlBov_hqzksJntOxBOlHfPK7aZEniN_P1RUDJFEz2h6u3L6ou6WfHMJ7AnLMIZLctmgSuZ8V10TbdLg86gAvy_0JfrCaVQwrsQO0EDgNGmRNS8g_Qs19ITxNeBkZM4mt8xM5PNnbctCl5coeO8nvbE8czB2V3Jk7pPxg2ZZvwOPTxIlblfZFxvckWiTtJDJ0hRBahlLhIIf697EHXHg98qlokKWAN387KwOu4F0MMuIne505t6oznxnOa87IkR6VfIFwFi3m-2qxuX6xr63rQ70qs98vw9aMx5helWjWri4QS4w1VtQWtmwyvZxY-3oX0XOhnqb9n7x3fn8rfBv3OkJohJl7yW4abj7V9OqxtMmO74av5iQ0jz1SvoeI4M-1v2d9Z4rgmuqMdsnu6pro8iQB8VbWZlRB4RhufvruSX68ej_4Mj8O0I17ddcY8uaZfRQ68VstY3Qpws5_vSca4oaJXqtjQa0MZu8tYnu7do7w0ufvVo68UcY9lOZsF3qtFr4FUbUf1VfR1O0711nBYaOaW7i3vy-6xfhwBBwiVl7c1mejWxs7cFicqval4IFbQx0cmgYOW3JhlRnQFu5msqknlSrvdeprqIcf35uozgJaVWg9tOSR366r6iv-l05ixeen7JbtZbjORkty-3Mw1xQroXmvbxqsheIdmXmzyyz3qpfo2Woc4pw7BlsSr7w5cjhmkVo_uyekZ2uU2mzWtkww8JQUamOaf4z3hukrcm6o9lm60RomfsaVJevrnjWMocOuUkeV_78jz2kIBIjjkqYm4sJo0ZZjcaox403Yo86lgBbXU-fjZ0XU9bW-J02fs_Ra4p8wjb';
+
+  const fcmEndpoint =
+      'https://fcm.googleapis.com/v1/projects/softwareproject-e838c/messages:send';
+  const receiverToken =
+      'crJ1lj5kR-O_ylFMbzC07q:APA91bERmz7BnHAGchWSP_7XKxoR3BjBuzPFEBnSTLovqA5fJezf9jq0ZwrgHNo_fYUIZjrLoNFpsqG7FnF5wtzy--QEsRuKBCHKEI7hGVRL9jFG93ssSKQ';
 
   var body = json.encode({
     "message": {
@@ -1706,15 +1727,37 @@ Future<void> sendMessage(String title) async {
       "notification": {
         "title": title,
         "body": "You Have New Message",
-      },   "android":{
-        "priority":"normal"
+      },
+      "data": {
+        "key1": "value1", // Example custom data
+        "key2": "value2",
+      },
+      "android": {
+        "priority": "high", // Set priority to "high" for background delivery
+        "notification": {
+          "click_action": "FLUTTER_NOTIFICATION_CLICK", // Handles notification click
+        }
+      },
+      "apns": {
+        "headers": {
+          "apns-priority": "10", // High priority for iOS
+        },
+        "payload": {
+          "aps": {
+            "alert": {
+              "title": title,
+              "body": "You Have New Message",
+            },
+            "content-available": 1, // Ensures background delivery
+          }
+        }
       }
-    },
+    }
   });
 
   try {
     var headers = {
-      'Authorization': accessToken,
+      'Authorization': 'Bearer $accessToken',
       'Content-Type': 'application/json',
     };
 
@@ -1736,6 +1779,7 @@ Future<void> sendMessage(String title) async {
 }
 
 
+
 class CardPage extends StatelessWidget {
   final dynamic article;
 
@@ -1754,8 +1798,11 @@ class CardPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(article['title']),
-        backgroundColor: Colors.indigoAccent,
+        title: Text(article['title'],style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -1792,4 +1839,132 @@ class CardPage extends StatelessWidget {
     );
   }
 }
+
+
+
+class RecipientDetailsPage extends StatefulWidget {
+  final String recipientId;
+  final String recipientEmail; // Added email as a parameter
+
+  // Constructor to accept recipientId and recipientEmail
+  RecipientDetailsPage({required this.recipientId, required this.recipientEmail});
+
+  @override
+  _RecipientDetailsPageState createState() => _RecipientDetailsPageState();
+}
+
+class _RecipientDetailsPageState extends State<RecipientDetailsPage> {
+  // Function to fetch medical reports
+  Future<void> fetchMedicalReports(String careRecipientId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:3001/user/files/$careRecipientId'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        List<dynamic> files = data['files'] ?? []; // Handle null case for 'files'
+
+        // Navigate to the new page and pass the files (even if empty)
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MedicalReportsPage(files: files),
+          ),
+        );
+      } else {
+        // If the response is not successful, navigate with an empty list
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MedicalReportsPage(files: []),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error fetching files: $e');
+      // Navigate with an empty list if an error occurs
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MedicalReportsPage(files: []),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.recipientEmail,style: TextStyle(color: Colors.white),), // Display the recipient's email in the AppBar
+        backgroundColor: Colors.teal,
+        elevation: 4.0,
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
+      ),
+      body: Container(
+        color: Colors.grey[100], // Background color for the whole screen
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Medical Report Button with enhanced design
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.teal,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                minimumSize: Size(double.infinity, 50),
+                shadowColor: Colors.black.withOpacity(0.3),
+                elevation: 5,
+              ),
+              onPressed: () {
+                // Fetch and display the medical report for this recipient
+                fetchMedicalReports(widget.recipientId);
+              },
+              child: Text(
+                "View Medical Report",
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(height: 20),
+            // History Page Button with similar styling, but teal background
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.teal, // Set the background color to teal
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                minimumSize: Size(double.infinity, 50),
+                shadowColor: Colors.black.withOpacity(0.3),
+                elevation: 5,
+              ),
+              onPressed: () {
+                // Navigate to the history page for this recipient
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HistoryPage(recipientId: widget.recipientId),
+                  ),
+                );
+              },
+              child: Text(
+                "View History",
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
