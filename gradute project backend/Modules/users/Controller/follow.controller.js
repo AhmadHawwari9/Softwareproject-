@@ -247,8 +247,11 @@ const handleNotificationAndUnfollowRequestDeletion = async (req, res) => {
 
 
 const handleNotificationAndUnfollowRequestDeletionforcarerecipant = async (req, res) => {
-  const senderId = req.params.senderId; 
-  const receiverId = req.user.id; 
+  const senderId = req.params.senderId;  // Caregiver's ID from URL parameter
+  const receiverId = req.user.id;  // Carerecipient's ID from the authenticated user
+  
+  console.log('Sender ID:', senderId);
+  console.log('Receiver ID:', receiverId);
 
   try {
     const result = await notificationAndUnfollowServiceforcarerecipant(senderId, receiverId);

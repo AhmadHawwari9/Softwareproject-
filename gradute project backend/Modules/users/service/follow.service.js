@@ -343,7 +343,7 @@ const notificationAndUnfollowService = (senderId, receiverId) => {
         }
 
         // Insert a notification for the approval of the unfollow request
-        db.query(insertNotificationQuery, [senderId, receiverId], (insertError, insertResults) => {
+        db.query(insertNotificationQuery, [receiverId, senderId], (insertError, insertResults) => {
           if (insertError) {
             console.error('Error inserting approval notification: ', insertError);
             return reject({ error: 'Database error while inserting approval notification' });
@@ -381,28 +381,32 @@ const notificationAndUnfollowServiceforcarerecipant = (senderId, receiverId) => 
       VALUES (?, ?, 'approve_unfollow_request', 0);
     `;
 
-    // Delete the 'unfollow' notification
+    console.log('Deleting notification for:', senderId, receiverId);
+
     db.query(deleteNotificationQuery, [senderId, receiverId], (notificationError, notificationResults) => {
       if (notificationError) {
         console.error('Error deleting notification: ', notificationError);
         return reject({ error: 'Database error while deleting notification' });
       }
 
-      // After deleting the notification, proceed to delete the unfollow request
+      console.log('Notification deleted, rows affected:', notificationResults.affectedRows);
+
       db.query(deleteUnfollowRequestQuery, [senderId, receiverId], (unfollowError, unfollowResults) => {
         if (unfollowError) {
           console.error('Error deleting unfollow request: ', unfollowError);
           return reject({ error: 'Database error while deleting unfollow request' });
         }
 
-        // Insert the 'approve_unfollow_request' notification
+        console.log('Unfollow request deleted, rows affected:', unfollowResults.affectedRows);
+
         db.query(insertNotificationQuery, [receiverId, senderId], (insertError, insertResults) => {
           if (insertError) {
             console.error('Error inserting approval notification: ', insertError);
             return reject({ error: 'Database error while inserting approval notification' });
           }
 
-          // Resolve the promise with all results from the queries
+          console.log('Approval notification inserted, rows affected:', insertResults.affectedRows);
+
           resolve({
             notificationResults,
             unfollowResults,
@@ -414,6 +418,9 @@ const notificationAndUnfollowServiceforcarerecipant = (senderId, receiverId) => 
     });
   });
 };
+
+
+
 
 
 

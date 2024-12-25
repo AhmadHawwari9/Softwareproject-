@@ -25,7 +25,7 @@ const {deleteUserFile,getFilesByUserId}=require('../Controller/MedicalReportpdf.
 const {getUserProfile}=require('../Controller/Profile.controller');
 const {updateUserBio}=require('../Controller/Profile.controller');
 const {updateUserage,updateImageForUser}=require('../Controller/Profile.controller');
-const{getSchedule,updateSchedule,deleteSchedule,addSchedule}=require('../Controller/scheduleforcaregiver.Controller');
+const{getSchedule,updateSchedule,deleteSchedule,addSchedule,getScheduleByDateForUser}=require('../Controller/scheduleforcaregiver.Controller');
 const {getCareRecipients}=require('../Controller/Tablecarerecipientlist.controller');
 const {getReportsByUserId}=require('../Controller/History.controller');
 const {getUsers,deleteUser} =require('../Controller/Operationsonusersfortheadmin.controller');
@@ -33,7 +33,7 @@ const{createCaregiverValidation}=require('../Validation/caregiverRequestToTheAdm
 const{createCaregiverUsingPost,getCaregiver,moveCaregiverToUser,deleteCaregiverRequest}=require('../Controller/caregiverRequestToTheAdmin.controller');
 const {updateEmailController,changePassword,deletemyaccount}=require('../Controller/Settings.controller');
 const {getUsersfromsearch,getUserById}=require('../Controller/search.controller');
-const{getScheduleByDate}=require('../Controller/scheduleforcaregiver.Controller');
+const{getScheduleByDate,addScheduleById}=require('../Controller/scheduleforcaregiver.Controller');
 const articleController = require('../Controller/articals.controller');
 const {sendFollowRequest,getUserNotifications,fetchUserNotifications,deleteFollowRequest,approveFollowRequest,
     removeFollowRequest1,fetchCareGiversForRecipient,sendUnfollowRequest,
@@ -42,6 +42,19 @@ const {sendFollowRequest,getUserNotifications,fetchUserNotifications,deleteFollo
     handleNotificationAndUnfollowRequestDeletionforcarerecipant,fetchNotificationCount,
     markNotificationsAsRead}=require('../Controller/follow.controller');
 
+    const {setDoctorAvailability,getDoctorAvailability,fetchDoctorAvailability}=require('../Controller/doctorAvailability.Controller');
+
+    const{modifySchedule,removeSchedule,fetchCaregiverSchedule}=require('../Controller/scheduleforcaregiver.Controller');
+    const {getMedications,getAllMedicationsForPatient,createNewMedication,
+        getMedicationsForPatientById,
+        getUserEmailByToken,
+        deleteMedicationById,
+        fetchMedicationsReminder
+    }=require('../Controller/medicine.controller');
+
+
+    const{getAllHospitals}=require('../Controller/hospitals.controller');
+    
 const router = express.Router();
 
 const uploade = require('../../fileMannager/helper/multerobj');
@@ -135,6 +148,25 @@ router.delete('/deleteNotificationAndUnfollowAccept/:senderId', authonitication,
 router.delete('/deleteNotificationAndUnfollowAcceptforcarerecipant/:senderId', authonitication, handleNotificationAndUnfollowRequestDeletionforcarerecipant);
 router.get('/notification-count', authonitication, fetchNotificationCount);
 router.put('/mark-notifications-read', authonitication, markNotificationsAsRead);
+
+router.post('/setAvailability', authonitication, setDoctorAvailability);
+router.get('/getAvailability', authonitication, getDoctorAvailability);
+router.get('/getScheduleByDateForUser/:userId/:date', getScheduleByDateForUser);
+router.put('/modifySchedule/:userId/:scheduleId', modifySchedule);
+router.delete('/removeSchedule/:userId/:scheduleId', removeSchedule);
+
+router.get('/caregiverSchedule/:userId', fetchCaregiverSchedule);
+router.get('/availability/:id', fetchDoctorAvailability);
+router.post('/schedulefromthecarerecipant/:id', addScheduleById);
+router.get('/getMedications/:doctorId', authonitication, getMedications);
+router.get('/medications', authonitication, getAllMedicationsForPatient);
+router.post('/add-medication', authonitication, createNewMedication);
+router.get('/medications/:patientId', getMedicationsForPatientById);
+router.get('/user/email', authonitication, getUserEmailByToken); 
+router.delete('/medication/:id', deleteMedicationById);
+router.get('/medication-reminder', authonitication, fetchMedicationsReminder);
+
+router.get('/hospitals', getAllHospitals);
 
 
 
