@@ -104,11 +104,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
     if (response.statusCode == 200) {
       print('Follow request approved for sender ID $senderId');
       setState(() {
-        followNotifications = followNotifications.then((list) {
-          list.removeWhere((notification) =>
-          notification['Sender_id'].toString() == senderId);
-          return list;
-        });
+        followNotifications = fetchFollowNotifications();
+        unfollowNotifications = fetchUnfollowNotifications();
       });
     } else {
       print('Failed to approve follow request');
@@ -149,8 +146,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final response = await http.delete(
       Uri.parse(url),
       headers: {
-        'Authorization': 'Bearer ${widget.savedToken}',
-        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${widget.savedToken}'
       },
     );
 
@@ -171,8 +167,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final response = await http.delete(
       Uri.parse(url),
       headers: {
-        'Authorization': 'Bearer ${widget.savedToken}', // Include token in headers
-        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${widget.savedToken}'
       },
     );
 
@@ -193,11 +188,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final response = await http.delete(
       Uri.parse(url),
       headers: {
-        'Authorization': 'Bearer ${widget.savedToken}', // Include token in headers
+        'Authorization': 'Bearer ${widget.savedToken}',
         'Content-Type': 'application/json',
       },
     );
 
+    print('Response status: ${response.statusCode}');
     if (response.statusCode == 200) {
       print('Unfollow request accepted for sender ID $senderId');
       setState(() {
@@ -206,7 +202,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         unfollowNotifications = fetchUnfollowNotifications();
       });
     } else {
-      print('Failed to accept unfollow request');
+      print('Failed to accept unfollow request: ${response.body}');
     }
   }
 
@@ -344,47 +340,65 @@ class _NotificationsPageState extends State<NotificationsPage> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          subtitle: Text(
-                            notificationType == 'follow'
-                                ? 'You have a new follow request '
-                                : notificationType == 'unfollow'
-                                ? 'You have a new unfollow request '
-                                : notificationType == 'approve_follow_request'
-                                ? 'Follow request approved'
-                                : notificationType == 'approve_unfollow_request'
-                                ? 'Unfollow request approved'
-                                : '',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: isUnread ? Colors.black : Colors.grey,
-                            ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                notificationType == 'follow'
+                                    ? 'You have a new follow request '
+                                    : notificationType == 'unfollow'
+                                    ? 'You have a new unfollow request '
+                                    : notificationType == 'approve_follow_request'
+                                    ? 'Follow request approved'
+                                    : notificationType == 'approve_unfollow_request'
+                                    ? 'Unfollow request approved'
+                                    : notificationType, // Print typeofnotifications if it does not match any of the above
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: isUnread ? Colors.black : Colors.grey,
+                                ),
+                              ),
+                              // Optionally, you can include the type of notification only if it's not one of the predefined ones
+                              notificationType != 'follow' && notificationType != 'unfollow' && notificationType != 'approve_follow_request' && notificationType != 'approve_unfollow_request'
+                                  ? Text('', // Print typeofnotifications here if it's not one of the predefined types
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                  ))
+                                  : Container(), // Empty container if it's one of the predefined types
+                            ],
                           ),
-                          trailing: notificationType == 'approve_follow_request' || notificationType == 'approve_unfollow_request'
-                              ? null
+
+                          trailing: notificationType == 'approve_follow_request' ||
+                              notificationType == 'approve_unfollow_request'
+                              ? null // No buttons for approved requests
+                              : notificationType != 'follow' && notificationType != 'unfollow'
+                              ? null // Skip buttons for unrecognized types
                               : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                icon: Icon(
-                                  Icons.check_circle,
-                                  color: Colors.green,
-                                ),
-                                onPressed: () {
-                                  String senderId = notification['Sender_id'].toString();
-                                  if (notificationType == 'follow') {
-                                    approveFollowRequest(senderId);
-                                  } else {
-                                    if (widget.iscareRecipant) {
-                                      acceptUnfollowRequestforcareRecipant(senderId);
-                                    } else {
-                                      acceptUnfollowRequest(senderId);
-                                    }
-                                  }
-                                },
-                              ),
-                              SizedBox(width: 10),
-                              IconButton(
+                          IconButton(
+                          icon: Icon(Icons.check_circle, color: Colors.green),
+                          onPressed: () {
+                            String senderId = notification['Sender_id'].toString();
+                            String notificationType = notification['typeofnotifications'];
+
+                            print('senderId: $senderId, notificationType: $notificationType'); // Log for debugging
+
+                            if (notificationType == 'follow') {
+                              approveFollowRequest(senderId);
+                            } else {
+                              if (widget.iscareRecipant) {
+                                acceptUnfollowRequestforcareRecipant(senderId);
+                              } else {
+                                acceptUnfollowRequest(senderId);
+                              }
+                            }
+                          },
+                        ),
+
+                        IconButton(
                                 icon: Icon(
                                   Icons.cancel,
                                   color: Colors.red,
@@ -394,12 +408,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                   if (notificationType == 'follow') {
                                     rejectFollowRequest(senderId);
                                   } else {
-                                    rejectUnfollowRequest(senderId); // Call the method to reject unfollow request
+                                    if (widget.iscareRecipant) {
+                                      rejectUnfollowRequest(senderId);
+                                    } else {
+                                      rejectFollowRequest(senderId);
+                                    }
                                   }
                                 },
                               ),
                             ],
                           ),
+
                           tileColor: isUnread ? Colors.teal[50] : Colors.white,
                           onTap: () {
                             print('Notification tapped: ${notification['Notifications_id']}');
@@ -416,7 +435,5 @@ class _NotificationsPageState extends State<NotificationsPage> {
       ),
     );
   }
-
-
 
 }

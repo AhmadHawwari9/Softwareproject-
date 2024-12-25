@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
 
+import 'chatwithspecificperson.dart';
+
 class HospitalDetails extends StatelessWidget {
   final Map<String, String> hospital;
+  final String savedToken;
+  final String hospitalId;
+  final String userEmail;
 
-  const HospitalDetails({Key? key, required this.hospital}) : super(key: key);
-
+  const HospitalDetails({
+    Key? key,
+    required this.hospital,
+    required this.savedToken,
+    required this.userEmail,
+    required this.hospitalId,
+  }) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${hospital["name"]} - Details',style: TextStyle(color: Colors.white),),
+        title: Text('${hospital["name"]}', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.teal,
         iconTheme: IconThemeData(
           color: Colors.white, // This makes the back arrow white
@@ -20,60 +30,146 @@ class HospitalDetails extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Hospital Image with rounded borders and shadow
             Center(
-              child: CircleAvatar(
-                radius: 60,
-                backgroundImage: AssetImage(hospital["image"]!),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(100),
+                child: hospital['image'] != null
+                    ? Image.network(
+                  'http://10.0.2.2:3001/${hospital['image']!.startsWith('/') ? hospital['image']!.substring(1) : hospital['image']!}',
+                  height: 150,
+                  width: 150,
+                  fit: BoxFit.cover,
+                )
+                    : Container(
+                  height: 150,
+                  width: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Icon(Icons.home, size: 80, color: Colors.white),
+                ),
               ),
             ),
             const SizedBox(height: 20),
+
+            // Hospital Name
             Text(
-              'Name: ${hospital["name"]}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              '${hospital["name"] ?? "N/A"}',
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.teal,
+              ),
             ),
             const SizedBox(height: 10),
-            Text(
-              'Location: ${hospital["location"]}',
-              style: const TextStyle(fontSize: 18),
-            ),
+
+            // Location
+            _buildInfoRow('Location', hospital["location"]),
+            const SizedBox(height: 10),
+
+            // Description
+            _buildSectionTitle('Description'),
+            _buildInfoText(hospital["description"]),
             const SizedBox(height: 20),
-            Text(
-              'Description:\n${hospital["description"]}',
-              style: const TextStyle(fontSize: 16),
-            ),
+
+            // Clinics
+            _buildSectionTitle('Clinics'),
+            _buildInfoText(hospital["clinics"]),
             const SizedBox(height: 20),
-            Text(
-              '${hospital["clinics"]}',
-              style: const TextStyle(fontSize: 16),
-            ),
+
+            // Working Hours
+            _buildSectionTitle('Working Hours'),
+            _buildInfoText(hospital["workingHours"]),
             const SizedBox(height: 20),
-            Text(
-              '${hospital["workingHours"]}',
-              style: const TextStyle(fontSize: 16),
-            ),
+
+            // Doctors
+            _buildSectionTitle('Doctors'),
+            _buildInfoText(hospital["doctors"]),
             const SizedBox(height: 20),
-            Text(
-              '${hospital["doctors"]}',
-              style: const TextStyle(fontSize: 16),
-            ),
+
+            // Contact Information
+            _buildSectionTitle('Contact'),
+            _buildInfoText(hospital["contact"]),
             const SizedBox(height: 20),
-            Text(
-              '${hospital["contact"]}',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
+            // Contact Button (For action like calling)
+            ElevatedButton(
               onPressed: () {
-                // مثال: الاتصال بالطوارئ
-                print("Calling Emergency Service");
+                // final hospitalId = hospital["User_id"] ?? "";
+                // final useremail = hospital["user_email"] ?? "";
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                      otherUserId: hospitalId,
+                      userEmail: userEmail,
+                      jwtToken: savedToken,
+                    ),
+                  ),
+                );
               },
-              icon: const Icon(Icons.phone),
-              label: const Text("Call Emergency"),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal, // Set the background color
+                padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0), // Increase padding
+                minimumSize: Size(double.infinity, 60), // Make the button take full width and increase height
+              ),
+              child: Text(
+                'Contact Hospital',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18, // Increase font size
+                ),
+              ),
             ),
+
           ],
         ),
       ),
+    );
+  }
+
+  // Helper function to build title of sections
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+        color: Colors.teal,
+      ),
+    );
+  }
+
+  // Helper function to build text content
+  Widget _buildInfoText(String? content) {
+    return Text(
+      content ?? "Not available",
+      style: const TextStyle(fontSize: 16, color: Colors.black87),
+      softWrap: true,
+    );
+  }
+
+  // Helper function to build location and contact rows
+  Widget _buildInfoRow(String title, String? content) {
+    return Row(
+      children: [
+        Text(
+          '$title: ',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.teal,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            content ?? "Not available",
+            style: const TextStyle(fontSize: 16, color: Colors.black87),
+            softWrap: true,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -74,6 +74,7 @@ class _HomepageState extends State<CareRecipientHomepage> {
     getAccessToken();
     fetchUnreadMessagesCount();
     getToken();
+    fetchMedicationReminders();
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (message.notification != null) {
         print("new message");
@@ -89,6 +90,23 @@ class _HomepageState extends State<CareRecipientHomepage> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<List<String>> fetchMedicationReminders() async {
+    final url = 'http://10.0.2.2:3001/medication-reminder'; // Update the URL if necessary
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer ${widget.savedToken}', // Include the token in the headers
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return List<String>.from(data['reminders'] ?? []);
+    } else {
+      throw Exception('Failed to fetch medication reminders');
+    }
   }
 
 
@@ -617,11 +635,11 @@ class _HomepageState extends State<CareRecipientHomepage> {
     if (page == 'settings') {
       Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsPage(widget.savedEmail,widget.savedPassword,widget.savedToken,widget.isGoogleSignInEnabled)));
     } else if (page == 'doctor') {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => DoctorPage()));
+      Navigator.push(context, MaterialPageRoute(builder: (context) => CareGiversScreen(widget.savedToken)));
     } else if (page == 'pharmaceutical') {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => PharmaceuticalPage()));
+      Navigator.push(context, MaterialPageRoute(builder: (context) => PharmaceuticalPage(widget.savedToken)));
     } else if (page == 'hospital') {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => HospitalsPage()));
+      Navigator.push(context, MaterialPageRoute(builder: (context) => HospitalsPage(widget.savedToken)));
     }else if(page=='PDFReaderApp'){
       Navigator.push(
         context,
@@ -736,7 +754,7 @@ class _HomepageState extends State<CareRecipientHomepage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => NotificationsPage(widget.savedToken, false),
+                      builder: (context) => NotificationsPage(widget.savedToken, true),
                     ),
                   );
                 },
@@ -844,16 +862,7 @@ class _HomepageState extends State<CareRecipientHomepage> {
               },
             ),
 
-            ListTile(
-              leading: Icon(Icons.person),
-              title: Text("My Care Givers"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CareGiversScreen(widget.savedToken)),
-                );
-              },
-            ),
+
             ListTile(
               leading: Icon(Icons.picture_as_pdf_rounded,),
               title: Text("My Medical Reports"),

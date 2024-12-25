@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -7,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:softwaregraduateproject/setavilabelityforthedoctor.dart';
 import 'AdminHomepage.dart';
 import 'CareRecipientHomepage.dart';
 import 'Conversations.dart';
@@ -21,6 +21,8 @@ import 'Myfiles.dart';
 import 'Noti.dart';
 import 'Notificationpage.dart';
 import 'PdfReader.dart';
+import 'PharmaceuticalPageforDoctor.dart';
+import 'Profileforcarerecipantincaregiverpage.dart';
 import 'Reportsshowtocaregiver.dart';
 import 'Searchcaregievrpage.dart';
 import 'Searchpage.dart';
@@ -76,6 +78,7 @@ class _HomepageState extends State<CareGiverHomepage> {
     fetchArticles();
     fetchCareRecipients();
     fetchSchedule();
+    fetchAvailability();
     fetchCareRecipients().then((_) {
       setState(() {
         // Populate the filtered list with all recipients by default
@@ -155,6 +158,7 @@ class _HomepageState extends State<CareGiverHomepage> {
       }
     });
   }
+
   Future<void> fetchSchedule() async {
     final url = Uri.parse('http://10.0.2.2:3001/ScheduleforCaregiver'); // Your API URL to get all schedule data
     try {
@@ -886,6 +890,94 @@ class _HomepageState extends State<CareGiverHomepage> {
       });
     }
   }
+   bool hasUnfollowRequest = false;
+
+  Future<void> checkUnfollowRequest(String id) async {
+    final url = Uri.parse('http://10.0.2.2:3001/notifications');
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer ${widget.savedToken}'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Check if the user has any unfollow notifications
+        if (data['notifications'] != null) {
+          for (var notification in data['notifications']) {
+            if (notification['reciver_id'].toString() == id &&
+                notification['typeofnotifications'] == 'unfollow') {
+              setState(() {
+                hasUnfollowRequest = true; // An unfollow request exists
+              });
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('Error fetching unfollow notifications: $e');
+    }
+  }
+
+
+  Future<void> _toggleFollowRequest(String id) async {
+    final unfollowRequestUrl = Uri.parse('http://10.0.2.2:3001/unfollow');
+    final deleteUnfollowRequestUrl = Uri.parse('http://10.0.2.2:3001/DeleteUnfollowRequest/$id');
+
+    try {
+      http.Response response;
+
+      if (hasUnfollowRequest) {
+        // If there's an existing unfollow request, delete it
+        response = await http.delete(
+          deleteUnfollowRequestUrl,
+          headers: {
+            'Authorization': 'Bearer ${widget.savedToken}',
+            'Content-Type': 'application/json',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          setState(() {
+            hasUnfollowRequest = false; // Remove unfollow request
+          });
+        }
+      } else {
+        // Otherwise, create a new unfollow request
+        response = await http.post(
+          unfollowRequestUrl,
+          headers: {
+            'Authorization': 'Bearer ${widget.savedToken}',
+            'Content-Type': 'application/json',
+          },
+          body: json.encode({'reciver_id': id}),
+        );
+
+        if (response.statusCode == 200) {
+          setState(() {
+            hasUnfollowRequest = true; // Set unfollow request state
+          });
+        }
+      }
+
+      // Handle errors if the response status is not 200
+      if (response.statusCode != 200) {
+        final errorData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${errorData['error']}')),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred. Please try again.')),
+      );
+    }
+  }
+
+
+
 
 // Call this method after editing a schedule
   void refreshSchedulesForSelectedDate() {
@@ -893,24 +985,37 @@ class _HomepageState extends State<CareGiverHomepage> {
   }
 
 
+  List<String> _getEventsForDay(DateTime day) {
+    // Normalize the input day to local midnight
+    final localDay = DateTime(day.year, day.month, day.day);
 
+    return scheduleData.where((schedule) {
+      DateTime scheduleDate;
+      try {
+        // Parse the 'Date' string as a local date
+        scheduleDate = DateTime.parse(schedule['Date']);
 
-  List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
-    final formattedDay = "${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}";
+        // Add one day to adjust for the time zone shift
+        scheduleDate = scheduleDate.add(const Duration(days: 1));
 
-    // Normalize the schedule Date format to YYYY-MM-DD
-    return List<Map<String, dynamic>>.from(scheduleData.where((schedule) {
-      // Convert the Date field from DD/MM/YYYY to YYYY-MM-DD for comparison
-      var scheduleDate = schedule['Date']; // Assuming 'Date' is in the format 'DD/MM/YYYY'
-      var parts = scheduleDate.split('/');
-      if (parts.length == 3) {
-        // Reformat date to YYYY-MM-DD
-        scheduleDate = '${parts[2]}-${parts[1]}-${parts[0]}';
+        // Normalize to local midnight
+        scheduleDate = DateTime(scheduleDate.year, scheduleDate.month, scheduleDate.day);
+      } catch (e) {
+        print('Error parsing date: ${schedule['Date']}');
+        return false; // Skip invalid dates
       }
 
-      return scheduleDate == formattedDay; // Compare the reformatted Date with formattedDay
-    }).toList());
+      // Compare only the date part
+      return scheduleDate == localDay;
+    }).map<String>((schedule) {
+      return schedule['Name']?.toString() ?? 'No Name';
+    }).toList();
   }
+
+
+
+
+
 
   Future<List> fetchNotifications() async {
     final url = 'http://10.0.2.2:3001/notifications';
@@ -1063,6 +1168,77 @@ class _HomepageState extends State<CareGiverHomepage> {
     });
   }
 
+  String availabilityText = "";
+  Future<void> fetchAvailability() async {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:3001/getAvailability'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${widget.savedToken}',  // Pass the token in the header
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      if (data.isNotEmpty) {
+        // Construct a string with the availability information
+        setState(() {
+          availabilityText = "Available on: ${data[0]['days']}\n"
+              "From: ${data[0]['start_time']} to ${data[0]['end_time']}";
+        });
+      } else {
+        setState(() {
+          availabilityText = "No availability set.";
+        });
+      }
+    } else {
+      setState(() {
+        availabilityText = "No availability Added";
+      });
+    }
+  }
+
+  Widget buildAvailabilityDisplay() {
+    return Card(
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      color: Colors.teal[50],
+      margin: EdgeInsets.symmetric(vertical: 20),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: availabilityText.isEmpty
+            ? Center(
+          child: Text(
+            "Loading availability...",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal),
+          ),
+        )
+            : availabilityText == "No availability set."
+            ? Center(
+          child: Text(
+            "No availability set yet.",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
+          ),
+        )
+            : Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Your Availability:",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal),
+            ),
+            SizedBox(height: 10),
+            Text(
+              availabilityText,
+              style: TextStyle(fontSize: 16, color: Colors.teal),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   TextEditingController searchController = TextEditingController();
   List<dynamic> filteredUsers = [];
@@ -1269,6 +1445,28 @@ class _HomepageState extends State<CareGiverHomepage> {
 
 
             SizedBox(height: 22),
+            buildAvailabilityDisplay(),
+            SizedBox(height: 22),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AvailabilityPage(widget.savedToken)),
+                );
+              },
+              child: Text(
+                "Set Availability",
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+            ),
+            SizedBox(height: 22),
             // Title Text above the table
             Text(
               'Task Schedule for Caregiver',
@@ -1280,12 +1478,11 @@ class _HomepageState extends State<CareGiverHomepage> {
             ),
 
             SingleChildScrollView(
-              scrollDirection: Axis.vertical,  // Vertical scroll for the entire body
+              scrollDirection: Axis.vertical, // Vertical scroll for the entire body
               child: Card(
                 elevation: 4,
                 child: Column(
                   children: [
-
                     // Calendar section
                     Container(
                       height: 400, // Fixed height for the calendar
@@ -1295,8 +1492,11 @@ class _HomepageState extends State<CareGiverHomepage> {
                         focusedDay: DateTime.now(),
                         calendarFormat: CalendarFormat.month,
                         eventLoader: (day) {
-                          return _getEventsForDay(day); // Return events for that day
+                          final events = _getEventsForDay(day);
+                          return events;
                         },
+
+
                         calendarStyle: CalendarStyle(
                           todayDecoration: BoxDecoration(
                             color: Colors.teal,
@@ -1400,8 +1600,12 @@ class _HomepageState extends State<CareGiverHomepage> {
                                       ElevatedButton(
                                         onPressed: () {
                                           String rawDate = schedule['Date'] ?? '';
-                                          DateTime parsedDate = DateTime.parse(rawDate);
-                                          String formattedDate = DateFormat('dd/MM/yyyy').format(parsedDate);
+                                          // Safely parse and format the date
+                                          DateTime? parsedDate = DateTime.tryParse(rawDate);
+
+                                          String formattedDate = parsedDate != null
+                                              ? DateFormat('dd/MM/yyyy').format(parsedDate.toLocal())
+                                              : 'Invalid Date'; // Fallback if parsing fails
 
                                           _showEditDialog(
                                             context,
@@ -1414,9 +1618,7 @@ class _HomepageState extends State<CareGiverHomepage> {
                                         child: Text('Edit'),
                                         style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(horizontal: 8)),
                                       ),
-
-
-                              SizedBox(width: 8),
+                                      SizedBox(width: 8),
                                       ElevatedButton(
                                         onPressed: () async {
                                           bool success = await _deleteSchedule(schedule['scedual_id']);
@@ -1532,55 +1734,58 @@ class _HomepageState extends State<CareGiverHomepage> {
                             ),
                           ]
                               : filteredRecipients.map<Widget>((recipient) {
-                            return GestureDetector(
-                              onTap: () {
-                                // Navigate to the details page when card is clicked
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => RecipientDetailsPage(
-                                      recipientId: recipient['carerecipient_id'].toString(),
-                                      recipientEmail: recipient['Email'],
+                            bool isRequested = recipient['is_following'] ?? false;  // Check if it's already requested from the backend
+
+                            return StatefulBuilder(
+                              builder: (BuildContext context, StateSetter setState) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => RecipientDetailsPage(
+                                          recipientId: recipient['carerecipient_id'].toString(),
+                                          recipientEmail: recipient['Email'],
+                                          savedToken: '$token',
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Card(
+                                    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                    elevation: 4, // Slight elevation for individual tiles
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10), // Rounded corners for each tile
+                                    ),
+                                    child: ListTile(
+                                      contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                                      leading: CircleAvatar(
+                                        backgroundImage: NetworkImage(
+                                          'http://10.0.2.2:3001/${recipient['image_path']}',
+                                        ),
+                                        radius: 30, // Circular design
+                                      ),
+                                      title: Text(
+                                        recipient['Email'],
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.teal.shade800,
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        recipient['Type_oftheuser'],
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+
+
                                     ),
                                   ),
                                 );
                               },
-                              child: Card(
-                                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                                elevation: 4, // Slight elevation for individual tiles
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10), // Rounded corners for each tile
-                                ),
-                                child: ListTile(
-                                  contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                                  leading: CircleAvatar(
-                                    backgroundImage: NetworkImage(
-                                      'http://10.0.2.2:3001/${recipient['image_path']}',
-                                    ),
-                                    radius: 30, // Circular design
-                                  ),
-                                  title: Text(
-                                    recipient['Email'],
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.teal.shade800,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    recipient['Type_oftheuser'],
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
-                                  trailing: Icon(
-                                    Icons.arrow_forward_ios, // Add an arrow for better UX
-                                    color: Colors.teal.shade700,
-                                    size: 16,
-                                  ),
-                                ),
-                              ),
                             );
                           }).toList(),
                         ),
@@ -1590,6 +1795,9 @@ class _HomepageState extends State<CareGiverHomepage> {
                 ),
               ),
             )
+
+
+
 
 
 
@@ -1841,13 +2049,13 @@ class CardPage extends StatelessWidget {
 }
 
 
-
 class RecipientDetailsPage extends StatefulWidget {
   final String recipientId;
-  final String recipientEmail; // Added email as a parameter
+  final String recipientEmail;
+  final String savedToken;
 
   // Constructor to accept recipientId and recipientEmail
-  RecipientDetailsPage({required this.recipientId, required this.recipientEmail});
+  RecipientDetailsPage({required this.recipientId, required this.recipientEmail,required this.savedToken});
 
   @override
   _RecipientDetailsPageState createState() => _RecipientDetailsPageState();
@@ -1897,7 +2105,10 @@ class _RecipientDetailsPageState extends State<RecipientDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.recipientEmail,style: TextStyle(color: Colors.white),), // Display the recipient's email in the AppBar
+        title: Text(
+          widget.recipientEmail,
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.teal,
         elevation: 4.0,
         iconTheme: IconThemeData(
@@ -1910,7 +2121,7 @@ class _RecipientDetailsPageState extends State<RecipientDetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Medical Report Button with enhanced design
+
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
@@ -1924,20 +2135,28 @@ class _RecipientDetailsPageState extends State<RecipientDetailsPage> {
                 elevation: 5,
               ),
               onPressed: () {
-                // Fetch and display the medical report for this recipient
-                fetchMedicalReports(widget.recipientId);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserDetailsPageforcarerecipantincaregiverpage(id: widget.recipientId, savedToken: widget.savedToken,),
+                  ),
+                );
               },
               child: Text(
-                "View Medical Report",
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                "profile",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             SizedBox(height: 20),
-            // History Page Button with similar styling, but teal background
+            // Medical Report Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
-                backgroundColor: Colors.teal, // Set the background color to teal
+                backgroundColor: Colors.teal,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1947,7 +2166,32 @@ class _RecipientDetailsPageState extends State<RecipientDetailsPage> {
                 elevation: 5,
               ),
               onPressed: () {
-                // Navigate to the history page for this recipient
+                fetchMedicalReports(widget.recipientId);
+              },
+              child: Text(
+                "View Medical Report",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            // History Page Button
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.teal,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                minimumSize: Size(double.infinity, 50),
+                shadowColor: Colors.black.withOpacity(0.3),
+                elevation: 5,
+              ),
+              onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -1957,7 +2201,42 @@ class _RecipientDetailsPageState extends State<RecipientDetailsPage> {
               },
               child: Text(
                 "View History",
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            // Patient's Medications Button
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.teal,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                minimumSize: Size(double.infinity, 50),
+                shadowColor: Colors.black.withOpacity(0.3),
+                elevation: 5,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PharmaceuticalPagefordoctor(widget.savedToken,widget.recipientId),
+                  ),
+                );
+              },
+              child: Text(
+                "Patient Medications",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -1966,5 +2245,6 @@ class _RecipientDetailsPageState extends State<RecipientDetailsPage> {
     );
   }
 }
+
 
 

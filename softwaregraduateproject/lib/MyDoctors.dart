@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:softwaregraduateproject/profileforanotherusers.dart';
 import 'dart:convert';
 
+import 'package:softwaregraduateproject/profileformydoctorswithcalender.dart';
+
 class CareGiversScreen extends StatefulWidget {
   final String savedToken;
   CareGiversScreen(this.savedToken);
@@ -108,7 +110,7 @@ class _CareGiversScreenState extends State<CareGiversScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => UserDetailsPage(
+                      builder: (context) => UserDetailsPagewithcalender(
                         id: caregiver['User_id'].toString(), // Convert to String
                         savedToken: widget.savedToken, // Pass the token
                       ),

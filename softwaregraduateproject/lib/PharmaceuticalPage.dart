@@ -1,61 +1,123 @@
 import 'package:flutter/material.dart';
-//import 'PatientPage.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:intl/intl.dart';  // Make sure to add the intl package in your pubspec.yaml
+
+// Assuming you have a class to represent medication
+class Medication {
+  final String name;
+  final String time;
+  final String doctor;
+
+  Medication({
+    required this.name,
+    required this.time,
+    required this.doctor,
+  });
+
+  // Factory method to convert JSON to Medication object
+  factory Medication.fromJson(Map<String, dynamic> json) {
+    return Medication(
+      name: json['medicine_name'],
+      time: _formatTime(json['timings']),
+      doctor: json['doctor_email'],
+    );
+  }
+
+  // Method to format the time string
+  static String _formatTime(String time) {
+    try {
+      final timeFormat = DateFormat("HH:mm"); // Format the time to HH:mm
+      final formattedTime = timeFormat.parse(time); // Parse the input time string
+      return DateFormat("HH:mm").format(formattedTime) + " /day";  // Return formatted time with /day
+    } catch (e) {
+      return time;  // If parsing fails, return the original time string
+    }
+  }
+}
 
 class PharmaceuticalPage extends StatefulWidget {
+  final String savedToken;
+  PharmaceuticalPage(this.savedToken);
+
   @override
   _PharmaceuticalPageState createState() => _PharmaceuticalPageState();
 }
 
 class _PharmaceuticalPageState extends State<PharmaceuticalPage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  List<Medication> _medications = [];
 
-  List<Map<String, String>> _medications = [
-    {"name": "Paracetamol", "time": "08:00 AM", "doctor": "Dr. Smith", "description": "Used to treat mild to moderate pain and fever."},
-    {"name": "Ibuprofen", "time": "02:00 PM", "doctor": "Dr. Johnson", "description": "Reduces pain, inflammation, and fever."},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchMedications();
+  }
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _timeController = TextEditingController();
-  final TextEditingController _doctorController = TextEditingController();
+  Future<void> _fetchMedications() async {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:3001/medications'),
+      headers: {
+        'Authorization': 'Bearer ${widget.savedToken}', // Add token to header
+      },
+    );
 
-  void _addMedication() {
-    if (_nameController.text.isNotEmpty &&
-        _timeController.text.isNotEmpty &&
-        _doctorController.text.isNotEmpty) {
+    if (response.statusCode == 200) {
+      final List<dynamic> medicationList = json.decode(response.body);
+
       setState(() {
-        _medications.add({
-          "name": _nameController.text,
-          "time": _timeController.text,
-          "doctor": _doctorController.text,
-          "description": "No description provided.",
-        });
+        _medications = medicationList
+            .map((data) => Medication.fromJson(data))
+            .toList();
       });
-      _nameController.clear();
-      _timeController.clear();
-      _doctorController.clear();
-      Navigator.of(context).pop();
+    } else {
+      throw Exception('Failed to load medications');
     }
   }
 
+  void _navigateToMedicationDetails(BuildContext context, Medication medication) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MedicationDetailsPage(medication: medication),
+      ),
+    );
+  }
+
   void _showAddMedicationDialog() {
+    final TextEditingController _nameController = TextEditingController();
+    final TextEditingController _timeController = TextEditingController();
+    final TextEditingController _doctorController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         title: Text('Add New Medication'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Medication Name'),
+              decoration: InputDecoration(
+                labelText: 'Medication Name',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
             ),
+            SizedBox(height: 8),
             TextField(
               controller: _timeController,
-              decoration: InputDecoration(labelText: 'Time (e.g., 08:00 AM)'),
+              decoration: InputDecoration(
+                labelText: 'Time (e.g., 08:00 AM)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
             ),
+            SizedBox(height: 8),
             TextField(
               controller: _doctorController,
-              decoration: InputDecoration(labelText: 'Doctor Name'),
+              decoration: InputDecoration(
+                labelText: 'Doctor Name',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
             ),
           ],
         ),
@@ -67,7 +129,16 @@ class _PharmaceuticalPageState extends State<PharmaceuticalPage> {
             child: Text('Cancel'),
           ),
           TextButton(
-            onPressed: _addMedication,
+            onPressed: () {
+              setState(() {
+                _medications.add(Medication(
+                  name: _nameController.text,
+                  time: _timeController.text,
+                  doctor: _doctorController.text,
+                ));
+              });
+              Navigator.of(context).pop();
+            },
             child: Text('Add'),
           ),
         ],
@@ -75,32 +146,19 @@ class _PharmaceuticalPageState extends State<PharmaceuticalPage> {
     );
   }
 
-  void _navigateToMedicationDetails(BuildContext context, Map<String, String> medication) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MedicationDetailsPage(medication: medication),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
         backgroundColor: Colors.teal,
-        elevation: 0,
+        elevation: 4,
         title: Text(
           'My Medications',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
         ),
         centerTitle: true,
-        iconTheme: IconThemeData(
-          color: Colors.white, // This makes the back arrow white
-        ),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -113,10 +171,20 @@ class _PharmaceuticalPageState extends State<PharmaceuticalPage> {
                   final medication = _medications[index];
                   return Card(
                     margin: EdgeInsets.symmetric(vertical: 8.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    elevation: 3,
                     child: ListTile(
                       leading: Icon(Icons.medication, color: Colors.teal),
-                      title: Text(medication["name"]!),
-                      subtitle: Text('Time: ${medication["time"]!}\nDoctor: ${medication["doctor"]!}'),
+                      title: Text(
+                        medication.name,
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        'Time: ${medication.time}/day\nDoctor: ${medication.doctor}',
+                        style: TextStyle(fontSize: 14),
+                      ),
                       onTap: () => _navigateToMedicationDetails(context, medication),
                     ),
                   );
@@ -124,17 +192,77 @@ class _PharmaceuticalPageState extends State<PharmaceuticalPage> {
               ),
             ),
             SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _showAddMedicationDialog,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class MedicationDetailsPage extends StatelessWidget {
+  final Medication medication;
+
+  const MedicationDetailsPage({Key? key, required this.medication}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Medication Details',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.teal,
+        elevation: 4,
+      ),
+      body: Container(
+        height: double.infinity,  // Ensure the container takes the full screen height
+        decoration: BoxDecoration(
+          color: Colors.teal.shade100,  // Lighter teal color for the entire background
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildMedicationCard(),
+                SizedBox(height: 20),
+                _buildDetailCard('Time', '${medication.time}/day'),
+                _buildDetailCard('Doctor', medication.doctor),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMedicationCard() {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      margin: EdgeInsets.only(bottom: 20),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(Icons.medication, size: 50, color: Colors.teal.shade700),
+            SizedBox(width: 20),
+            Expanded(
               child: Text(
-                'Add Medication',
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 15),
-                backgroundColor: Colors.teal,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+                medication.name,
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.teal.shade800,
                 ),
               ),
             ),
@@ -143,43 +271,31 @@ class _PharmaceuticalPageState extends State<PharmaceuticalPage> {
       ),
     );
   }
-}
 
-class MedicationDetailsPage extends StatelessWidget {
-  final Map<String, String> medication;
-
-  const MedicationDetailsPage({Key? key, required this.medication}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Medication Details'),
-        backgroundColor: Colors.teal,
+  Widget _buildDetailCard(String title, String detail) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      margin: EdgeInsets.symmetric(vertical: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(18.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Name: ${medication["name"]}',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.teal.shade700,
+              ),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 8),
             Text(
-              'Time: ${medication["time"]}',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Doctor: ${medication["doctor"]}',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Description: ${medication["description"]}',
-              style: TextStyle(fontSize: 16),
+              detail,
+              style: TextStyle(fontSize: 18, color: Colors.grey[700]),
             ),
           ],
         ),
