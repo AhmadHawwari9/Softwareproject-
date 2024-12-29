@@ -15,6 +15,7 @@ import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
 import 'Conversations.dart';
 import 'Historypage.dart';
+import 'Hospitaluser.dart';
 import 'Login.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -87,6 +88,7 @@ class _HomepageState extends State<AdminHomepage> {
       await getAccessToken();  // Get access token
       await fetchUsers();  // Fetch users after getting the access token
       fetchArticles();
+      fetchHospitalsData();
       fetchUnreadMessagesCount();
       setState(() {
         filteredUsers = users;  // Initialize filteredUsers with all users
@@ -337,10 +339,11 @@ class _HomepageState extends State<AdminHomepage> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else {
+        } else if(userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
+        }else{
+          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
-
 
         // If mounted, navigate to the homepage
         if (mounted) {
@@ -650,6 +653,7 @@ class _HomepageState extends State<AdminHomepage> {
       ),
     );
   }
+
   List<Map<String, dynamic>> caregivers = [];
 
   Future<void> fetchCaregiversData() async {
@@ -672,7 +676,7 @@ class _HomepageState extends State<AdminHomepage> {
       });
     } else {
       // Handle error if necessary
-      throw Exception('Failed to load caregivers');
+      // throw Exception('Failed to load caregivers');
     }
   }
 
@@ -705,6 +709,71 @@ class _HomepageState extends State<AdminHomepage> {
 
       if (response.statusCode == 200) {
         fetchCaregiversData();
+      } else {
+        print('Failed to delete the caregiver from pending ');
+      }
+    } catch (error) {
+      print('Error occurred: $error');
+    }
+  }
+
+
+
+  List<Map<String, dynamic>> hospitals = [];
+
+  Future<void> fetchHospitalsData() async {
+    final response = await http.get(Uri.parse('http://10.0.2.2:3001/hospitalRequestToTheAdminDisplay'));
+
+    if (response.statusCode == 200) {
+      // Parse the response JSON
+      List<dynamic> data = json.decode(response.body);
+      setState(() {
+        // Map the data into a format suitable for the DataTable
+        hospitals = data.map((item) {
+          return {
+            'Request_id': item['Request_id'],
+            'Email': item['Email'],
+            'cv_id': item['cv_id'],
+            // Assuming the 'file_path' is added as a part of the response
+            'File': item['cv_path'] ?? 'No file available', // If file path is returned as 'cv_file_path'
+          };
+        }).toList();
+      });
+    } else {
+      // Handle error if necessary
+      // throw Exception('Failed to load hospitals');
+    }
+  }
+
+  Future<void> moveHospitalsToUser(String requestId) async {
+    final url = 'http://10.0.2.2:3001/movecaregivertouserstable/$requestId'; // Replace with actual URL
+
+    try {
+      final response = await http.delete(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        await fetchUsers();
+        fetchHospitalsData();
+
+        print('Caregiver moved to users table successfully');
+      } else {
+        // Failure: Handle error (maybe show an error message)
+        print('Failed to move caregiver to users table');
+      }
+    } catch (error) {
+      // Handle network or other errors
+      print('Error occurred: $error');
+    }
+  }
+
+  Future<void> deletehospitalfrompending(String requestId) async {
+    final url = 'http://10.0.2.2:3001/deletecaregiver/$requestId'; // Replace with actual URL
+
+    try {
+      final response = await http.delete(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        fetchHospitalsData();
       } else {
         print('Failed to delete the caregiver from pending ');
       }
@@ -1261,12 +1330,14 @@ class _HomepageState extends State<AdminHomepage> {
                       return DataRow(cells: [
                         DataCell(
                           Container(
-                            constraints: BoxConstraints(maxWidth: 120), // Add constraints to control width
+                            constraints: BoxConstraints(
+                              maxWidth: 80, // Set the maximum width
+                            ),
                             child: Text(
-                              caregiver['Email'],
-                              style: TextStyle(fontSize: 10),
-                              overflow: TextOverflow.ellipsis, // Truncate text if needed
-                              softWrap: true,  // Allow text to wrap
+                              caregiver['Email'], // Replace with the actual email data
+                              style: TextStyle(fontSize: 12),
+                              overflow: TextOverflow.visible, // Allow the text to wrap
+                              softWrap: true, // Enable wrapping
                             ),
                           ),
                         ),
@@ -1336,15 +1407,155 @@ class _HomepageState extends State<AdminHomepage> {
                   ),
                 ),
               ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Pending Hospitals',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal),
+              ),
+            ),
+
+            Card(
+              elevation: 4,
+              child: Container(
+                height: 250,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: DataTable(
+                    headingRowColor: MaterialStateColor.resolveWith(
+                          (states) => Colors.teal,
+                    ),
+                    dataRowHeight: 100, // Increased row height.
+                    columns: [
+                      DataColumn(
+                        label: Container(
+                          width: 70, // Set a smaller width for the column
+                          child: Text(
+                            'Email',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Container(
+                          width: 70, // Set a smaller width for the column
+                          child: Text(
+                            'CV',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Container(
+                          width: 70, // Set a smaller width for the column
+                          child: Text(
+                            'Actions',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ),
+                    ],
+                    rows: hospitals.isNotEmpty
+                        ? hospitals.map((caregiver) {
+                      String filePath = caregiver['File'];
+                      String fileName = filePath.replaceFirst('Uploade/', ''); // Remove 'Upload/' prefix
+                      return DataRow(cells: [
+                        DataCell(
+                          Container(
+                            constraints: BoxConstraints(
+                              maxWidth: 80, // Set the maximum width
+                            ),
+                            child: Text(
+                              caregiver['Email'], // Replace with the actual email data
+                              style: TextStyle(fontSize: 12),
+                              overflow: TextOverflow.visible, // Allow the text to wrap
+                              softWrap: true, // Enable wrapping
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          GestureDetector(
+                            onTap: () async {
+                              // Download and open PDF
+                              String pdfPath = await downloadPdf(filePath);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PdfViewerPage(pdfPath: pdfPath),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.picture_as_pdf,
+                                    color: Colors.red,
+                                    size: 20, // Smaller icon size
+                                  ),
+                                  SizedBox(width: 4), // Reduced space between icon and text
+                                  Container(
+                                    constraints: BoxConstraints(maxWidth: 60),
+                                    child: Text(
+                                      fileName, // Display the file name without the 'Upload/' prefix
+                                      style: TextStyle(color: Colors.black, fontSize: 10),
+                                      softWrap: true,
+                                      overflow: TextOverflow.visible,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          FittedBox(
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.check, color: Colors.green),
+                                  onPressed: () {
+                                    moveHospitalsToUser(caregiver['Request_id'].toString());
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.close, color: Colors.red),
+                                  onPressed: () {
+                                    deletehospitalfrompending(caregiver['Request_id'].toString());
+                                    fetchHospitalsData();
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ]);
+                    }).toList()
+                        : [
+                      DataRow(cells: [
+                        DataCell(Text('', style: TextStyle(fontSize: 12))),
+                        DataCell(Text('')),
+                        DataCell(Text('')),
+                      ])
+                    ],
+                  ),
+                ),
+              ),
             )
-
-
-
-
-
-
-
-
 
           ],
         ),

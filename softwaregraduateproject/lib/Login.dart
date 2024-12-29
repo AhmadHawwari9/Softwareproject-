@@ -8,7 +8,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'Forgetpassword.dart';
+import 'Hospitaluser.dart';
 import 'Noti.dart';
+import 'SignUpashospital.dart';
 import 'Signup.dart';  // Import SignUp Page
 import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
@@ -79,9 +81,11 @@ class _LoginPageState extends State<Loginpage> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else {
+        } else if(userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
-        }
+        }else{
+          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
+      }
 
         // If mounted, navigate to the homepage
         if (mounted) {
@@ -306,8 +310,11 @@ class _LoginPageState extends State<Loginpage> {
                   backgroundColor: Colors.red, // Button color
                   foregroundColor: Colors.white, // Text color
                 ),
-                onPressed: signInWithGoogle,
-                child: Text('Sign In with Google'),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Signupashospital()), // Navigate to SignUp page
+                ),
+                child: Text('Sign Up as a Hospital'),
               ),
 
               SizedBox(height: 20), // Space between buttons

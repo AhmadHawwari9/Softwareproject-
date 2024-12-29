@@ -11,6 +11,7 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'AdminHomepage.dart';
 import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
+import 'Hospitaluser.dart';
 import 'Searchpage.dart';
 import 'chatwithspecificperson.dart'; // Ensure you have this import for DateFormat
 
@@ -197,8 +198,10 @@ class _ConversationsPageState extends State<ConversationsPage> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else {
+        } else if(userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
+        }else{
+          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
 
         // If mounted, navigate to the homepage

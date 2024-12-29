@@ -8,6 +8,7 @@ import 'AdminHomepage.dart';
 import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
 import 'Conversations.dart';
+import 'Hospitaluser.dart';
 import 'Searchpage.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -271,10 +272,13 @@ class _SettingsPageState extends State<SettingsPage> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else {
+        } else if(userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
+        }else{
+          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
 
+        // If mounted, navigate to the homepage
         if (mounted) {
           Navigator.pushReplacement(
             context,

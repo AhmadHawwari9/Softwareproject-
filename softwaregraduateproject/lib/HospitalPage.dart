@@ -39,7 +39,7 @@ class _HospitalsPageState extends State<HospitalsPage> {
           'workingHours': hospital['workingHours'] ?? "Not specified",
           'doctors': hospital['doctors'] ?? "No doctor list available",
           'contact': hospital['contact'] ?? "No contact info available",
-          'image': hospital['image_path']?.replaceAll(r'\', '/') ?? '',
+          'image': hospital['user_image_path']?.replaceAll(r'\', '/') ?? '',
           'user_email': hospital['user_email'] ?? "No email available",
         });
       }

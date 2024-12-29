@@ -12,6 +12,7 @@ import 'Conversations.dart';
 import 'DoctorPage.dart';
 import 'Historypage.dart';
 import 'HospitalPage.dart';
+import 'Hospitaluser.dart';
 import 'Login.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -254,10 +255,11 @@ class _HomepageState extends State<CareRecipientHomepage> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else {
+        } else if(userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
+        }else{
+          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
-
 
         // If mounted, navigate to the homepage
         if (mounted) {
@@ -719,6 +721,32 @@ class _HomepageState extends State<CareRecipientHomepage> {
     }
   }
 
+  Future<void> sendNotificationEmergencyAlert() async {
+    final String url = 'http://10.0.2.2:3001/sendNotifications'; // URL to your backend
+    try {
+      print("Sending request to: $url");  // Debugging output
+
+      print(token);
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token', // Ensure token is valid
+        },
+      );
+
+      print("Response Status: ${response.statusCode}"); // Debugging response status
+
+      if (response.statusCode == 200) {
+        print("Notification sent successfully!");
+      } else {
+        print("Failed to send notification: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error making request: $e");
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1004,6 +1032,9 @@ class _HomepageState extends State<CareRecipientHomepage> {
                   ),
                 ],
               ),
+
+              SizedBox(height: 50),
+
             ],
           ),
         ),
@@ -1052,6 +1083,52 @@ class _HomepageState extends State<CareRecipientHomepage> {
           ),
         ],
       ),
+      floatingActionButton: Container(
+        width: 70, // Increased width for a larger button
+        height: 70, // Increased height for a larger button
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [
+              Colors.teal,
+              Colors.tealAccent,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 15,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: sendNotificationEmergencyAlert, // No action when pressed
+          backgroundColor: Colors.transparent, // Transparent to show gradient
+          elevation: 0, // Remove default shadow
+          shape: CircleBorder(),
+          child: Text(
+            "🚨",
+            style: TextStyle(
+              fontSize:  30, // Larger emoji size for visibility
+              // Optionally, you can add a slight shadow to the emoji for better contrast
+              shadows: [
+                Shadow(
+                  offset: Offset(1, 1),
+                  blurRadius: 2.0,
+                  color: Colors.black26,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+
+
+
+
     );
   }
 

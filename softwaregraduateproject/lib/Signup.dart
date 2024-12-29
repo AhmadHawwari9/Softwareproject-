@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'AdminHomepage.dart';
 import 'CareGiverFileUpload.dart';
 import 'CareRecipientHomepage.dart';
+import 'Hospitaluser.dart';
 import 'Login.dart';
 
 File? _image;
@@ -140,6 +141,15 @@ class _SignupState extends State<Signup> {
             context,
             MaterialPageRoute(
               builder: (context) => CareGiverHomepage(email, password, token,false),
+            ),
+                (route) => false, // This removes all previous routes
+          );
+        }
+        else{
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HospitalUserForm(email, password, token,false),
             ),
                 (route) => false, // This removes all previous routes
           );

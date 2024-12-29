@@ -8,6 +8,7 @@ import 'AdminHomepage.dart';
 import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
 import 'Conversations.dart';
+import 'Hospitaluser.dart';
 
 class SearchPage extends StatefulWidget {
   final String savedEmail;
@@ -107,6 +108,7 @@ class _SearchPageState extends State<SearchPage> {
 
       return matchesSearch && matchesType;
     }).toList();
+
   }
 
 
@@ -138,8 +140,8 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  Future<void> fetchHomepageAndNavigate(BuildContext context, String email, String password,
-      String token, bool isGoogleSignInEnabled) async {
+  Future<void> fetchHomepageAndNavigate(
+      BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
       final response = await http.get(
         Uri.parse('http://10.0.2.2:3001/api/homepage'),
@@ -149,16 +151,19 @@ class _SearchPageState extends State<SearchPage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final userType = data['userType'];
-        Widget homepage;
 
+        Widget homepage;
         if (userType == 'Care recipient') {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else {
+        } else if(userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
+        }else{
+          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
 
+        // If mounted, navigate to the homepage
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -221,15 +226,28 @@ class _SearchPageState extends State<SearchPage> {
             ),
             SizedBox(height: 10),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: ["All", "Care recipient", "Care giver", "Report"]
-                  .map((type) => ChoiceChip(
-                label: Text(type),
-                selected: _selectedType == type,
-                onSelected: (isSelected) => _onFilterChanged(type),
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: ["All", "Care recipient", "Care giver", "Hospital", "Report"]
+                  .map((type) => Expanded(
+                child: ChoiceChip(
+                  label: Text(
+                    type,
+                    style: TextStyle(fontSize: 12), // Reduce font size
+                  ),
+                  selected: _selectedType == type,
+                  onSelected: (isSelected) => _onFilterChanged(type),
+                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0), // Reduce padding
+                ),
               ))
                   .toList(),
             ),
+            SizedBox(height: 20),
+
+            if (_selectedType.isNotEmpty)
+              Text(
+                "Selected: $_selectedType", // Show the selected type
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             SizedBox(height: 20),
             Expanded(
               child: _filteredUsers.isNotEmpty
@@ -246,7 +264,6 @@ class _SearchPageState extends State<SearchPage> {
                           selectedUserId.isNotEmpty) {
                         print('Tapped on user with ID: $selectedUserId');
 
-                        // Check if the user type is "Care giver" and navigate accordingly
                         if (selectedUserType == 'Care giver') {
                           Navigator.push(
                             context,

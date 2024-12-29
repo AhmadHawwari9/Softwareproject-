@@ -11,6 +11,7 @@ import 'AdminHomepage.dart';
 import 'CareRecipientHomepage.dart';
 import 'Conversations.dart';
 import 'Historypage.dart';
+import 'Hospitaluser.dart';
 import 'Login.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -300,8 +301,10 @@ class _HomepageState extends State<CareGiverHomepage> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else {
+        } else if(userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
+        }else{
+          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
 
         // If mounted, navigate to the homepage
