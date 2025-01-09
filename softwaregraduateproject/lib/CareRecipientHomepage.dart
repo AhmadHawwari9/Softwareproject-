@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -29,6 +30,8 @@ import 'Reportsshowtocaregiver.dart';
 import 'Searchpage.dart';
 import 'Settingspage.dart';
 import 'UserProfilePage.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
+
 
 class CareRecipientHomepage extends StatefulWidget {
   final String savedEmail;
@@ -94,9 +97,12 @@ class _HomepageState extends State<CareRecipientHomepage> {
   }
 
   Future<List<String>> fetchMedicationReminders() async {
-    final url = 'http://10.0.2.2:3001/medication-reminder'; // Update the URL if necessary
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/medication-reminder'  // Web environment
+        : 'http://10.0.2.2:3001/medication-reminder'; // Emulator/Device environment
+
     final response = await http.get(
-      Uri.parse(url),
+      Uri.parse(apiUrl),
       headers: {
         'Authorization': 'Bearer ${widget.savedToken}', // Include the token in the headers
       },
@@ -115,11 +121,13 @@ class _HomepageState extends State<CareRecipientHomepage> {
   final TextEditingController _sugarController = TextEditingController();
   final TextEditingController _bloodPressureController = TextEditingController();
   Future<void> fetchSchedule() async {
-    final url = Uri.parse('http://10.0.2.2:3001/ScheduleforCaregiver'); // Replace with your API URL
-    try {
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/ScheduleforCaregiver'  // Web environment
+        : 'http://10.0.2.2:3001/ScheduleforCaregiver'; // Emulator/Device environment
 
+    try {
       final response = await http.get(
-        url,
+        Uri.parse(apiUrl),
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Send the token in the Authorization header
         },
@@ -150,9 +158,13 @@ class _HomepageState extends State<CareRecipientHomepage> {
       return;
     }
 
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/chat/conversations'  // Web environment
+        : 'http://10.0.2.2:3001/chat/conversations'; // Emulator/Device environment
+
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/chat/conversations'),
+        Uri.parse(apiUrl),
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}',
         },
@@ -185,7 +197,6 @@ class _HomepageState extends State<CareRecipientHomepage> {
       print("Error fetching conversations: $e");
     }
   }
-
   Future<void> _loadCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -238,11 +249,15 @@ class _HomepageState extends State<CareRecipientHomepage> {
     }
   }
 
-  Future<void> fetchHomepageAndNavigate(
+  Future<http.Response> fetchHomepageAndNavigate(
       BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
+      final apiUrl = kIsWeb
+          ? 'http://localhost:3001/api/homepage' // Web environment (localhost or public URL)
+          : 'http://10.0.2.2:3001/api/homepage'; // Mobile emulator
+
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/api/homepage'),
+        Uri.parse(apiUrl),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -255,10 +270,10 @@ class _HomepageState extends State<CareRecipientHomepage> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else if(userType == 'Care giver') {
+        } else if (userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
-        }else{
-          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
+        } else {
+          homepage = HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
 
         // If mounted, navigate to the homepage
@@ -268,11 +283,14 @@ class _HomepageState extends State<CareRecipientHomepage> {
             MaterialPageRoute(builder: (context) => homepage),
           );
         }
+        return response; // Return the response on success
       } else {
-        _showErrorDialog('Failed to load homepage data');
+        throw Exception('Failed to load homepage data. Status code: ${response.statusCode}');
       }
+    } on SocketException {
+      throw Exception('No Internet connection or server unreachable');
     } catch (e) {
-      _showErrorDialog('An error occurred: $e');
+      throw Exception('Unexpected error occurred: $e');
     }
   }
   void _showErrorDialog(String message) {
@@ -296,15 +314,21 @@ class _HomepageState extends State<CareRecipientHomepage> {
 
 
   Future<void> fetchHomepageData() async {
-    final homepageUrl = Uri.parse('http://10.0.2.2:3001/api/homepage');
-    final imageUrl = Uri.parse('http://10.0.2.2:3001/user/image/${widget.savedEmail}');
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final homepageUrl = Uri.parse('$baseUrl/api/homepage');
+    final imageUrl = Uri.parse('$baseUrl/user/image/${widget.savedEmail}');
 
     try {
+      // Fetch homepage data
       final homepageResponse = await http.get(
         homepageUrl,
         headers: {
           'Content-Type': 'application/json',
-          'token': token ?? ''
+          'authorization': token ?? '',
         },
       );
 
@@ -320,18 +344,21 @@ class _HomepageState extends State<CareRecipientHomepage> {
         });
       }
 
+      // Fetch image data
       final imageResponse = await http.get(
         imageUrl,
         headers: {
           'Content-Type': 'application/json',
-          'token': token ?? ''
+          'authorization': token ?? '',
         },
       );
 
       if (imageResponse.statusCode == 200) {
         final imageData = jsonDecode(imageResponse.body);
         String relativeImagePath = imageData['imagePath'];
-        photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+        setState(() {
+          photoUrl = '$baseUrl/' + relativeImagePath.replaceAll('\\', '/');
+        });
       } else {
         setState(() {
           photoUrl = null;
@@ -393,10 +420,12 @@ class _HomepageState extends State<CareRecipientHomepage> {
 
 
   Future<void> fetchMedicalReports(String careRecipientId) async {
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/user/files/$careRecipientId' // Web environment
+        : 'http://10.0.2.2:3001/user/files/$careRecipientId'; // Emulator/Device environment
+
     try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/user/files/$careRecipientId'),
-      );
+      final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -545,11 +574,13 @@ class _HomepageState extends State<CareRecipientHomepage> {
   List<Map<String, dynamic>> careRecipients1 = [];
 
   Future<void> fetchCareRecipients() async {
-    const String url = 'http://10.0.2.2:3001/getCareRecipients'; // Adjust URL if needed
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/getCareRecipients' // Web environment
+        : 'http://10.0.2.2:3001/getCareRecipients'; // Emulator/Device environment
 
     try {
       final response = await http.get(
-        Uri.parse(url),
+        Uri.parse(apiUrl),
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Include token in the headers
         },
@@ -583,7 +614,6 @@ class _HomepageState extends State<CareRecipientHomepage> {
       );
     }
   }
-
 
   Widget _buildInputCard(BuildContext context, String label, String hint, IconData icon, TextEditingController controller) {
     return Container(
@@ -653,19 +683,28 @@ class _HomepageState extends State<CareRecipientHomepage> {
   }
   int notificationCount = 0;
   Future<void> fetchNotificationCount() async {
-    final url = 'http://10.0.2.2:3001/notification-count';
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/notification-count');
     final headers = {
       'Authorization': 'Bearer ${widget.savedToken}',
     };
 
     try {
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await http.get(url, headers: headers);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
           notificationCount = data['notificationCount']; // Update the notification count
-          if(notificationCount>0){
-            Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $notificationCount Notifications",fln:flutterLocalNotificationsPlugin );
+          if (notificationCount > 0) {
+            Noti.showBigTextNotification(
+              title: "SafeAging",
+              body: "You Have New $notificationCount Notifications",
+              fln: flutterLocalNotificationsPlugin,
+            );
           }
         });
       } else {
@@ -676,11 +715,16 @@ class _HomepageState extends State<CareRecipientHomepage> {
     }
   }
 
-
   int unreadMessageCount = 0;
 
   Future<void> fetchUnreadMessagesCount() async {
-    final url = Uri.parse('http://10.0.2.2:3001/unread-message-count');
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/unread-message-count');
+
     try {
       final response = await http.get(
         url,
@@ -697,8 +741,12 @@ class _HomepageState extends State<CareRecipientHomepage> {
         if (data.containsKey('unreadMessageCount') && data['unreadMessageCount'] is int) {
           setState(() {
             unreadMessageCount = data['unreadMessageCount'];
-            if(unreadMessageCount>0){
-              Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $unreadMessageCount Messages",fln:flutterLocalNotificationsPlugin );
+            if (unreadMessageCount > 0) {
+              Noti.showBigTextNotification(
+                title: "SafeAging",
+                body: "You Have New $unreadMessageCount Messages",
+                fln: flutterLocalNotificationsPlugin,
+              );
             }
           });
         } else {
@@ -722,13 +770,16 @@ class _HomepageState extends State<CareRecipientHomepage> {
   }
 
   Future<void> sendNotificationEmergencyAlert() async {
-    final String url = 'http://10.0.2.2:3001/sendNotifications'; // URL to your backend
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/sendNotifications' // Web environment
+        : 'http://10.0.2.2:3001/sendNotifications'; // Emulator/Device environment
+
     try {
-      print("Sending request to: $url");  // Debugging output
+      print("Sending request to: $apiUrl");  // Debugging output
 
       print(token);
       final response = await http.get(
-        Uri.parse(url),
+        Uri.parse(apiUrl),
         headers: {
           'Authorization': 'Bearer $token', // Ensure token is valid
         },
@@ -745,7 +796,6 @@ class _HomepageState extends State<CareRecipientHomepage> {
       print("Error making request: $e");
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -949,10 +999,11 @@ class _HomepageState extends State<CareRecipientHomepage> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: Image.asset(
-                      'imgs/human-heart-gray-background-3d-illustration-3d-rendering_1057-35869.avif',
-                      height: 380,
-                      fit: BoxFit.contain,
+                    child:  Image.asset(
+                      "imgs/project_logo.png",
+                      width: MediaQuery.of(context).size.width, // Full width of the screen
+                      height: MediaQuery.of(context).size.height * 0.40, // 40% of the screen height
+                      fit: BoxFit.cover, // Ensures the image fills the space without distortion
                     ),
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';  // Make sure to add the intl package in your pubspec.yaml
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class Medication {
   final int id;  // Add the id field
@@ -59,10 +60,13 @@ class _PharmaceuticalPageState extends State<PharmaceuticalPagefordoctor> {
     super.initState();
     _fetchMedications();
   }
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
 
   Future<String> _fetchDoctorEmail() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3001/user/email'),
+      Uri.parse('$baseUrl/user/email'),
       headers: {
         'Authorization': 'Bearer ${widget.savedToken}',  // Add token to header
       },
@@ -77,7 +81,7 @@ class _PharmaceuticalPageState extends State<PharmaceuticalPagefordoctor> {
   }
 
   Future<void> _deleteMedication(Medication medication) async {
-    final url = Uri.parse('http://10.0.2.2:3001/medication/${medication.id}');  // Use id instead of name
+    final url = Uri.parse('$baseUrl/medication/${medication.id}');  // Use id instead of name
 
     final response = await http.delete(
       url,
@@ -100,7 +104,7 @@ class _PharmaceuticalPageState extends State<PharmaceuticalPagefordoctor> {
     try {
       final doctorEmail = await _fetchDoctorEmail();  // Fetch doctor's email
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/medications/${widget.recipientId}'),
+        Uri.parse('$baseUrl/medications/${widget.recipientId}'),
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Add token to header
         },
@@ -141,7 +145,7 @@ class _PharmaceuticalPageState extends State<PharmaceuticalPagefordoctor> {
     required String dosage,
     required List<String> timings,
   }) async {
-    final url = Uri.parse('http://10.0.2.2:3001/add-medication');
+    final url = Uri.parse('$baseUrl/add-medication');
 
     final response = await http.post(
       url,

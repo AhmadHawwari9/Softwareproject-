@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'Verifycode.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 
 class Forgetpassword extends StatefulWidget {
   const Forgetpassword({super.key});
@@ -48,8 +49,11 @@ class _ForgetpasswordState extends State<Forgetpassword> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Forget Password"),
+        title: Text("Forget Password",style: TextStyle(color: Colors.white),),
         backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -110,11 +114,16 @@ class _ForgetpasswordState extends State<Forgetpassword> {
                                   };
 
                                   try {
+                                    final String baseUrl = kIsWeb
+                                        ? 'http://localhost:3001' // Web environment
+                                        : 'http://10.0.2.2:3001'; // Mobile environment
+
                                     final response = await http.post(
-                                      Uri.parse('http://10.0.2.2:3001/api/ForgetPassword'),
+                                      Uri.parse('$baseUrl/api/ForgetPassword'),
                                       headers: {'Content-Type': 'application/json'},
                                       body: json.encode(userData),
                                     );
+
 
                                     print("Response status: ${response.statusCode}");
                                     print("Response body: ${response.body}");

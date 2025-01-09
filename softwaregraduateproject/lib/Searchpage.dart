@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:softwaregraduateproject/profileforanotherusers.dart';
 import 'package:softwaregraduateproject/profileforanotherusersforcaregiver.dart';
 import 'dart:convert';
-
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'AdminHomepage.dart';
 import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
@@ -35,8 +35,12 @@ class _SearchPageState extends State<SearchPage> {
     fetchUsers();
   }
 
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
+
   Future<void> fetchUsers() async {
-    const String url = 'http://10.0.2.2:3001/getUsersforsearch';
+    final String url = '$baseUrl/getUsersforsearch';
 
     try {
       final String token = widget.savedToken;
@@ -144,7 +148,7 @@ class _SearchPageState extends State<SearchPage> {
       BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/api/homepage'),
+        Uri.parse('$baseUrl/api/homepage'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -303,7 +307,7 @@ class _SearchPageState extends State<SearchPage> {
                           backgroundImage: _filteredUsers[index]['photoUrl'] != null &&
                               _filteredUsers[index]['photoUrl'].isNotEmpty
                               ? NetworkImage(
-                              'http://10.0.2.2:3001/${_filteredUsers[index]['photoUrl'].startsWith('/') ? _filteredUsers[index]['photoUrl'].substring(1) : _filteredUsers[index]['photoUrl']}')
+                              '$baseUrl/${_filteredUsers[index]['photoUrl'].startsWith('/') ? _filteredUsers[index]['photoUrl'].substring(1) : _filteredUsers[index]['photoUrl']}')
                               : NetworkImage('https://via.placeholder.com/150'),
                           child: _filteredUsers[index]['photoUrl'] == null ||
                               _filteredUsers[index]['photoUrl'].isEmpty

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +15,7 @@ import 'CareRecipientHomepage.dart';
 import 'Hospitaluser.dart';
 import 'Searchpage.dart';
 import 'chatwithspecificperson.dart'; // Ensure you have this import for DateFormat
+import 'package:flutter/foundation.dart'; // For kIsWeb
 
 
 String accessToken = '';
@@ -105,9 +107,13 @@ class _ConversationsPageState extends State<ConversationsPage> {
       return;
     }
 
+    final String apiUrl = kIsWeb
+        ? 'http://localhost:3001/chat/conversations' // Web environment
+        : 'http://10.0.2.2:3001/chat/conversations'; // Mobile environment
+
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/chat/conversations'),
+        Uri.parse(apiUrl),
         headers: {
           'Authorization': 'Bearer ${widget.jwtToken}',
         },
@@ -144,10 +150,15 @@ class _ConversationsPageState extends State<ConversationsPage> {
     }
   }
 
+
   Future<void> _fetchUserImage(String email) async {
+    final String baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment
+        : 'http://10.0.2.2:3001'; // Mobile environment
+
     try {
       final imageResponse = await http.get(
-        Uri.parse('http://10.0.2.2:3001/user/image/$email'),
+        Uri.parse('$baseUrl/user/image/$email'),
         headers: {
           'Authorization': 'Bearer ${widget.jwtToken}',
         },
@@ -157,7 +168,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
         final imageData = json.decode(imageResponse.body);
         String relativeImagePath = imageData['imagePath'];
         setState(() {
-          userImages[email] = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+          userImages[email] = '$baseUrl/' + relativeImagePath.replaceAll('\\', '/');
         });
       } else {
         setState(() {
@@ -181,11 +192,15 @@ class _ConversationsPageState extends State<ConversationsPage> {
       return dateTimeStr;
     }
   }
-  Future<void> fetchHomepageAndNavigate(
+  Future<http.Response> fetchHomepageAndNavigate(
       BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
+      final apiUrl = kIsWeb
+          ? 'http://localhost:3001/api/homepage' // Web environment (localhost or public URL)
+          : 'http://10.0.2.2:3001/api/homepage'; // Mobile emulator
+
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/api/homepage'),
+        Uri.parse(apiUrl),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -198,10 +213,10 @@ class _ConversationsPageState extends State<ConversationsPage> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else if(userType == 'Care giver') {
+        } else if (userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
-        }else{
-          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
+        } else {
+          homepage = HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
 
         // If mounted, navigate to the homepage
@@ -211,11 +226,14 @@ class _ConversationsPageState extends State<ConversationsPage> {
             MaterialPageRoute(builder: (context) => homepage),
           );
         }
+        return response; // Return the response on success
       } else {
-        _showErrorDialog('Failed to load homepage data');
+        throw Exception('Failed to load homepage data. Status code: ${response.statusCode}');
       }
+    } on SocketException {
+      throw Exception('No Internet connection or server unreachable');
     } catch (e) {
-      _showErrorDialog('An error occurred: $e');
+      throw Exception('Unexpected error occurred: $e');
     }
   }
   void _showErrorDialog(String message) {
@@ -323,12 +341,17 @@ class _ConversationsPageState extends State<ConversationsPage> {
 
               // Send a request to mark messages as read
               try {
+                final String baseUrl = kIsWeb
+                    ? 'http://localhost:3001' // Web environment
+                    : 'http://10.0.2.2:3001'; // Mobile environment
+
                 final response = await http.post(
-                  Uri.parse('http://10.0.2.2:3001/chat/conversations/$otherUserId'),
+                  Uri.parse('$baseUrl/chat/conversations/$otherUserId'),
                   headers: {
                     'Authorization': 'Bearer ${widget.jwtToken}',
                   },
                 );
+
 
                 if (response.statusCode == 200) {
                   print("Messages marked as read successfully.");

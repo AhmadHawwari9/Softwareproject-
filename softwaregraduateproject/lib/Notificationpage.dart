@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class NotificationsPage extends StatefulWidget {
   final String savedToken;
@@ -25,8 +26,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
     unfollowNotifications = fetchUnfollowNotifications();
   }
 
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
+
   Future<List> fetchFollowNotifications() async {
-    final url = 'http://10.0.2.2:3001/notifications';
+    final url = '$baseUrl/notifications';
     final response = await http.get(
       Uri.parse(url),
       headers: {
@@ -51,7 +56,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Future<List> fetchUnfollowNotifications() async {
-    final url = 'http://10.0.2.2:3001/getUnfollowNotifications';
+    final url = '$baseUrl/getUnfollowNotifications';
     final response = await http.get(
       Uri.parse(url),
       headers: {
@@ -79,7 +84,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Future<String> fetchSenderImage(String senderEmail) async {
-    final url = 'http://10.0.2.2:3001/user/image/$senderEmail';
+    final url = '$baseUrl/user/image/$senderEmail';
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -91,7 +96,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Future<void> approveFollowRequest(String senderId) async {
-    final url = 'http://10.0.2.2:3001/approveFollowRequest';
+    final url = '$baseUrl/approveFollowRequest';
     final response = await http.post(
       Uri.parse(url),
       headers: {
@@ -112,9 +117,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
-
   Future<void> rejectFollowRequest(String senderId) async {
-    final url = 'http://10.0.2.2:3001/deleteFollowRequest';
+    final url = '$baseUrl/deleteFollowRequest';
     final response = await http.delete(
       Uri.parse(url),
       headers: {
@@ -134,7 +138,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
         followNotifications = fetchFollowNotifications();
         unfollowNotifications = fetchUnfollowNotifications();
       });
-
     } else {
       // Handle error
       print('Failed to reject follow request');
@@ -142,7 +145,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Future<void> rejectUnfollowRequest(String senderId) async {
-    final url = 'http://10.0.2.2:3001/deleteNotificationunfollowrequest/$senderId';
+    final url = '$baseUrl/deleteNotificationunfollowrequest/$senderId';
     final response = await http.delete(
       Uri.parse(url),
       headers: {
@@ -156,14 +159,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
         followNotifications = fetchFollowNotifications();
         unfollowNotifications = fetchUnfollowNotifications();
       });
-
     } else {
       print('Failed to reject unfollow request');
     }
   }
 
   Future<void> acceptUnfollowRequest(String senderId) async {
-    final url = 'http://10.0.2.2:3001/deleteNotificationAndUnfollowAccept/$senderId';
+    final url = '$baseUrl/deleteNotificationAndUnfollowAccept/$senderId';
     final response = await http.delete(
       Uri.parse(url),
       headers: {
@@ -182,9 +184,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
-
   Future<void> acceptUnfollowRequestforcareRecipant(String senderId) async {
-    final url = 'http://10.0.2.2:3001/deleteNotificationAndUnfollowAcceptforcarerecipant/$senderId';
+    final url = '$baseUrl/deleteNotificationAndUnfollowAcceptforcarerecipant/$senderId';
     final response = await http.delete(
       Uri.parse(url),
       headers: {
@@ -209,7 +210,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Future<void> markNotificationsAsRead() async {
     try {
       final response = await http.put(
-        Uri.parse('http://10.0.2.2:3001/mark-notifications-read'),
+        Uri.parse('$baseUrl/mark-notifications-read'),
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}',
           'Content-Type': 'application/json',
@@ -218,7 +219,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
       if (response.statusCode == 200) {
         print('Notifications marked as read successfully');
-
       } else {
         print('Failed to mark notifications as read: ${response.body}');
       }
@@ -226,6 +226,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       print('Error marking notifications as read: $e');
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -312,9 +313,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     String relativeImagePath = imageSnapshot.data ?? '';
                     String photoUrl = '';
 
+                    final baseUrl = kIsWeb
+                        ? 'http://localhost:3001' // Web environment (localhost)
+                        : 'http://10.0.2.2:3001'; // Mobile emulator
+
                     if (relativeImagePath.isNotEmpty) {
-                      photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+                      photoUrl = '$baseUrl/${relativeImagePath.replaceAll('\\', '/')}';
                     }
+
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 5.0),

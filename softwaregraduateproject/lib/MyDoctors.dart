@@ -4,6 +4,7 @@ import 'package:softwaregraduateproject/profileforanotherusers.dart';
 import 'dart:convert';
 
 import 'package:softwaregraduateproject/profileformydoctorswithcalender.dart';
+import 'package:flutter/foundation.dart';  // Import for kIsWeb
 
 class CareGiversScreen extends StatefulWidget {
   final String savedToken;
@@ -23,10 +24,16 @@ class _CareGiversScreenState extends State<CareGiversScreen> {
     fetchCareRecipients();
   }
 
+
   Future<void> fetchCareRecipients() async {
+    // Set the base URL dynamically based on the platform
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/caregivers'),
+        Uri.parse('$baseUrl/caregivers'),  // Use the dynamically set base URL
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Sending token for authorization
         },
@@ -54,6 +61,7 @@ class _CareGiversScreenState extends State<CareGiversScreen> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -84,11 +92,14 @@ class _CareGiversScreenState extends State<CareGiversScreen> {
               child: ListTile(
                 leading: ClipOval(
                   child: Image.network(
-                    'http://10.0.2.2:3001/${caregiver['image_path']}',
+                    kIsWeb
+                        ? 'http://localhost:3001/${caregiver['image_path']}' // Web environment
+                        : 'http://10.0.2.2:3001/${caregiver['image_path']}', // Mobile emulator
                     width: 50, // Set a fixed width for the avatar
                     height: 50, // Set a fixed height for the avatar
                     fit: BoxFit.cover, // Make the image cover the circle
-                  ),
+                  )
+
                 ),
                 title: Text(
                   '${caregiver['First_name']} ${caregiver['Last_name']}',

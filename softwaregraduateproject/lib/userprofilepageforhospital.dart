@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
+import 'package:universal_html/html.dart' as html;
+import 'package:http_parser/http_parser.dart';
 
 class UserProfilePageforhospital extends StatefulWidget {
   final String jwtToken;
@@ -23,10 +28,13 @@ class _UserProfilePageState extends State<UserProfilePageforhospital> {
     super.initState();
     userDataFuture = fetchUserData(); // Initialize data fetching
   }
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
 
   // Fetch user data from API
   Future<Map<String, dynamic>> fetchUserData() async {
-    final url = Uri.parse('http://10.0.2.2:3001/profile'); // Replace with your API URL
+    final url = Uri.parse('$baseUrl/profile'); // Replace with your API URL
     final response = await http.get(url, headers: {
       'Authorization': 'Bearer ${widget.jwtToken}', // Include JWT token if required
     });
@@ -40,7 +48,7 @@ class _UserProfilePageState extends State<UserProfilePageforhospital> {
 
   // Function to update bio in the database via PUT request
   Future<void> updateBio(String newBio) async {
-    final url = Uri.parse('http://10.0.2.2:3001/update-bio'); // API URL for updating bio
+    final url = Uri.parse('$baseUrl/update-bio'); // API URL for updating bio
     final response = await http.put(
       url,
       headers: {
@@ -63,7 +71,7 @@ class _UserProfilePageState extends State<UserProfilePageforhospital> {
 
   // Function to update the user's age in the database via PUT request
   Future<void> updateAge(String newAge) async {
-    final url = Uri.parse('http://10.0.2.2:3001/update-age'); // API URL for updating age
+    final url = Uri.parse('$baseUrl/update-age'); // API URL for updating age
     final response = await http.put(
       url,
       headers: {
@@ -81,44 +89,98 @@ class _UserProfilePageState extends State<UserProfilePageforhospital> {
       throw Exception('Failed to update age');
     }
   }
-
   Future<void> pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    try {
+      if (kIsWeb) {
+        // Web-specific image picker
+        final html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
+        uploadInput.accept = 'image/*';
+        uploadInput.click();
 
-    if (pickedFile != null) {
-      try {
-        final url = Uri.parse('http://10.0.2.2:3001/update-image');
-        final request = http.MultipartRequest('POST', url)
-          ..headers['Authorization'] = 'Bearer ${widget.jwtToken}'
-          ..files.add(await http.MultipartFile.fromPath('photo', pickedFile.path));
+        uploadInput.onChange.listen((event) async {
+          final files = uploadInput.files;
+          if (files != null && files.isNotEmpty) {
+            final html.File file = files.first;
 
-        final response = await request.send();
+            // Read the file as bytes
+            final reader = html.FileReader();
+            reader.readAsArrayBuffer(file);
 
-        if (response.statusCode == 200) {
-          final responseString = await response.stream.bytesToString();
-          final updatedImagePath = jsonDecode(responseString)['image_path'];
+            await reader.onLoadEnd.first;
+            final imageBytes = reader.result as Uint8List;
 
-          // Trigger a state refresh with the updated data
-          setState(() {
-            userData['image_path'] = updatedImagePath;
-            userDataFuture = fetchUserData(); // Refresh user data
-          });
+            // Create a Multipart request for upload
+            final url = Uri.parse('$baseUrl/update-image');
+            final request = http.MultipartRequest('POST', url)
+              ..headers['Authorization'] = 'Bearer ${widget.jwtToken}'
+              ..files.add(http.MultipartFile.fromBytes(
+                'photo',
+                imageBytes,
+                filename: file.name,
+                contentType: MediaType('image', 'jpeg'),
+              ));
+
+            final response = await request.send();
+
+            if (response.statusCode == 200) {
+              final responseString = await response.stream.bytesToString();
+              final updatedImagePath = jsonDecode(responseString)['image_path'];
+
+              // Update state with the new image path
+              setState(() {
+                userData['image_path'] = updatedImagePath;
+                userDataFuture = fetchUserData(); // Refresh user data
+              });
+              print('Image updated successfully');
+            } else {
+              final responseString = await response.stream.bytesToString();
+              print('Failed to update image. Response: $responseString');
+              throw Exception('Failed to update image');
+            }
+          }
+        });
+      } else {
+        // Mobile-specific image picker
+        final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+        if (pickedFile != null) {
+          final url = Uri.parse('$baseUrl/update-image');
+          final request = http.MultipartRequest('POST', url)
+            ..headers['Authorization'] = 'Bearer ${widget.jwtToken}'
+            ..files.add(await http.MultipartFile.fromPath(
+              'photo',
+              pickedFile.path,
+              contentType: MediaType('image', 'jpeg'),
+            ));
+
+          final response = await request.send();
+
+          if (response.statusCode == 200) {
+            final responseString = await response.stream.bytesToString();
+            final updatedImagePath = jsonDecode(responseString)['image_path'];
+
+            // Update state with the new image path
+            setState(() {
+              userData['image_path'] = updatedImagePath;
+              userDataFuture = fetchUserData(); // Refresh user data
+            });
+            print('Image updated successfully');
+          } else {
+            final responseString = await response.stream.bytesToString();
+            print('Failed to update image. Response: $responseString');
+            throw Exception('Failed to update image');
+          }
         } else {
-          final responseString = await response.stream.bytesToString();
-          print('Failed to update image. Response: $responseString');
-          throw Exception('Failed to update image');
+          print('No image selected');
         }
-      } catch (e) {
-        print('Error occurred: $e');
-        throw Exception('Error occurred while updating image');
       }
-    } else {
-      print('No image selected');
+    } catch (e) {
+      print('Error occurred: $e');
+      throw Exception('Error occurred while updating image');
     }
   }
 
   Future<void> updateImage() async {
-    final url = Uri.parse('http://10.0.2.2:3001/update-image'); // API URL for updating image
+    final url = Uri.parse('$baseUrl/update-image'); // API URL for updating image
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery); // Or use camera as source
 
     if (pickedFile != null) {
@@ -242,12 +304,15 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
     });
   }
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
 
   @override
   Widget build(BuildContext context) {
     final imagePath = widget.data['image_path'] ?? '';
     final imageUrl = imagePath.isNotEmpty
-        ? 'http://10.0.2.2:3001/${imagePath.startsWith('/') ? imagePath.substring(1) : imagePath}'
+        ? '$baseUrl/${imagePath.startsWith('/') ? imagePath.substring(1) : imagePath}'
         : 'https://via.placeholder.com/150';  // Fallback image if no path
 
 

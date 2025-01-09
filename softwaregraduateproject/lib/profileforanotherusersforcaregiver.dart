@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'chatwithspecificperson.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 
 class UserDetailsPageforcaregiver extends StatefulWidget {
@@ -26,11 +27,14 @@ class _UserDetailsPageState extends State<UserDetailsPageforcaregiver> {
     super.initState();
     fetchUserData();
   }
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
 
   String globalEmail = '';
 
   Future<void> fetchUserData() async {
-    final String url = 'http://10.0.2.2:3001/getUsersforsearch/${widget.id}';
+    final String url = '$baseUrl/getUsersforsearch/${widget.id}';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -130,7 +134,7 @@ class _UserDetailsPageState extends State<UserDetailsPageforcaregiver> {
                   child: ClipOval(
                     child: userData['image_path'] != null
                         ? Image.network(
-                      'http://10.0.2.2:3001/${userData['image_path'].startsWith('/') ? userData['image_path'].substring(1) : userData['image_path']}',
+                      '$baseUrl/${userData['image_path'].startsWith('/') ? userData['image_path'].substring(1) : userData['image_path']}',
                       width: 140,
                       height: 140,
                       fit: BoxFit.cover,

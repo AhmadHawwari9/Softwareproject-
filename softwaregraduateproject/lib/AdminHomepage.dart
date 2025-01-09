@@ -31,7 +31,17 @@ import 'Searchcaregievrpage.dart';
 import 'Searchpage.dart';
 import 'Settingspage.dart';
 import 'UserProfilePage.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:pdfx/pdfx.dart'; // Web-compatible PDF rendering package
+import 'dart:io' show File, Directory;
 
+
+import 'dart:io'; // Import for File handling on mobile platforms
+import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:convert';
+import 'package:universal_html/html.dart' as html;
 
 
 bool mayarticaldeleted=false;
@@ -120,20 +130,32 @@ class _HomepageState extends State<AdminHomepage> {
   }
 
   Future<void> fetchArticles() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:3001/articles'));
+    try {
+      // Determine the API URL based on platform (web or mobile)
+      final apiUrl = kIsWeb
+          ? 'http://localhost:3001/articles' // Web environment (localhost or public URL)
+          : 'http://10.0.2.2:3001/articles'; // Mobile emulator
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);  // Decode the response body
+      final response = await http.get(Uri.parse(apiUrl));
 
-      setState(() {
-        articleCount = data['count'];  // Set the count
-        // Cast the 'articles' key to a List<Map<String, dynamic>>
-        articles = List<Map<String, dynamic>>.from(data['articles']);
-      });
-    } else {
-      throw Exception('Failed to load articles');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);  // Decode the response body
+
+        setState(() {
+          articleCount = data['count'];  // Set the count
+          // Cast the 'articles' key to a List<Map<String, dynamic>>
+          articles = List<Map<String, dynamic>>.from(data['articles']);
+        });
+      } else {
+        throw Exception('Failed to load articles. Status code: ${response.statusCode}');
+      }
+    } on SocketException {
+      throw Exception('No Internet connection or server unreachable');
+    } catch (e) {
+      throw Exception('Unexpected error occurred: $e');
     }
   }
+
 
 
   void startScrolling() {
@@ -168,12 +190,16 @@ class _HomepageState extends State<AdminHomepage> {
   }
 
 
-  Future<void> fetchSchedule() async {
-    final url = Uri.parse('http://10.0.2.2:3001/ScheduleforCaregiver'); // Replace with your API URL
-    try {
 
+  Future<void> fetchSchedule() async {
+    // Determine the API URL based on platform (web or mobile)
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/ScheduleforCaregiver' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001/ScheduleforCaregiver'; // Mobile emulator
+
+    try {
       final response = await http.get(
-        url,
+        Uri.parse(apiUrl),
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Send the token in the Authorization header
         },
@@ -185,8 +211,13 @@ class _HomepageState extends State<AdminHomepage> {
           isLoading = false;
         });
       } else {
-        throw Exception('Failed to load schedule');
+        throw Exception('Failed to load schedule. Status code: ${response.statusCode}');
       }
+    } on SocketException {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error: No Internet connection or server unreachable');
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -204,11 +235,16 @@ class _HomepageState extends State<AdminHomepage> {
       return;
     }
 
+    // Determine the API URL based on platform (web or mobile)
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/chat/conversations' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001/chat/conversations'; // Mobile emulator
+
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/chat/conversations'),
+        Uri.parse(apiUrl),
         headers: {
-          'Authorization': 'Bearer ${widget.savedToken}',
+          'Authorization': 'Bearer ${widget.savedToken}', // Send the token in the Authorization header
         },
       );
       if (response.statusCode == 200) {
@@ -222,7 +258,7 @@ class _HomepageState extends State<AdminHomepage> {
           String userEmail = conversation['user_email'] ?? '';
           if (conversation['hasUnreadMessages'] == true) {
             unreadConversations.add(conversation['user_id'].toString());
-            await sendMessage(userEmail);
+            //await sendMessage(userEmail);
           }
         }
       } else {
@@ -231,6 +267,12 @@ class _HomepageState extends State<AdminHomepage> {
           _errorMessage = "Failed to load conversations: ${response.statusCode}";
         });
       }
+    } on SocketException {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = "No Internet connection or server unreachable.";
+      });
+      print("Error: No internet connection or server unreachable");
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -239,6 +281,7 @@ class _HomepageState extends State<AdminHomepage> {
       print("Error fetching conversations: $e");
     }
   }
+
 
   Future<void> _loadCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -265,9 +308,14 @@ class _HomepageState extends State<AdminHomepage> {
       return;
     }
 
+    // Determine the API URL based on platform (web or mobile)
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/usersoperationsforadmin' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001/usersoperationsforadmin'; // Mobile emulator
+
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/usersoperationsforadmin'),
+        Uri.parse(apiUrl),
         headers: {'Authorization': 'Bearer ${widget.savedToken}'},
       );
 
@@ -282,10 +330,13 @@ class _HomepageState extends State<AdminHomepage> {
       } else {
         print('Failed to fetch users with status: ${response.statusCode}');
       }
+    } on SocketException {
+      print('Error: No internet connection or server unreachable');
     } catch (e) {
       print('Error fetching users: $e');
     }
   }
+
 
 
 
@@ -322,11 +373,15 @@ class _HomepageState extends State<AdminHomepage> {
       print('Error loading service account JSON: $e');
     }
   }
-  Future<void> fetchHomepageAndNavigate(
+  Future<http.Response> fetchHomepageAndNavigate(
       BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
+      final apiUrl = kIsWeb
+          ? 'http://localhost:3001/api/homepage' // Web environment (localhost or public URL)
+          : 'http://10.0.2.2:3001/api/homepage'; // Mobile emulator
+
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/api/homepage'),
+        Uri.parse(apiUrl),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -339,10 +394,10 @@ class _HomepageState extends State<AdminHomepage> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else if(userType == 'Care giver') {
+        } else if (userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
-        }else{
-          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
+        } else {
+          homepage = HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
 
         // If mounted, navigate to the homepage
@@ -352,13 +407,17 @@ class _HomepageState extends State<AdminHomepage> {
             MaterialPageRoute(builder: (context) => homepage),
           );
         }
+        return response; // Return the response on success
       } else {
-        _showErrorDialog('Failed to load homepage data');
+        throw Exception('Failed to load homepage data. Status code: ${response.statusCode}');
       }
+    } on SocketException {
+      throw Exception('No Internet connection or server unreachable');
     } catch (e) {
-      _showErrorDialog('An error occurred: $e');
+      throw Exception('Unexpected error occurred: $e');
     }
   }
+
   void _showErrorDialog(String message) {
     if (mounted) {
       showDialog(
@@ -377,17 +436,22 @@ class _HomepageState extends State<AdminHomepage> {
     }
   }
 
-
   Future<void> fetchHomepageData() async {
-    final homepageUrl = Uri.parse('http://10.0.2.2:3001/api/homepage');
-    final imageUrl = Uri.parse('http://10.0.2.2:3001/user/image/${widget.savedEmail}');
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final homepageUrl = Uri.parse('$baseUrl/api/homepage');
+    final imageUrl = Uri.parse('$baseUrl/user/image/${widget.savedEmail}');
 
     try {
+      // Fetch homepage data
       final homepageResponse = await http.get(
         homepageUrl,
         headers: {
           'Content-Type': 'application/json',
-          'token': token ?? ''
+          'authorization': token ?? '',
         },
       );
 
@@ -403,18 +467,21 @@ class _HomepageState extends State<AdminHomepage> {
         });
       }
 
+      // Fetch image data
       final imageResponse = await http.get(
         imageUrl,
         headers: {
           'Content-Type': 'application/json',
-          'token': token ?? ''
+          'authorization': token ?? '',
         },
       );
 
       if (imageResponse.statusCode == 200) {
         final imageData = jsonDecode(imageResponse.body);
         String relativeImagePath = imageData['imagePath'];
-        photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+        setState(() {
+          photoUrl = '$baseUrl/' + relativeImagePath.replaceAll('\\', '/');
+        });
       } else {
         setState(() {
           photoUrl = null;
@@ -427,6 +494,7 @@ class _HomepageState extends State<AdminHomepage> {
       });
     }
   }
+
 
   Future<void> _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -460,10 +528,10 @@ class _HomepageState extends State<AdminHomepage> {
         );
         break;
       case 2:
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => SearchPageCaregiver(email!,password!,token!,false)),
-      );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => SearchPageCaregiver(email!,password!,token!,false)),
+        );
         break;
       case 3:
       // Navigator.push(
@@ -476,9 +544,16 @@ class _HomepageState extends State<AdminHomepage> {
 
 
   Future<void> fetchMedicalReports(String careRecipientId) async {
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final medicalReportsUrl = Uri.parse('$baseUrl/user/files/$careRecipientId');
+
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/user/files/$careRecipientId'),
+        medicalReportsUrl,
       );
 
       if (response.statusCode == 200) {
@@ -575,11 +650,16 @@ class _HomepageState extends State<AdminHomepage> {
 
   // Fetch care recipients with token
   Future<void> fetchCareRecipients() async {
-    const String url = 'http://10.0.2.2:3001/getCareRecipients'; // Adjust URL if needed
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/getCareRecipients'); // Complete URL for mobile/web
 
     try {
       final response = await http.get(
-        Uri.parse(url),
+        url,
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Include token in the headers
         },
@@ -602,11 +682,17 @@ class _HomepageState extends State<AdminHomepage> {
   }
 
 
-
   Future<void> deleteUser(int userId) async {
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/deleteUser/$userId'); // Complete URL for mobile/web
+
     try {
       final response = await http.delete(
-        Uri.parse('http://10.0.2.2:3001/deleteUser/$userId'),
+        url,
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}',
         },
@@ -629,6 +715,7 @@ class _HomepageState extends State<AdminHomepage> {
       );
     }
   }
+
 
   void showDeleteConfirmationDialog(int userId) {
     showDialog(
@@ -654,37 +741,21 @@ class _HomepageState extends State<AdminHomepage> {
     );
   }
 
-  List<Map<String, dynamic>> caregivers = [];
 
-  Future<void> fetchCaregiversData() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:3001/caregiverRequestToTheAdminDisplay'));
 
-    if (response.statusCode == 200) {
-      // Parse the response JSON
-      List<dynamic> data = json.decode(response.body);
-      setState(() {
-        // Map the data into a format suitable for the DataTable
-        caregivers = data.map((item) {
-          return {
-            'Request_id': item['Request_id'],
-            'Email': item['Email'],
-            'cv_id': item['cv_id'],
-            // Assuming the 'file_path' is added as a part of the response
-            'File': item['cv_path'] ?? 'No file available', // If file path is returned as 'cv_file_path'
-          };
-        }).toList();
-      });
-    } else {
-      // Handle error if necessary
-      // throw Exception('Failed to load caregivers');
-    }
-  }
+
+
 
   Future<void> moveCaregiverToUser(String requestId) async {
-    final url = 'http://10.0.2.2:3001/movecaregivertouserstable/$requestId'; // Replace with actual URL
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/movecaregivertouserstable/$requestId'); // Complete URL for mobile/web
 
     try {
-      final response = await http.delete(Uri.parse(url));
+      final response = await http.delete(url);
 
       if (response.statusCode == 200) {
         await fetchUsers();
@@ -701,19 +772,63 @@ class _HomepageState extends State<AdminHomepage> {
     }
   }
 
+
   Future<void> deletecaregiverfrompending(String requestId) async {
-    final url = 'http://10.0.2.2:3001/deletecaregiver/$requestId'; // Replace with actual URL
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/deletecaregiver/$requestId'); // Complete URL for mobile/web
 
     try {
-      final response = await http.delete(Uri.parse(url));
+      final response = await http.delete(url);
 
       if (response.statusCode == 200) {
         fetchCaregiversData();
       } else {
-        print('Failed to delete the caregiver from pending ');
+        print('Failed to delete the caregiver from pending');
       }
     } catch (error) {
       print('Error occurred: $error');
+    }
+  }
+
+  List<Map<String, dynamic>> hospitals1= [];
+
+
+  Future<void> fetchCaregiversData() async {
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/caregiverRequestToTheAdminDisplay'); // Complete URL for mobile/web
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        // Parse the response JSON
+        List<dynamic> data = json.decode(response.body);
+        setState(() {
+          // Map the data into a format suitable for the DataTable
+          hospitals1 = data.map((item) {
+            return {
+              'Request_id': item['Request_id'],
+              'Email': item['Email'],
+              'cv_id': item['cv_id'],
+              // Assuming the 'file_path' is added as a part of the response
+              'File': item['cv_path'] ?? 'No file available', // If file path is returned as 'cv_file_path'
+            };
+          }).toList();
+        });
+      } else {
+        print('Failed to load hospitals');
+        // Handle error if necessary
+      }
+    } catch (error) {
+      print('Error fetching hospitals data: $error');
     }
   }
 
@@ -722,43 +837,61 @@ class _HomepageState extends State<AdminHomepage> {
   List<Map<String, dynamic>> hospitals = [];
 
   Future<void> fetchHospitalsData() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:3001/hospitalRequestToTheAdminDisplay'));
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
 
-    if (response.statusCode == 200) {
-      // Parse the response JSON
-      List<dynamic> data = json.decode(response.body);
-      setState(() {
-        // Map the data into a format suitable for the DataTable
-        hospitals = data.map((item) {
-          return {
-            'Request_id': item['Request_id'],
-            'Email': item['Email'],
-            'cv_id': item['cv_id'],
-            // Assuming the 'file_path' is added as a part of the response
-            'File': item['cv_path'] ?? 'No file available', // If file path is returned as 'cv_file_path'
-          };
-        }).toList();
-      });
-    } else {
-      // Handle error if necessary
-      // throw Exception('Failed to load hospitals');
+    final url = Uri.parse('$baseUrl/hospitalRequestToTheAdminDisplay'); // Complete URL for mobile/web
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        // Parse the response JSON
+        List<dynamic> data = json.decode(response.body);
+        setState(() {
+          // Map the data into a format suitable for the DataTable
+          hospitals = data.map((item) {
+            return {
+              'Request_id': item['Request_id'],
+              'Email': item['Email'],
+              'cv_id': item['cv_id'],
+              'Type_oftheuser':item['Type_oftheuser'],
+              // Assuming the 'file_path' is added as a part of the response
+              'File': item['cv_path'] ?? 'No file available', // If file path is returned as 'cv_file_path'
+            };
+          }).toList();
+        });
+      } else {
+        print('Failed to load hospitals');
+        // Handle error if necessary
+      }
+    } catch (error) {
+      print('Error fetching hospitals data: $error');
     }
   }
 
+
   Future<void> moveHospitalsToUser(String requestId) async {
-    final url = 'http://10.0.2.2:3001/movecaregivertouserstable/$requestId'; // Replace with actual URL
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/movecaregivertouserstable/$requestId'); // Complete URL for mobile/web
 
     try {
-      final response = await http.delete(Uri.parse(url));
+      final response = await http.delete(url);
 
       if (response.statusCode == 200) {
         await fetchUsers();
         fetchHospitalsData();
 
-        print('Caregiver moved to users table successfully');
+        print('Hospital moved to users table successfully');
       } else {
         // Failure: Handle error (maybe show an error message)
-        print('Failed to move caregiver to users table');
+        print('Failed to move hospital to users table');
       }
     } catch (error) {
       // Handle network or other errors
@@ -766,16 +899,22 @@ class _HomepageState extends State<AdminHomepage> {
     }
   }
 
+
   Future<void> deletehospitalfrompending(String requestId) async {
-    final url = 'http://10.0.2.2:3001/deletecaregiver/$requestId'; // Replace with actual URL
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/deletecaregiver/$requestId'); // Complete URL for mobile/web
 
     try {
-      final response = await http.delete(Uri.parse(url));
+      final response = await http.delete(url);
 
       if (response.statusCode == 200) {
         fetchHospitalsData();
       } else {
-        print('Failed to delete the caregiver from pending ');
+        print('Failed to delete the caregiver from pending');
       }
     } catch (error) {
       print('Error occurred: $error');
@@ -783,36 +922,56 @@ class _HomepageState extends State<AdminHomepage> {
   }
 
 
+
   Future<String> downloadPdf(String pdfPath) async {
     try {
       if (pdfPath.isEmpty) throw Exception('Invalid file path');
-      final permissionStatus = await Permission.storage.request();
 
-      if (permissionStatus.isGranted) {
-        final response = await http.get(
-          Uri.parse('http://10.0.2.2:3001/$pdfPath'),
-        );
+      // Determine the base URL based on platform (web or mobile)
+      final baseUrl = kIsWeb
+          ? 'http://localhost:3001' // Web environment (localhost)
+          : 'http://10.0.2.2:3001'; // Mobile emulator
 
+      final url = Uri.parse('$baseUrl/$pdfPath'); // Complete URL for mobile/web
+
+      if (kIsWeb) {
+        // Web-specific code
+        final response = await http.get(url);
         if (response.statusCode == 200) {
-          // Get the path for the Downloads folder
-          final downloadsDirectory =
-          Directory('/storage/emulated/0/Download'); // Path to Downloads
+          final bytes = response.bodyBytes;
+          final base64Data = base64Encode(bytes);
 
-          if (!await downloadsDirectory.exists()) {
-            await downloadsDirectory.create(recursive: true); // Create the folder
-          }
+          // Create an anchor element to trigger the file download on web
+          final anchor = html.AnchorElement(href: "data:application/octet-stream;base64,$base64Data")
+            ..download = pdfPath.split('/').last
+            ..target = 'blank'
+            ..click(); // Trigger the download by simulating a click
 
-          // Create the file path
-          final file = File(
-              '${downloadsDirectory.path}/${pdfPath.split('/').last}');
-          await file.writeAsBytes(response.bodyBytes); // Save the file
-
-          return file.path; // Return the local path of the file
+          return 'File downloaded successfully in the browser';
         } else {
           throw Exception('Failed to download PDF');
         }
       } else {
-        throw Exception('Storage permission denied');
+        // Mobile-specific code (Android/iOS)
+        final permissionStatus = await Permission.storage.request();
+        if (permissionStatus.isGranted) {
+          final response = await http.get(url);
+          if (response.statusCode == 200) {
+            final appDocDir = await getExternalStorageDirectory();
+            if (appDocDir != null) {
+              final file = File('${appDocDir.path}/${pdfPath.split('/').last}');
+              await file.writeAsBytes(response.bodyBytes); // Save the file
+
+              return file.path; // Return the local path of the file
+            } else {
+              throw Exception('Failed to get storage directory');
+            }
+          } else {
+            throw Exception('Failed to download PDF');
+          }
+        } else {
+          throw Exception('Storage permission denied');
+        }
       }
     } catch (e) {
       print('Error downloading PDF: $e');
@@ -823,19 +982,28 @@ class _HomepageState extends State<AdminHomepage> {
   int notificationCount = 0;
 
   Future<void> fetchNotificationCount() async {
-    final url = 'http://10.0.2.2:3001/notification-count';
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/notification-count');
     final headers = {
       'Authorization': 'Bearer ${widget.savedToken}',
     };
 
     try {
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await http.get(url, headers: headers);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
           notificationCount = data['notificationCount']; // Update the notification count
-          if(notificationCount>0){
-            Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $notificationCount Notifications",fln:flutterLocalNotificationsPlugin );
+          if (notificationCount > 0) {
+            Noti.showBigTextNotification(
+              title: "SafeAging",
+              body: "You Have New $notificationCount Notifications",
+              fln: flutterLocalNotificationsPlugin,
+            );
           }
         });
       } else {
@@ -847,9 +1015,14 @@ class _HomepageState extends State<AdminHomepage> {
   }
 
   int unreadMessageCount = 0;
-
   Future<void> fetchUnreadMessagesCount() async {
-    final url = Uri.parse('http://10.0.2.2:3001/unread-message-count');
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/unread-message-count');
+
     try {
       final response = await http.get(
         url,
@@ -866,8 +1039,12 @@ class _HomepageState extends State<AdminHomepage> {
         if (data.containsKey('unreadMessageCount') && data['unreadMessageCount'] is int) {
           setState(() {
             unreadMessageCount = data['unreadMessageCount'];
-            if(unreadMessageCount>0){
-              Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $unreadMessageCount Messages",fln:flutterLocalNotificationsPlugin );
+            if (unreadMessageCount > 0) {
+              Noti.showBigTextNotification(
+                title: "SafeAging",
+                body: "You Have New $unreadMessageCount Messages",
+                fln: flutterLocalNotificationsPlugin,
+              );
             }
           });
         } else {
@@ -889,7 +1066,6 @@ class _HomepageState extends State<AdminHomepage> {
       });
     }
   }
-
   TextEditingController searchController = TextEditingController();
   List<dynamic> filteredUsers = [];
   void _filterUsers(String query) {
@@ -1101,14 +1277,20 @@ class _HomepageState extends State<AdminHomepage> {
                     // Ensure 'image_path' is a String, provide a default empty string if null
                     String relativeImagePath = article['image_path'] ?? ''; // If null, use an empty string
 
+                    // Determine the base URL based on platform (web or mobile)
+                    final baseUrl = kIsWeb
+                        ? 'http://localhost:3001' // Web environment (localhost)
+                        : 'http://10.0.2.2:3001'; // Mobile emulator
+
                     // If the 'image_path' is not empty, construct the photo URL
                     String photoUrl = '';
                     if (relativeImagePath.isNotEmpty) {
-                      photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+                      photoUrl = '$baseUrl/' + relativeImagePath.replaceAll('\\', '/');
                     }
 
-                    if(mayarticaldeleted){
-                      fetchArticles();
+                    // Fetch articles only when necessary (avoid continuous fetching)
+                    if (mayarticaldeleted) {
+                      fetchArticles(); // Trigger article fetching when the condition is met
                     }
 
                     return buildCard(
@@ -1121,10 +1303,6 @@ class _HomepageState extends State<AdminHomepage> {
                 ),
               ),
             ),
-
-
-
-
 
 
             Padding(
@@ -1269,150 +1447,10 @@ class _HomepageState extends State<AdminHomepage> {
             ),
 
 
-
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Pending Doctors',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: Colors.teal),
-              ),
-            ),
-
-            Card(
-              elevation: 4,
-              child: Container(
-                height: 250,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: DataTable(
-                    headingRowColor: MaterialStateColor.resolveWith(
-                          (states) => Colors.teal,
-                    ),
-                    dataRowHeight: 100,  // Increased row height
-                    columns: [
-                      DataColumn(
-                        label: Container(
-                          width: 70,  // Set a smaller width for the column
-                          child: Text(
-                            'Email',
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Container(
-                          width: 70,  // Set a smaller width for the column
-                          child: Text(
-                            'CV',
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Container(
-                          width: 70,  // Set a smaller width for the column
-                          child: Text(
-                            'Actions',
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                      ),
-                    ],
-                    rows: caregivers.map((caregiver) {
-                      String filePath = caregiver['File'];
-                      String fileName = filePath.replaceFirst('Uploade/', ''); // Remove 'Upload/' prefix
-                      return DataRow(cells: [
-                        DataCell(
-                          Container(
-                            constraints: BoxConstraints(
-                              maxWidth: 80, // Set the maximum width
-                            ),
-                            child: Text(
-                              caregiver['Email'], // Replace with the actual email data
-                              style: TextStyle(fontSize: 12),
-                              overflow: TextOverflow.visible, // Allow the text to wrap
-                              softWrap: true, // Enable wrapping
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          GestureDetector(
-                            onTap: () async {
-                              // Download and open PDF
-                              String pdfPath = await downloadPdf(filePath);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PdfViewerPage(pdfPath: pdfPath),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),  // Reduced padding for smaller button
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.picture_as_pdf,
-                                    color: Colors.red,
-                                    size: 20,  // Smaller icon size
-                                  ),
-                                  SizedBox(width: 4),  // Reduced space between icon and text
-                                  // Allow the text (PDF name) to wrap inside the button
-                                  Container(
-                                    constraints: BoxConstraints(maxWidth: 60),  // Set a smaller max width for the container
-                                    child: Text(
-                                      fileName,  // Display the file name without the 'Upload/' prefix
-                                      style: TextStyle(color: Colors.black, fontSize: 10),  // Reduced font size for smaller text
-                                      softWrap: true,  // Allow text to wrap to a new line
-                                      overflow: TextOverflow.visible, // Allow text to go to new line
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.check, color: Colors.green),
-                                onPressed: () {
-                                  // Call the API to move caregiver to users table
-                                  moveCaregiverToUser(caregiver['Request_id'].toString());
-                                },
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.close, color: Colors.red),
-                                onPressed: () {
-                                  deletecaregiverfrompending(caregiver['Request_id'].toString());
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ]);
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Pending Hospitals',
+                'Pending Hospitals/Doctors',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal),
               ),
             ),
@@ -1433,7 +1471,7 @@ class _HomepageState extends State<AdminHomepage> {
                         label: Container(
                           width: 70, // Set a smaller width for the column
                           child: Text(
-                            'Email',
+                            'Email & Type',
                             style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
@@ -1467,17 +1505,25 @@ class _HomepageState extends State<AdminHomepage> {
                         ? hospitals.map((caregiver) {
                       String filePath = caregiver['File'];
                       String fileName = filePath.replaceFirst('Uploade/', ''); // Remove 'Upload/' prefix
+                      String emailWithType = '${caregiver['Email']} / ${caregiver['Type_oftheuser']}'; // Email and Type
                       return DataRow(cells: [
                         DataCell(
                           Container(
                             constraints: BoxConstraints(
                               maxWidth: 80, // Set the maximum width
                             ),
-                            child: Text(
-                              caregiver['Email'], // Replace with the actual email data
+                            child: Text.rich(
+                              TextSpan(
+                                text: '${caregiver['Email']} / ', // Regular email part
+                                style: TextStyle(fontWeight: FontWeight.normal), // Normal style for email
+                                children: [
+                                  TextSpan(
+                                    text: '${caregiver['Type_oftheuser']}', // Bold type part
+                                    style: TextStyle(fontWeight: FontWeight.bold), // Bold style for type
+                                  ),
+                                ],
+                              ),
                               style: TextStyle(fontSize: 12),
-                              overflow: TextOverflow.visible, // Allow the text to wrap
-                              softWrap: true, // Enable wrapping
                             ),
                           ),
                         ),
@@ -1486,6 +1532,8 @@ class _HomepageState extends State<AdminHomepage> {
                             onTap: () async {
                               // Download and open PDF
                               String pdfPath = await downloadPdf(filePath);
+
+                              if(!kIsWeb)
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -1726,8 +1774,11 @@ class PdfViewerPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('PDF Viewer'),
+        title: Text('PDF Viewer',style: TextStyle(color: Colors.white),),
         backgroundColor: Colors.teal, // Keep consistent theme
+        iconTheme: IconThemeData(
+          color: Colors.white, // This makes the back arrow white
+        ),
 
       ),
       body: Center(
@@ -1747,16 +1798,24 @@ class CardPage extends StatelessWidget {
 
   // Function to delete the article (This will need to call an API)
   Future<void> deleteArticleFromApi(String articleId) async {
-    final response = await http.delete(
-      Uri.parse('http://10.0.2.2:3001/articles/$articleId'),
-    );
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
 
-    if (response.statusCode == 200) {
-      print('Article deleted successfully');
-      mayarticaldeleted=true;
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/articles/$articleId'),
+      );
 
-    } else {
-      print('Failed to delete article');
+      if (response.statusCode == 200) {
+        print('Article deleted successfully');
+        mayarticaldeleted = true;
+      } else {
+        print('Failed to delete article');
+      }
+    } catch (e) {
+      print('Error occurred: $e');
     }
   }
 
@@ -1802,13 +1861,18 @@ class CardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Extract the relative image path from the article data
     String relativeImagePath = article['image_path'];
 
-    // Construct the full image URL using the relative image path
+// Construct the full image URL using the relative image path
     String photoUrl = '';
     if (relativeImagePath.isNotEmpty) {
-      photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+      // Determine the base URL based on platform (web or mobile)
+      final baseUrl = kIsWeb
+          ? 'http://localhost:3001' // Web environment (localhost)
+          : 'http://10.0.2.2:3001'; // Mobile emulator
+
+      // Construct the full URL for the image
+      photoUrl = '$baseUrl/' + relativeImagePath.replaceAll('\\', '/');
     }
 
     return Scaffold(

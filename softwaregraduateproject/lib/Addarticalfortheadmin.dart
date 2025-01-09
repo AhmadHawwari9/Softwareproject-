@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import 'package:path/path.dart' as path;
+import 'package:flutter/services.dart';
 
 class AddArticlePage extends StatefulWidget {
   @override
@@ -14,25 +18,44 @@ class _AddArticlePageState extends State<AddArticlePage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
-  File? _selectedImage;
+  File? _selectedImage; // For mobile
+  Uint8List? _webImage; // For web
+  String? _webImageName; // File name for web
   final ImagePicker _picker = ImagePicker();
   bool _isSubmitting = false;
 
-  // Function to pick an image
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
+    try {
+      if (kIsWeb) {
+        // Web-specific image picker
+        final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+        if (pickedFile != null) {
+          // Read the file as bytes and update the UI in setState
+          final imageBytes = await pickedFile.readAsBytes();
+          setState(() {
+            _webImage = imageBytes; // Store image as bytes
+            _webImageName = pickedFile.name; // Store file name
+          });
+        }
+      } else {
+        // Mobile-specific image picker
+        final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+        if (pickedFile != null) {
+          setState(() {
+            _selectedImage = File(pickedFile.path);
+          });
+        }
+      }
+    } on PlatformException catch (e) {
+      print("Error picking image: $e");
     }
   }
 
-  // Function to submit the article
+
   Future<void> _submitArticle() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedImage == null) {
+    if (_selectedImage == null && _webImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please select an image')),
       );
@@ -44,21 +67,34 @@ class _AddArticlePageState extends State<AddArticlePage> {
     });
 
     try {
-      // Replace with your actual backend API URL
-      final uri = Uri.parse('http://10.0.2.2:3001/addnewArticle');
-      var request = http.MultipartRequest('POST', uri);
+      final apiUrl = kIsWeb
+          ? 'http://localhost:3001/addnewArticle' // Web environment
+          : 'http://10.0.2.2:3001/addnewArticle'; // Mobile emulator
 
-      // Add title and content as fields
+      var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
+
       request.fields['title'] = _titleController.text;
       request.fields['content'] = _contentController.text;
 
-      // Add image as a file
-      final mimeTypeData = lookupMimeType(_selectedImage!.path)?.split('/');
-      request.files.add(await http.MultipartFile.fromPath(
-        'photo', // Change key if backend expects a different key
-        _selectedImage!.path,
-        contentType: MediaType(mimeTypeData![0], mimeTypeData[1]),
-      ));
+      if (kIsWeb && _webImage != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'photo',
+          _webImage!,
+          filename: _webImageName,
+          contentType: MediaType('image', 'jpeg'), // Adjust MIME type if needed
+        ));
+      } else if (_selectedImage != null) {
+        final mimeTypeData = _getMimeTypeFromFile(_selectedImage!.path);
+        if (mimeTypeData == null) {
+          throw Exception('Unable to determine mime type of the selected image');
+        }
+
+        request.files.add(await http.MultipartFile.fromPath(
+          'photo', // The backend key for file upload
+          _selectedImage!.path,
+          contentType: MediaType(mimeTypeData[0], mimeTypeData[1]),
+        ));
+      }
 
       // Send the request
       final response = await request.send();
@@ -69,16 +105,20 @@ class _AddArticlePageState extends State<AddArticlePage> {
         _formKey.currentState!.reset();
         setState(() {
           _selectedImage = null;
+          _webImage = null;
+          _webImageName = null;
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add article')),
-        );
+        throw Exception('Failed to add article. Status code: ${response.statusCode}');
       }
-    } catch (error) {
-      print(error);
+    } on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred')),
+        SnackBar(content: Text('No Internet connection or server unreachable')),
+      );
+    } catch (error) {
+      print('Error: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred: $error')),
       );
     } finally {
       setState(() {
@@ -87,12 +127,48 @@ class _AddArticlePageState extends State<AddArticlePage> {
     }
   }
 
+  List<String>? _getMimeTypeFromFile(String filePath) {
+    // Attempt to get MIME type using lookupMimeType
+    final mimeType = lookupMimeType(filePath);
+    if (mimeType != null) {
+      final mimeTypeParts = mimeType.split('/');
+      if (mimeTypeParts.length == 2) {
+        return mimeTypeParts;
+      }
+    }
+
+// Fallback to file extension if MIME type cannot be determined
+    final extension = path.extension(filePath).toLowerCase();
+    if (extension == '.jpg' || extension == '.jpeg') {
+      return ['image', 'jpeg'];
+    } else if (extension == '.png') {
+      return ['image', 'png'];
+    } else if (extension == '.gif') {
+      return ['image', 'gif'];
+    } else if (extension == '.bmp') {
+      return ['image', 'bmp'];
+    } else if (extension == '.webp') {
+      return ['image', 'webp'];
+    } else if (extension == '.svg') {
+      return ['image', 'svg+xml'];
+    } else if (extension == '.pdf') {
+      return ['application', 'pdf'];
+    } else {
+      print('Unsupported file type: $extension');
+      return null; // Unsupported file type
+    }
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add New Article'),
+        title: Text('Add New Article', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
@@ -101,7 +177,6 @@ class _AddArticlePageState extends State<AddArticlePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image picker preview
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
@@ -112,8 +187,14 @@ class _AddArticlePageState extends State<AddArticlePage> {
                     borderRadius: BorderRadius.circular(12.0),
                     border: Border.all(color: Colors.grey),
                   ),
-                  child: _selectedImage == null
+                  child: _selectedImage == null && _webImage == null
                       ? Icon(Icons.add_a_photo, size: 50, color: Colors.grey)
+                      : kIsWeb && _webImage != null
+                      ? Image.memory(
+                    _webImage!,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                  )
                       : ClipRRect(
                     borderRadius: BorderRadius.circular(12.0),
                     child: Image.file(
@@ -125,8 +206,6 @@ class _AddArticlePageState extends State<AddArticlePage> {
                 ),
               ),
               SizedBox(height: 20),
-
-              // Title field
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
@@ -142,8 +221,6 @@ class _AddArticlePageState extends State<AddArticlePage> {
                 },
               ),
               SizedBox(height: 20),
-
-              // Content field
               TextFormField(
                 controller: _contentController,
                 decoration: InputDecoration(
@@ -160,8 +237,6 @@ class _AddArticlePageState extends State<AddArticlePage> {
                 },
               ),
               SizedBox(height: 20),
-
-              // Submit button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -190,4 +265,5 @@ class _AddArticlePageState extends State<AddArticlePage> {
       ),
     );
   }
+
 }

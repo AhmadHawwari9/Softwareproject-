@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 
 class HistoryPage extends StatefulWidget {
   final String recipientId;
@@ -23,8 +24,14 @@ class _HistoryPageState extends State<HistoryPage> {
 
   // Function to fetch medical reports based on user id (recipientId)
   Future<void> showHistory(String userId) async {
+    // Dynamically set base URL depending on whether the app is running in the web or mobile environment
+    final String baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment
+        : 'http://10.0.2.2:3001'; // Mobile environment
+
+    // Use the baseUrl and append the userId to the endpoint
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3001/History/$userId'),
+      Uri.parse('$baseUrl/History/$userId'),
     );
 
     if (response.statusCode == 200) {
@@ -39,6 +46,7 @@ class _HistoryPageState extends State<HistoryPage> {
       );
     }
   }
+
 
   // Function to fetch data for a specific column (like HDL, BloodPressure, etc.)
   List<dynamic> getColumnData(String column) {

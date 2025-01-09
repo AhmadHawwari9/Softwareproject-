@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'chatwithspecificperson.dart';
 
@@ -31,9 +32,12 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
     checkUnfollowRequest();
     checkNotifications(); // Check if this user has been followed/requested
   }
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
 
   Future<void> checkIfFollowing() async {
-    final url = Uri.parse('http://10.0.2.2:3001/caregivers');
+    final url = Uri.parse('$baseUrl/caregivers');
     try {
       final response = await http.get(
         url,
@@ -70,7 +74,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
   String globalEmail = '';
 
   Future<void> fetchUserData() async {
-    final String url = 'http://10.0.2.2:3001/getUsersforsearch/${widget.id}';
+    final String url = '$baseUrl/getUsersforsearch/${widget.id}';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -110,7 +114,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
 
   Future<void> checkNotifications() async {
     // API call to check if a follow request exists for the current user
-    final url = Uri.parse('http://10.0.2.2:3001/notificationssender');
+    final url = Uri.parse('$baseUrl/notificationssender');
     try {
       final response = await http.get(
         url,
@@ -137,7 +141,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
   }
 
   Future<void> _sendFollowRequest() async {
-    final url = Uri.parse('http://10.0.2.2:3001/follow'); // Replace with actual API URL
+    final url = Uri.parse('$baseUrl/follow'); // Replace with actual API URL
 
     try {
       final response = await http.post(
@@ -180,7 +184,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
     );
   }
   Future<void> checkUnfollowRequest() async {
-    final url = Uri.parse('http://10.0.2.2:3001/getUnfollowNotifications');
+    final url = Uri.parse('$baseUrl/getUnfollowNotifications');
     try {
       final response = await http.get(
         url,
@@ -215,11 +219,11 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
   Future<void> _toggleFollowRequest() async {
     // Define the API endpoints
     final endpoints = {
-      'getUnfollowNotifications': Uri.parse('http://10.0.2.2:3001/getUnfollowNotifications'), // GET
-      'unfollow': Uri.parse('http://10.0.2.2:3001/unfollow'), // POST
-      'deleteFollowRequest': Uri.parse('http://10.0.2.2:3001/Deletefollowrequest/${widget.id}'), // DELETE
-      'deleteUnfollowRequest': Uri.parse('http://10.0.2.2:3001/DeleteUnfollowRequest/${widget.id}'), // DELETE
-      'follow': Uri.parse('http://10.0.2.2:3001/follow'), // POST
+      'getUnfollowNotifications': Uri.parse('$baseUrl/getUnfollowNotifications'), // GET
+      'unfollow': Uri.parse('$baseUrl/unfollow'), // POST
+      'deleteFollowRequest': Uri.parse('$baseUrl/Deletefollowrequest/${widget.id}'), // DELETE
+      'deleteUnfollowRequest': Uri.parse('$baseUrl/DeleteUnfollowRequest/${widget.id}'), // DELETE
+      'follow': Uri.parse('$baseUrl/follow'), // POST
     };
 
     try {
@@ -356,7 +360,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                   child: ClipOval(
                     child: userData['image_path'] != null
                         ? Image.network(
-                      'http://10.0.2.2:3001/${userData['image_path'].startsWith('/') ? userData['image_path'].substring(1) : userData['image_path']}',
+                      '$baseUrl/${userData['image_path'].startsWith('/') ? userData['image_path'].substring(1) : userData['image_path']}',
                       width: 140,
                       height: 140,
                       fit: BoxFit.cover,

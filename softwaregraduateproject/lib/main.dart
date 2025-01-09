@@ -4,11 +4,13 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:softwaregraduateproject/PdfReader.dart';
+import 'Gps.dart';
 import 'Login.dart'; // Ensure this widget is correctly defined
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:flutter/foundation.dart';
 
 import 'CareGiverHomepage.dart';
 import 'Noti.dart';
@@ -39,7 +41,21 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 FlutterLocalNotificationsPlugin();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  if (kIsWeb) {
+    await Firebase.initializeApp(
+      options: FirebaseOptions(
+        apiKey: 'AIzaSyAhwMHIbo4R-jNn3FlI-ook3qGl4lZ8gFI',  // Replace with your Firebase project values
+        appId: 'your-app-id',
+        messagingSenderId: 'your-sender-id',
+        projectId: 'softwareproject-e838c',
+
+      ),
+    );
+  } else {
+    await Firebase.initializeApp();
+  }
+
+
   await Noti.initialize(flutterLocalNotificationsPlugin);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 

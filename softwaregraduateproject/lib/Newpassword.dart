@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:softwaregraduateproject/Login.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 
 class NewPassword extends StatefulWidget {
   final String? email;
@@ -204,11 +205,16 @@ class _NewPasswordState extends State<NewPassword> {
                                     'email': widget.email,
                                     'newPassword': newpass
                                   };
+                                  final String baseUrl = kIsWeb
+                                      ? 'http://localhost:3001' // Web environment
+                                      : 'http://10.0.2.2:3001'; // Mobile environment
+
                                   final response = await http.post(
-                                    Uri.parse('http://10.0.2.2:3001/api/ForgetPassword/verifycode/Newpassword'),
+                                    Uri.parse('$baseUrl/api/ForgetPassword/verifycode/Newpassword'),
                                     headers: {'Content-Type': 'application/json'},
                                     body: json.encode(userData),
                                   );
+
                                   print("Response status: ${response.statusCode}");
                                   print("Response body: ${response.body}");
 

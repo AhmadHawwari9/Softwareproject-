@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'chatwithspecificperson.dart';
+import 'package:flutter/foundation.dart'; // for kIsWeb
 
 class HospitalDetails extends StatelessWidget {
   final Map<String, String> hospital;
@@ -15,6 +15,12 @@ class HospitalDetails extends StatelessWidget {
     required this.userEmail,
     required this.hospitalId,
   }) : super(key: key);
+
+  // Dynamically set the base URL depending on the environment
+  final String baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment
+      : 'http://10.0.2.2:3001'; // Mobile environment
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,7 +42,8 @@ class HospitalDetails extends StatelessWidget {
                 borderRadius: BorderRadius.circular(100),
                 child: hospital['image'] != null
                     ? Image.network(
-                  'http://10.0.2.2:3001/${hospital['image']!.startsWith('/') ? hospital['image']!.substring(1) : hospital['image']!}',
+                  // Use the dynamic base URL
+                  '$baseUrl/${hospital['image']!.startsWith('/') ? hospital['image']!.substring(1) : hospital['image']!}',
                   height: 150,
                   width: 150,
                   fit: BoxFit.cover,
@@ -93,6 +100,7 @@ class HospitalDetails extends StatelessWidget {
             _buildSectionTitle('Contact'),
             _buildInfoText(hospital["contact"]),
             const SizedBox(height: 20),
+
             // Contact Button (For action like calling)
             ElevatedButton(
               onPressed: () {
@@ -122,7 +130,6 @@ class HospitalDetails extends StatelessWidget {
                 ),
               ),
             ),
-
           ],
         ),
       ),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'HospitalDetails.dart';
+import 'package:flutter/foundation.dart'; // for kIsWeb
 
 class HospitalsPage extends StatefulWidget {
   final String savedToken;
@@ -22,7 +23,12 @@ class _HospitalsPageState extends State<HospitalsPage> {
   }
 
   Future<void> fetchHospitals() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:3001/hospitals'));
+    // Dynamically set the base URL depending on the environment (mobile or web)
+    final String baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment
+        : 'http://10.0.2.2:3001'; // Mobile environment
+
+    final response = await http.get(Uri.parse('$baseUrl/hospitals'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -56,16 +62,21 @@ class _HospitalsPageState extends State<HospitalsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Dynamically set the base URL depending on the environment (mobile or web)
+    final String baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment
+        : 'http://10.0.2.2:3001'; // Mobile environment
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Hospitals", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.teal,
-        iconTheme: IconThemeData(
+        iconTheme: const IconThemeData(
           color: Colors.white, // This makes the back arrow white
         ),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
         itemCount: hospitals.length,
         itemBuilder: (context, index) {
@@ -76,7 +87,7 @@ class _HospitalsPageState extends State<HospitalsPage> {
                 radius: 30,
                 backgroundImage: hospital['image'] != null
                     ? NetworkImage(
-                    'http://10.0.2.2:3001/${hospital['image']!.startsWith('/') ? hospital['image']!.substring(1) : hospital['image']!}')
+                    '$baseUrl/${hospital['image']!.startsWith('/') ? hospital['image']!.substring(1) : hospital['image']!}')
                     : null,
               ),
               title: Text(hospital["name"]!),
@@ -109,4 +120,5 @@ class _HospitalsPageState extends State<HospitalsPage> {
       ),
     );
   }
+
 }

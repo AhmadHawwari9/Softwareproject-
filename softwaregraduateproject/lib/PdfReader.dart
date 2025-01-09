@@ -10,8 +10,11 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart'; // Import for file system access
 import 'package:permission_handler/permission_handler.dart'; // Import for permission handling
 import 'package:http_parser/http_parser.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:universal_html/html.dart' as html; // Import universal_html package
 
 import 'ResponsePage.dart';
+
 class PDFReaderApp extends StatelessWidget {
   final String jwtToken;
   PDFReaderApp({required this.jwtToken});
@@ -35,45 +38,57 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
   String? _filePath;
   String _extractedText = '';
 
-  // Method to pick and extract text from the PDF
-  Future<void> _pickAndExtractPDF() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
+  Future<void> _pickAndExtractPDFweb() async {
+    if (kIsWeb) {
+      final html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
+      uploadInput.accept = 'application/pdf';
+      uploadInput.click();
 
+      uploadInput.onChange.listen((e) async {
+        final files = uploadInput.files;
+        if (files == null || files.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('No file selected')),
+          );
+          return;
+        }
 
-    if (result != null && result.files.single.path != null) {
-      setState(() {
-        _filePath = result.files.single.path;
-      });
+        final reader = html.FileReader();
+        reader.readAsArrayBuffer(files[0]);
 
-      try {
-        // Load the PDF file as bytes
-        final fileBytes = File(_filePath!).readAsBytesSync();
-        final pdfDocument = sf_pdf.PdfDocument(inputBytes: fileBytes);
+        reader.onLoadEnd.listen((e) async {
+          final bytes = reader.result as Uint8List;
+          try {
+            final pdfDocument = sf_pdf.PdfDocument(inputBytes: bytes);
+            final text = sf_pdf.PdfTextExtractor(pdfDocument).extractText();
+            print(text);
+            setState(() {
+              _extractedText = text;
+            });
 
-        // Extract text from the PDF
-        final text = sf_pdf.PdfTextExtractor(pdfDocument).extractText();
-        print(text);
-
-        setState(() {
-          _extractedText = text;
+            kIsWeb?
+            // Send the extracted text to the backend
+            await _sendExtractedTextToBackendweb(_extractedText):await _sendExtractedTextToBackendapp(_extractedText);
+            pdfDocument.dispose();
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error extracting text: $e')),
+            );
+          }
         });
 
-        // Send extracted data to the backend
-        await _sendDataToBackend();
-
-        pdfDocument.dispose(); // Dispose of the document after use
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error extracting text: $e')),
-        );
-      }
+        reader.onError.listen((e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error reading file: $e')),
+          );
+        });
+      });
     }
   }
 
-  Future<void> _sendDataToBackend() async {
+
+
+  Future<void> _sendDataToBackendapp() async {
     if (_filePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('No file selected')),
@@ -117,7 +132,9 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
       if (response.statusCode == 200) {
         // File uploaded successfully, now send the extracted text
         if (_extractedText.isNotEmpty) {
-          await _sendExtractedTextToBackend(_extractedText);
+          kIsWeb?
+          // Send the extracted text to the backend
+          await _sendExtractedTextToBackendweb(_extractedText):await _sendExtractedTextToBackendapp(_extractedText);
         }
 
         // Show success message after file upload and text extraction
@@ -139,7 +156,83 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
     }
   }
 
-  Future<void> _sendExtractedTextToBackend(String extractedText) async {
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
+
+
+  Future<void> _sendDataToBackendweb() async {
+    if (_filePath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No file selected')),
+      );
+      return;
+    }
+
+    try {
+      // Open the PDF file as bytes
+      final fileBytes = File(_filePath!).readAsBytesSync();
+
+      // Extract the original filename from the file path
+      String originalFilename = _filePath!.split('/').last;
+
+      // Get the current timestamp
+      String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Create a new filename by appending the timestamp
+      String newFilename = '$originalFilename-$timestamp.pdf';
+
+      // Prepare the multipart request
+      var uri = Uri.parse('$baseUrl/upload');  // Use baseUrl here
+      var request = http.MultipartRequest('POST', uri);
+
+      // Attach the file to the request
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file', // The form field name for the file
+          fileBytes,
+          filename: newFilename, // The new filename with timestamp
+          contentType: MediaType('application', 'pdf'),
+        ),
+      );
+
+      // Add authorization header (JWT token)
+      request.headers['Authorization'] = 'Bearer ${widget.jwtToken}';
+
+      // Send the file upload request
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        // File uploaded successfully, now send the extracted text
+        if (_extractedText.isNotEmpty) {
+          kIsWeb?
+          // Send the extracted text to the backend
+          await _sendExtractedTextToBackendweb(_extractedText):await _sendExtractedTextToBackendapp(_extractedText);
+        }
+
+        // Show success message after file upload and text extraction
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('File uploaded and data processed successfully!')),
+        );
+
+        // Navigate to the ResponsePage with the result
+        _showResponsePopup(context, 'File uploaded and processed successfully!');
+      } else {
+        String responseBody = await response.stream.bytesToString();
+        print('Failed upload response: $responseBody');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to upload file')),
+        );
+      }
+    } catch (e) {
+      print('Error uploading file: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error uploading file: $e')),
+      );
+    }
+  }
+
+  Future<void> _sendExtractedTextToBackendapp(String extractedText) async {
     try {
       // Sanitize the extracted text by escaping special characters
       String sanitizedText = extractedText.replaceAll(RegExp(r'[\n\r\t]'), ''); // Removes newlines, carriage returns, tabs
@@ -173,6 +266,41 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
   }
 
 
+  Future<void> _sendExtractedTextToBackendweb(String extractedText) async {
+    try {
+      // Sanitize the extracted text by escaping special characters
+      String sanitizedText = extractedText.replaceAll(RegExp(r'[\n\r\t]'), ''); // Removes newlines, carriage returns, tabs
+
+      // Prepare the POST request for sending extracted text
+      var uri = Uri.parse('$baseUrl/check'); // Use baseUrl here
+      var response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'text': sanitizedText}), // Sending sanitized extracted text
+      );
+
+      // Check the response status code and handle accordingly
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // If successful, show the response in the ResponsePage
+        _showResponsePopup(context, response.body);
+      } else {
+        // Log the response error for debugging purposes
+        print('Error: ${response.statusCode} - ${response.body}');
+        // If the server response isn't successful, show an error
+        _showResponsePopup(context, 'Failed to process the document. This report may contain wrong values. Please try again later.');
+      }
+    } catch (e) {
+      // Log any error that occurs during the request for debugging purposes
+      print('Error sending text: $e');
+      // Show a user-friendly error message in the popup
+      _showResponsePopup(context, 'An error occurred while sending data.');
+    }
+  }
+
+
+
 
   void _showResponsePopup(BuildContext context, String responseText) {
     // Navigate to the ResponsePage and pass the responseText as a parameter
@@ -187,52 +315,56 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
 
 
 
-
-
-  // Method to request storage permission
   Future<bool> _requestStoragePermission() async {
-    var status = await Permission.storage.request();
-    if (!status.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Storage permission denied')),
-      );
-      return false; // Returning false if permission is denied
+    if (Platform.isAndroid) {
+      var status = await Permission.storage.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Storage permission denied')),
+        );
+        return false;
+      }
+
+      // For Android 11 and higher, check if 'MANAGE_EXTERNAL_STORAGE' permission is needed
+      if (await Permission.manageExternalStorage.isPermanentlyDenied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Manage External Storage permission denied')),
+        );
+        return false;
+      }
+      if (!await Permission.manageExternalStorage.request().isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Manage External Storage permission required')),
+        );
+        return false;
+      }
     }
-    return true; // Returning true if permission is granted
+    return true;
   }
 
-  // Method to download the form and save it to the Downloads folder
-  Future<void> _downloadForm() async {
-    // Request storage permission
-    bool hasPermission = await _requestStoragePermission();
-    if (!hasPermission) return; // If permission is denied, return early
 
+  Future<void> _downloadFormweb() async {
     try {
       // Load the PDF file from assets
       final byteData = await rootBundle.load('assets/PDFmedicalformreport/reportform.pdf');
       final buffer = byteData.buffer.asUint8List();
 
-      // Get the directory for the Downloads folder
-      final directory = await _getDownloadsDirectory();
-      if (directory == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error accessing Downloads folder')),
-        );
-        return;
-      }
+      // Create a Blob object from the PDF file
+      final blob = html.Blob([buffer]);
 
-      print('Download Path: ${directory.path}');
+      // Create an anchor element and simulate a click to download the file
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..target = 'blank'
+        ..download = 'reportform.pdf'
+        ..click();
 
-      // Define the file path for saving the downloaded file
-      final tempFile = File('${directory.path}/reportform.pdf');
+      // Clean up the URL object after download
+      html.Url.revokeObjectUrl(url);
 
-      // Write the PDF bytes to the file
-      await tempFile.writeAsBytes(buffer);
-      print('File written to: ${tempFile.path}');
-
-      // Show a message once the download is complete
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Form downloaded successfully to Downloads folder!')),
+        SnackBar(content: Text('Form downloaded successfully!')),
       );
     } catch (e) {
       print('Error downloading form: $e');
@@ -242,22 +374,111 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
     }
   }
 
-  // Method to get the Downloads directory
   Future<Directory?> _getDownloadsDirectory() async {
     if (Platform.isAndroid) {
-      // For Android, use external storage directories
-      final directory = Directory('/storage/emulated/0/Download');
-      if (await directory.exists()) {
-        return directory;
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download directory does not exist')),
-        );
-        return null;
+      // Use path_provider to get the external storage directory
+      final directory = await getExternalStorageDirectory();
+      if (directory != null) {
+        final downloadsDir = Directory('${directory.path}/Download');
+        if (await downloadsDir.exists()) {
+          return downloadsDir;
+        } else {
+          await downloadsDir.create(recursive: true);
+          return downloadsDir;
+        }
       }
     }
-    return null; // For iOS or other platforms, you can handle it differently
+    return null; // For other platforms, handle accordingly
   }
+
+
+
+  Future<void> _pickAndExtractPDFapp() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+
+
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _filePath = result.files.single.path;
+      });
+
+      try {
+        // Load the PDF file as bytes
+        final fileBytes = File(_filePath!).readAsBytesSync();
+        final pdfDocument = sf_pdf.PdfDocument(inputBytes: fileBytes);
+
+        // Extract text from the PDF
+        final text = sf_pdf.PdfTextExtractor(pdfDocument).extractText();
+        print(text);
+
+        setState(() {
+          _extractedText = text;
+        });
+        kIsWeb?
+        // Send the extracted text to the backend
+        await _sendDataToBackendweb(): await _sendDataToBackendapp();;
+
+
+        pdfDocument.dispose(); // Dispose of the document after use
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error extracting text: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadFormapp() async {
+    // Request storage permission
+    bool hasPermission = await _requestStoragePermission();
+    if (!hasPermission) return;
+
+    try {
+      // Load the PDF file from assets
+      final byteData = await rootBundle.load('assets/PDFmedicalformreport/reportform.pdf');
+      final buffer = byteData.buffer.asUint8List();
+
+      // Define the Downloads directory path
+      final downloadsPath = '/storage/emulated/0/Download';
+      final downloadsDir = Directory(downloadsPath);
+
+      // Ensure the Downloads folder exists
+      if (!await downloadsDir.exists()) {
+        await downloadsDir.create(recursive: true);
+      }
+
+      // Define the file path for saving the downloaded file
+      final filePath = '$downloadsPath/reportform.pdf';
+      final file = File(filePath);
+
+      // Write the PDF bytes to the file
+      await file.writeAsBytes(buffer);
+
+      // Verify the file exists
+      if (await file.exists()) {
+        print('File successfully written to: $filePath');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Form downloaded successfully to Downloads folder!')),
+        );
+      } else {
+        print('File does not exist after writing.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: File not found after download.')),
+        );
+      }
+    } catch (e) {
+      print('Error downloading form: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error downloading form: $e')),
+      );
+    }
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +510,7 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
                     ),
                     SizedBox(height: 20),
                     ElevatedButton.icon(
-                      onPressed: _downloadForm,
+                      onPressed: kIsWeb?_downloadFormweb:_downloadFormapp,
                       icon: Icon(Icons.download,color: Colors.teal,),
                       label: Text('Download Form',style: TextStyle(color: Colors.teal),),
                       style: ElevatedButton.styleFrom(
@@ -307,7 +528,7 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
 
             // PDF Pick and Extract Section
             ElevatedButton.icon(
-              onPressed: _pickAndExtractPDF,
+              onPressed: kIsWeb?_pickAndExtractPDFweb:_pickAndExtractPDFapp,
               icon: Icon(Icons.picture_as_pdf,color: Colors.teal,),
               label: Text('Pick and Extract PDF',style:TextStyle(color: Colors.teal),),
               style: ElevatedButton.styleFrom(
@@ -320,7 +541,9 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
             SizedBox(height: 20),
 
             // PDF View Section
-            _filePath == null
+            kIsWeb
+                ? Expanded(child: Center(child: Text('')))
+                : _filePath == null
                 ? Expanded(child: Center(child: Text('No PDF selected')))
                 : Expanded(
               child: Padding(
@@ -328,6 +551,7 @@ class _PDFReaderScreenState extends State<PDFReaderScreen> {
                 child: PDFView(filePath: _filePath!),
               ),
             ),
+
 
             // Extracted Text Section
             Padding(

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'Newpassword.dart';
 
 class Verifycode extends StatefulWidget {
@@ -166,19 +166,28 @@ class _VerifycodeState extends State<Verifycode> {
                               if (_formKey.currentState!.validate()) {
                                 final userData = {
                                   'email': widget.email,
-                                  'code': code
+                                  'code': code,
                                 };
 
                                 try {
+                                  // Determine base URL based on platform
+                                  final String baseUrl = kIsWeb
+                                      ? 'http://localhost:3001' // For web development
+                                      : 'http://10.0.2.2:3001'; // For Android Emulator
+
+                                  // Send POST request to the API
                                   final response = await http.post(
-                                    Uri.parse('http://10.0.2.2:3001/api/ForgetPasswword/verifycode'),
+                                    Uri.parse('$baseUrl/api/ForgetPasswword/verifycode'),
                                     headers: {'Content-Type': 'application/json'},
                                     body: json.encode(userData),
                                   );
+
+                                  // Log the response status and body for debugging
                                   print("Response status: ${response.statusCode}");
                                   print("Response body: ${response.body}");
 
                                   if (response.statusCode == 200) {
+                                    // Navigate to the NewPassword screen if the response is successful
                                     Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
@@ -187,15 +196,17 @@ class _VerifycodeState extends State<Verifycode> {
                                     );
                                     print("User exists");
                                     setState(() {
-                                      _errorMessage = null; // Clear any error message
+                                      _errorMessage = null; // Clear any existing error message
                                     });
                                   } else {
+                                    // Parse the response and extract the error message
                                     final responseBody = json.decode(response.body);
                                     setState(() {
                                       _errorMessage = responseBody['message'] ?? "Incorrect Code";
                                     });
                                   }
                                 } catch (error) {
+                                  // Handle request errors
                                   print("Request failed: $error");
                                   setState(() {
                                     _errorMessage = "An error occurred: $error";

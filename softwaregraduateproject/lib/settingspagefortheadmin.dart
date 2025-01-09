@@ -10,6 +10,8 @@ import 'CareRecipientHomepage.dart';
 import 'Conversations.dart';
 import 'Hospitaluser.dart';
 import 'Searchpage.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 
 class SettingsPageforadmin extends StatefulWidget {
   final String savedEmail;
@@ -26,6 +28,10 @@ class SettingsPageforadmin extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPageforadmin> {
   TextEditingController nameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
 
   // Update email
   Future<void> _updateProfile() async {
@@ -55,7 +61,7 @@ class _SettingsPageState extends State<SettingsPageforadmin> {
 
   Future<void> _updateEmail(String email) async {
     final response = await http.put(
-      Uri.parse('http://10.0.2.2:3001/updateemail'),
+      Uri.parse('$baseUrl/updateemail'),
       headers: {
         'Authorization': 'Bearer ${widget.savedToken}',
         'Content-Type': 'application/json'  // Add content type for JSON
@@ -80,7 +86,7 @@ class _SettingsPageState extends State<SettingsPageforadmin> {
 // Change password API call
   Future<void> _changePassword(String newPassword) async {
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:3001/changepassword'), // Use POST instead of PUT
+      Uri.parse('$baseUrl/changepassword'), // Use POST instead of PUT
       headers: {
         'Authorization': 'Bearer ${widget.savedToken}',
         'Content-Type': 'application/json', // Add content type for JSON
@@ -114,7 +120,7 @@ class _SettingsPageState extends State<SettingsPageforadmin> {
 
   Future<void> _deleteAccount() async {
     final response = await http.delete(
-      Uri.parse('http://10.0.2.2:3001/deleteuser'),
+      Uri.parse('$baseUrl/deleteuser'),
       headers: {'Authorization': 'Bearer ${widget.savedToken}'},  // Ensure you're passing the token correctly
     );
 
@@ -259,7 +265,7 @@ class _SettingsPageState extends State<SettingsPageforadmin> {
       BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/api/homepage'),
+        Uri.parse('$baseUrl/api/homepage'),
         headers: {'Authorization': 'Bearer $token'},
       );
 

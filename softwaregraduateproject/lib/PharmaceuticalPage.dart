@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';  // Make sure to add the intl package in your pubspec.yaml
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 // Assuming you have a class to represent medication
 class Medication {
@@ -52,10 +53,13 @@ class _PharmaceuticalPageState extends State<PharmaceuticalPage> {
     super.initState();
     _fetchMedications();
   }
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
 
   Future<void> _fetchMedications() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3001/medications'),
+      Uri.parse('$baseUrl/medications'),
       headers: {
         'Authorization': 'Bearer ${widget.savedToken}', // Add token to header
       },

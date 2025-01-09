@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'chatwithspecificperson.dart';
 
@@ -37,10 +38,15 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
     checkNotifications(); // Check if this user has been followed/requested
   }
 
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
+
   List<Map<String, String>> medications = [];
 
   Future<void> fetchMedications() async {
-    final url = Uri.parse('http://10.0.2.2:3001/getMedications/${widget.id}');
+
+    final url = Uri.parse('$baseUrl/getMedications/${widget.id}');
 
     try {
       final response = await http.get(url, headers: {
@@ -70,7 +76,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
 
 
   Future<void> checkIfFollowing() async {
-    final url = Uri.parse('http://10.0.2.2:3001/caregivers');
+    final url = Uri.parse('$baseUrl/caregivers');
     try {
       final response = await http.get(
         url,
@@ -107,7 +113,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
   String globalEmail = '';
 
   Future<void> fetchUserData() async {
-    final String url = 'http://10.0.2.2:3001/getUsersforsearch/${widget.id}';
+    final String url = '$baseUrl/getUsersforsearch/${widget.id}';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -147,7 +153,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
 
   Future<void> checkNotifications() async {
     // API call to check if a follow request exists for the current user
-    final url = Uri.parse('http://10.0.2.2:3001/notificationssender');
+    final url = Uri.parse('$baseUrl/notificationssender');
     try {
       final response = await http.get(
         url,
@@ -174,7 +180,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
   }
 
   Future<void> _sendFollowRequest() async {
-    final url = Uri.parse('http://10.0.2.2:3001/follow'); // Replace with actual API URL
+    final url = Uri.parse('$baseUrl/follow'); // Replace with actual API URL
 
     try {
       final response = await http.post(
@@ -217,7 +223,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
     );
   }
   Future<void> checkUnfollowRequest() async {
-    final url = Uri.parse('http://10.0.2.2:3001/getUnfollowNotifications');
+    final url = Uri.parse('$baseUrl/getUnfollowNotifications');
     try {
       final response = await http.get(
         url,
@@ -252,11 +258,11 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
   Future<void> _toggleFollowRequest() async {
     // Define the API endpoints
     final endpoints = {
-      'getUnfollowNotifications': Uri.parse('http://10.0.2.2:3001/getUnfollowNotifications'), // GET
-      'unfollow': Uri.parse('http://10.0.2.2:3001/unfollow'), // POST
-      'deleteFollowRequest': Uri.parse('http://10.0.2.2:3001/Deletefollowrequest/${widget.id}'), // DELETE
-      'deleteUnfollowRequest': Uri.parse('http://10.0.2.2:3001/DeleteUnfollowRequest/${widget.id}'), // DELETE
-      'follow': Uri.parse('http://10.0.2.2:3001/follow'), // POST
+      'getUnfollowNotifications': Uri.parse('$baseUrl/getUnfollowNotifications'), // GET
+      'unfollow': Uri.parse('$baseUrl/unfollow'), // POST
+      'deleteFollowRequest': Uri.parse('$baseUrl/Deletefollowrequest/${widget.id}'), // DELETE
+      'deleteUnfollowRequest': Uri.parse('$baseUrl/DeleteUnfollowRequest/${widget.id}'), // DELETE
+      'follow': Uri.parse('$baseUrl/follow'), // POST
     };
 
     try {
@@ -385,7 +391,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
 
       // Fetch the schedule data based on the selected date and userId
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/getScheduleByDateForUser/$userId/$formattedDate'), // Adjusted endpoint
+        Uri.parse('$baseUrl/getScheduleByDateForUser/$userId/$formattedDate'), // Adjusted endpoint
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Include token if required
         },
@@ -489,7 +495,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
 
     // API call to update the schedule on the server
     final url = Uri.parse(
-        'http://10.0.2.2:3001/modifySchedule/$userId/$scheduleId'); // Adjusted endpoint
+        '$baseUrl/modifySchedule/$userId/$scheduleId'); // Adjusted endpoint
 
     Map<String, dynamic> data = {
       'name': name,
@@ -542,7 +548,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
   Future<bool> _deleteSchedule(int userId, int scheduleId) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://10.0.2.2:3001/removeSchedule/$userId/$scheduleId'),
+        Uri.parse('$baseUrl/removeSchedule/$userId/$scheduleId'),
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Replace with actual token
         },
@@ -650,7 +656,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
 
                     // Make the POST request to your API
                     final response = await http.post(
-                      Uri.parse('http://10.0.2.2:3001/schedulefromthecarerecipant/${widget.id}'), // For Android emulator
+                      Uri.parse('$baseUrl/schedulefromthecarerecipant/${widget.id}'), // For Android emulator
                       headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ${widget.savedToken}',
@@ -681,7 +687,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
   }
 
   Future<void> fetchSchedule() async {
-    final url = Uri.parse('http://10.0.2.2:3001/caregiverSchedule/${widget.id}'); // API URL with userId as a parameter
+    final url = Uri.parse('$baseUrl/caregiverSchedule/${widget.id}'); // API URL with userId as a parameter
     try {
       final response = await http.get(url); // Removed Authorization header
 
@@ -703,7 +709,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
   String availabilityText = "";
   Future<void> fetchAvailability() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3001/availability/${widget.id}'),
+      Uri.parse('$baseUrl/availability/${widget.id}'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${widget.savedToken}',  // Pass the token in the header
@@ -817,7 +823,7 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
                   child: ClipOval(
                     child: userData['image_path'] != null
                         ? Image.network(
-                      'http://10.0.2.2:3001/${userData['image_path'].startsWith('/') ? userData['image_path'].substring(1) : userData['image_path']}',
+                      '$baseUrl/${userData['image_path'].startsWith('/') ? userData['image_path'].substring(1) : userData['image_path']}',
                       width: 140,
                       height: 140,
                       fit: BoxFit.cover,

@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:softwaregraduateproject/CareGiverHomepage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +15,10 @@ import 'CareGiverFileUpload.dart';
 import 'CareRecipientHomepage.dart';
 import 'Hospitaluser.dart';
 import 'Login.dart';
+import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as path;
+import 'package:http_parser/http_parser.dart';
+
 
 File? _image;
 
@@ -110,10 +117,15 @@ class _SignupState extends State<Signup> {
       BuildContext context, String email, String password, String token) async {
     try {
       // Make the request to /api/homepage to get the user type
+      final apiUrl = kIsWeb
+          ? 'http://localhost:3001/api/homepage' // Web environment
+          : 'http://10.0.2.2:3001/api/homepage'; // Mobile emulator
+
       final homepageResponse = await http.get(
-        Uri.parse('http://10.0.2.2:3001/api/homepage'),
+        Uri.parse(apiUrl),
         headers: {'Authorization': 'Bearer $token'},
       );
+
       print(homepageResponse.statusCode);
       if (homepageResponse.statusCode == 200) {
         final homepageData = json.decode(homepageResponse.body);
@@ -204,12 +216,68 @@ class _SignupState extends State<Signup> {
 
 
 
-  void pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
-    if (result != null) {
-      setState(() {
-        _image = File(result.files.single.path!);
-      });
+  File? _selectedImage; // For mobile
+  Uint8List? _webImage; // For web
+  String? _webImageName; // File name for web
+  final ImagePicker _picker = ImagePicker();
+  bool _isSubmitting = false;
+
+  Future<void> pickFile() async {
+    try {
+      if (kIsWeb) {
+        FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+        if (result != null) {
+          setState(() {
+            _webImage = result.files.first.bytes;
+            _webImageName = result.files.first.name;
+          });
+        } else {
+          setState(() {
+            _webImage = null;
+            _webImageName = null;
+          });
+        }
+      } else {
+        final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+        if (pickedFile != null) {
+          setState(() {
+            _selectedImage = File(pickedFile.path);
+          });
+        }
+      }
+    } on PlatformException catch (e) {
+      print("Error picking image: $e");
+    }
+  }
+
+
+  List<String>? _getMimeTypeFromFile(String filePath) {
+    // Attempt to get MIME type using lookupMimeType
+    final mimeType = lookupMimeType(filePath);
+    if (mimeType != null) {
+      final mimeTypeParts = mimeType.split('/');
+      if (mimeTypeParts.length == 2) {
+        return mimeTypeParts;
+      }
+    }
+
+    // Fallback to file extension if MIME type cannot be determined
+    final extension = path.extension(filePath).toLowerCase();
+    if (extension == '.jpg' || extension == '.jpeg') {
+      return ['image', 'jpeg'];
+    } else if (extension == '.png') {
+      return ['image', 'png'];
+    } else if (extension == '.gif') {
+      return ['image', 'gif'];
+    } else if (extension == '.bmp') {
+      return ['image', 'bmp'];
+    } else if (extension == '.webp') {
+      return ['image', 'webp'];
+    } else if (extension == '.svg') {
+      return ['image', 'svg+xml'];
+    } else {
+      print('Unsupported file type: $extension');
+      return null; // Unsupported file type
     }
   }
 
@@ -442,36 +510,29 @@ class _SignupState extends State<Signup> {
                     GestureDetector(
                       onTap: pickFile,
                       child: Container(
-                        height: 120,
-                        width: 120,
+                        height: 200,
+                        width: double.infinity,
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: Colors.teal, width: 2),
-                          image: _image != null
-                              ? DecorationImage(image: FileImage(_image!), fit: BoxFit.cover)
-                              : null,
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12.0),
+                          border: Border.all(color: Colors.grey),
                         ),
-                        child: _image == null
-                            ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.cloud_upload,
-                              color: Colors.teal,
-                              size: 40,
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              "Upload Photo",
-                              style: TextStyle(
-                                color: Colors.teal,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                        child: _selectedImage == null && _webImage == null
+                            ? Icon(Icons.add_a_photo, size: 50, color: Colors.grey)
+                            : kIsWeb && _webImage != null
+                            ? Image.memory(
+                          _webImage!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
                         )
-                            : null,
+                            : ClipRRect(
+                          borderRadius: BorderRadius.circular(12.0),
+                          child: Image.file(
+                            _selectedImage!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
+                        ),
                       ),
                     ),
 
@@ -508,28 +569,69 @@ class _SignupState extends State<Signup> {
                                 };
 
                                 if (selectedRole == "Care giver") {
-                                  // Navigate to CareGiverFileUpload and pass userData
+                                  // Send image along with user data to the CareGiverFileUpload page
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => CareGiverFileUpload(userData: Map<String, String>.from(userData),
+                                      builder: (context) => CareGiverFileUpload(
+                                        userData: Map<String, String>.from(userData),
+                                        selectedImage: _selectedImage, // Pass image here
+                                        webImage: _webImage, // Pass web image if selected
+                                        webImageName: _webImageName,
+                                      ),
                                     ),
-                                  ));
+                                  );
                                 } else {
+                                  // Handle image upload and user registration in the else block
                                   try {
-                                    var request = http.MultipartRequest(
-                                      'POST',
-                                      Uri.parse('http://10.0.2.2:3001/api/users'),
-                                    );
+                                    final apiUrl = kIsWeb
+                                        ? 'http://localhost:3001/api/users' // Web environment
+                                        : 'http://10.0.2.2:3001/api/users'; // Mobile emulator
 
+                                    var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
                                     request.fields.addAll(userData.map((key, value) => MapEntry(key, value!)));
 
                                     if (_token != null) {
                                       request.headers['authorization'] = 'Bearer $_token';
                                     }
 
-                                    if (_image != null) {
-                                      var file = await http.MultipartFile.fromPath('photo', _image!.path);
+                                    // Handle image upload based on the platform
+                                    if (kIsWeb && _webImage != null) {
+                                      final mimeTypeData = await _getMimeTypeFromFile(_webImageName ?? '');
+                                      if (mimeTypeData == null) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text("Unsupported file type."),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                        return;
+                                      }
+
+                                      final file = http.MultipartFile.fromBytes(
+                                        'photo',
+                                        _webImage!,
+                                        filename: _webImageName,
+                                        contentType: MediaType(mimeTypeData[0], mimeTypeData[1]),
+                                      );
+                                      request.files.add(file);
+                                    } else if (_selectedImage != null) {
+                                      final mimeTypeData = await _getMimeTypeFromFile(_selectedImage!.path);
+                                      if (mimeTypeData == null) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text("Unsupported file type."),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                        return;
+                                      }
+
+                                      final file = await http.MultipartFile.fromPath(
+                                        'photo',
+                                        _selectedImage!.path,
+                                        contentType: MediaType(mimeTypeData[0], mimeTypeData[1]),
+                                      );
                                       request.files.add(file);
                                     } else {
                                       ScaffoldMessenger.of(context).showSnackBar(
@@ -584,7 +686,8 @@ class _SignupState extends State<Signup> {
                               }
                             }
 
-,
+
+                            ,
 
 
 

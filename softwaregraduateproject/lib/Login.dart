@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -64,11 +65,15 @@ class _LoginPageState extends State<Loginpage> {
     }
   }
 
-  Future<void> fetchHomepageAndNavigate(
+  Future<http.Response> fetchHomepageAndNavigate(
       BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
+      final apiUrl = kIsWeb
+          ? 'http://localhost:3001/api/homepage' // Web environment (localhost or public URL)
+          : 'http://10.0.2.2:3001/api/homepage'; // Mobile emulator
+
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/api/homepage'),
+        Uri.parse(apiUrl),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -81,11 +86,11 @@ class _LoginPageState extends State<Loginpage> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else if(userType == 'Care giver') {
+        } else if (userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
-        }else{
-          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
-      }
+        } else {
+          homepage = HospitalUserForm(email, password, token, isGoogleSignInEnabled);
+        }
 
         // If mounted, navigate to the homepage
         if (mounted) {
@@ -94,13 +99,17 @@ class _LoginPageState extends State<Loginpage> {
             MaterialPageRoute(builder: (context) => homepage),
           );
         }
+        return response; // Return the response on success
       } else {
-        _showErrorDialog('Failed to load homepage data');
+        throw Exception('Failed to load homepage data. Status code: ${response.statusCode}');
       }
+    } on SocketException {
+      throw Exception('No Internet connection or server unreachable');
     } catch (e) {
-      _showErrorDialog('An error occurred: $e');
+      throw Exception('Unexpected error occurred: $e');
     }
   }
+
 
   Future<void> _saveCredentials(String token, String email, String password, bool isGoogleSignInEnabled) async {
     final prefs = await SharedPreferences.getInstance();
@@ -112,17 +121,29 @@ class _LoginPageState extends State<Loginpage> {
 
   Future<http.Response> _loginUser(Map<String, String> userData) async {
     try {
-      return await http.post(
-        Uri.parse('http://10.0.2.2:3001/api/Login'),
+      // Use 'localhost' for local development or a publicly accessible URL
+      final apiUrl = kIsWeb
+          ? 'http://localhost:3001/api/Login' // Web environment (localhost or public URL)
+          : 'http://10.0.2.2:3001/api/Login'; // Mobile emulator
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(userData),
       );
+
+      if (response.statusCode == 200) {
+        return response; // Successful login
+      } else {
+        throw Exception('Failed to login. Status code: ${response.statusCode}, Body: ${response.body}');
+      }
     } on SocketException {
       throw Exception('No Internet connection or server unreachable');
     } catch (e) {
       throw Exception('Unexpected error occurred: $e');
     }
   }
+
 
   void _showErrorDialog(String message) {
     if (mounted) {

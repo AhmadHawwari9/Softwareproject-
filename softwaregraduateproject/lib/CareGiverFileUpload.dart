@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
@@ -8,18 +11,175 @@ import 'Login.dart';
 
 class CareGiverFileUpload extends StatefulWidget {
   final Map<String, String> userData;
+  final File? selectedImage;  // You might want to keep this as it is.
+  final Uint8List? webImage;  // Declare the webImage property here.
+  final String? webImageName;  // Declare the webImageName property here.
 
-  CareGiverFileUpload({required this.userData});
+  CareGiverFileUpload({
+    required this.userData,
+    this.selectedImage,
+    this.webImage,  // Add the webImage parameter to the constructor.
+    this.webImageName,  // Add the webImageName parameter to the constructor.
+  });
 
   @override
   _CareGiverFileUploadState createState() => _CareGiverFileUploadState();
 }
 
+
 class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
   File? _selectedFile;
   bool _isLoading = false;
 
-  void pickFile() async {
+  FilePickerResult? result;
+
+  void pickFileweb() async {
+    result = await FilePicker.platform.pickFiles();  // Assign result here
+
+    if (result != null) {
+      if (kIsWeb) {
+        // Web: Use bytes and name
+        Uint8List? fileBytes = result!.files.single.bytes;
+        String fileName = result!.files.single.name;
+
+        if (fileBytes != null) {
+          setState(() {
+            _selectedFile = File(""); // Placeholder to trigger UI update
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Picked file: $fileName")),
+          );
+        }
+      } else {
+        // Non-Web: Use file path
+        setState(() {
+          _selectedFile = File(result!.files.single.path!);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Picked file: ${_selectedFile!.path.split('/').last}")),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No file selected.")),
+      );
+    }
+  }
+
+  bool _isImageFile(String path) {
+    final ext = path.split('.').last.toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'gif', 'pdf'].contains(ext);
+  }
+
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
+
+  Future<void> submitApplicationweb() async {
+    if (widget.userData['typeofuser'] == 'Care giver') { // Check if user is a caregiver
+      if (_selectedFile != null || kIsWeb) {
+        setState(() {
+          _isLoading = true;
+        });
+
+        try {
+          if (kIsWeb && result == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("File selection canceled.")),
+            );
+            setState(() {
+              _isLoading = false;
+            });
+            return;
+          }
+
+          var request = http.MultipartRequest(
+            'POST',
+            Uri.parse('$baseUrl/caregiverRequestToTheAdmin'),
+          );
+
+          request.fields.addAll(widget.userData);
+
+          // Add the image from the previous page if available
+          if (widget.webImage != null && widget.webImageName != null) {
+            request.files.add(
+              http.MultipartFile.fromBytes(
+                'photo',
+                widget.webImage!,
+                filename: widget.webImageName,
+              ),
+            );
+          }
+
+          // Add the file selected from this page
+          if (kIsWeb && result != null) {
+            Uint8List? fileBytes = result!.files.single.bytes;
+            String? fileName = result!.files.single.name;
+
+            if (fileBytes != null && fileName != null) {
+              request.files.add(
+                http.MultipartFile.fromBytes('file', fileBytes, filename: fileName),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Failed to read file.")),
+              );
+              setState(() {
+                _isLoading = false;
+              });
+              return;
+            }
+          } else if (!kIsWeb && _selectedFile != null) {
+            var file = await http.MultipartFile.fromPath('file', _selectedFile!.path);
+            request.files.add(file);
+          }
+
+          var response = await request.send();
+
+          if (response.statusCode == 201) {
+            var responseBody = await http.Response.fromStream(response);
+            var responseData = json.decode(responseBody.body);
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Application submitted successfully!")),
+            );
+
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => Loginpage()),
+                  (route) => false,
+            );
+          } else {
+            var responseBody = await http.Response.fromStream(response);
+            print("Failed to submit application. Status: ${response.statusCode}, Response: ${responseBody.body}");
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Failed to submit application.")),
+            );
+          }
+        } catch (e) {
+          print("Error: $e");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("An error occurred. Please try again.")),
+          );
+        } finally {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please upload a file first.")),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("You are not authorized to submit as a caregiver.")),
+      );
+    }
+  }
+
+
+  void pickFileapp() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
       setState(() {
@@ -28,12 +188,7 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
     }
   }
 
-  bool _isImageFile(String path) {
-    final ext = path.split('.').last.toLowerCase();
-    return ['jpg', 'jpeg', 'png', 'gif', 'bmp'].contains(ext);
-  }
-
-  Future<void> submitApplication() async {
+  Future<void> submitApplicationapp() async {
     if (_selectedFile != null) {
       setState(() {
         _isLoading = true;
@@ -111,13 +266,19 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
 
 
 
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Caregiver Application"),
+        title: Text("Caregiver Application", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.teal,
         elevation: 0,
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -149,7 +310,7 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    "Upload your certificate or any proof of your ability to act as a caregiver.also put an image of your identity inside the pdf and then upload them in one file This application will be sent to the admin for review. Try again to sign in to the app later.",
+                    "Upload your certificate or any proof of your ability to act as a caregiver. Also, include an image of your identity inside the PDF and upload them in one file. This application will be sent to the admin for review.",
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 18, color: Colors.white70),
                   ),
@@ -158,7 +319,7 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
             ),
             SizedBox(height: 30),
             GestureDetector(
-              onTap: pickFile,
+              onTap: kIsWeb ? pickFileweb : pickFileapp,
               child: Container(
                 height: 180,
                 width: double.infinity,
@@ -189,12 +350,10 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
                     : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _isImageFile(_selectedFile!.path)
-                        ? Image.file(_selectedFile!, height: 100, width: 100, fit: BoxFit.cover)
-                        : Icon(Icons.insert_drive_file, size: 50, color: Colors.teal),
+                    Icon(Icons.insert_drive_file, size: 50, color: Colors.teal),
                     SizedBox(height: 10),
                     Text(
-                      _selectedFile!.path.split('/').last,
+                      _selectedFile!.path.split('/').last,  // Only display the file name
                       style: TextStyle(fontSize: 16, color: Colors.teal),
                       textAlign: TextAlign.center,
                     ),
@@ -204,7 +363,7 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
             ),
             SizedBox(height: 30),
             ElevatedButton(
-              onPressed: _isLoading ? null : submitApplication,
+              onPressed: _isLoading ? null : (kIsWeb ? submitApplicationweb : submitApplicationapp),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 backgroundColor: Colors.teal,
@@ -224,4 +383,5 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
       ),
     );
   }
+
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 
 class AvailabilityPage extends StatefulWidget {
   final String savedToken;
@@ -48,6 +50,10 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
     }
   }
 
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
+
   Future<void> saveAvailability() async {
     // Collect selected days and times
     String selectedDaysString = daysOfWeek
@@ -74,7 +80,7 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
 
     // Send the data to the server
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:3001/setAvailability'),  // Replace with your actual API URL
+      Uri.parse('$baseUrl/setAvailability'),  // Replace with your actual API URL
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${widget.savedToken}',  // Pass the token in the header
@@ -185,7 +191,7 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
   Future<List<Map<String, String>>> fetchAvailability() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/getAvailability'),
+        Uri.parse('$baseUrl/getAvailability'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${widget.savedToken}',

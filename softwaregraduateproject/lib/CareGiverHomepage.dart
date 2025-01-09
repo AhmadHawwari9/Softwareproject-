@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -29,6 +30,7 @@ import 'Searchcaregievrpage.dart';
 import 'Searchpage.dart';
 import 'Settingspage.dart';
 import 'UserProfilePage.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 
 import 'package:table_calendar/table_calendar.dart';
 
@@ -114,20 +116,35 @@ class _HomepageState extends State<CareGiverHomepage> {
   List<Map<String, dynamic>> articles = [];  // To store the list of articles
 
   Future<void> fetchArticles() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:3001/articles'));
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/articles' // Web environment
+        : 'http://10.0.2.2:3001/articles'; // Mobile emulator
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);  // Decode the response body
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
 
-      setState(() {
-        articleCount = data['count'];  // Set the count
-        // Cast the 'articles' key to a List<Map<String, dynamic>>
-        articles = List<Map<String, dynamic>>.from(data['articles']);
-      });
-    } else {
-      throw Exception('Failed to load articles');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body); // Decode the response body
+
+        setState(() {
+          articleCount = data['count']; // Set the count
+          articles = List<Map<String, dynamic>>.from(data['articles']); // Cast to List<Map<String, dynamic>>
+        });
+      } else {
+        throw Exception('Failed to load articles. Status code: ${response.statusCode}');
+      }
+    } on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No Internet connection or server unreachable')),
+      );
+    } catch (error) {
+      print('Error: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred: $error')),
+      );
     }
   }
+
 
   void startScrolling() {
     timer = Timer.periodic(Duration(seconds: 2), (timer) {
@@ -161,10 +178,13 @@ class _HomepageState extends State<CareGiverHomepage> {
   }
 
   Future<void> fetchSchedule() async {
-    final url = Uri.parse('http://10.0.2.2:3001/ScheduleforCaregiver'); // Your API URL to get all schedule data
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/ScheduleforCaregiver' // Web environment
+        : 'http://10.0.2.2:3001/ScheduleforCaregiver'; // Mobile emulator
+
     try {
       final response = await http.get(
-        url,
+        Uri.parse(apiUrl),
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Authorization token
         },
@@ -172,21 +192,29 @@ class _HomepageState extends State<CareGiverHomepage> {
 
       if (response.statusCode == 200) {
         setState(() {
-          scheduleData = List<Map<String, dynamic>>.from(jsonDecode(response.body)); // Explicitly cast to List<Map<String, dynamic>>
+          scheduleData = List<Map<String, dynamic>>.from(jsonDecode(response.body)); // Explicit cast to List<Map<String, dynamic>>
           isLoading = false;
         });
       } else {
-        throw Exception('Failed to load schedule');
+        throw Exception('Failed to load schedule. Status code: ${response.statusCode}');
       }
-    } catch (e) {
+    } on SocketException {
       setState(() {
         isLoading = false;
       });
-      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No Internet connection or server unreachable')),
+      );
+    } catch (error) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error: $error');
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('An error occurred: $error')),
+      // );
     }
   }
-
-
 
   Future<void> _fetchConversations() async {
     if (widget.savedToken.isEmpty) {
@@ -197,13 +225,18 @@ class _HomepageState extends State<CareGiverHomepage> {
       return;
     }
 
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/chat/conversations' // Web environment
+        : 'http://10.0.2.2:3001/chat/conversations'; // Mobile emulator
+
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/chat/conversations'),
+        Uri.parse(apiUrl),
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}',
         },
       );
+
       if (response.statusCode == 200) {
         final List<dynamic> fetchedConversations = json.decode(response.body);
         setState(() {
@@ -224,14 +257,26 @@ class _HomepageState extends State<CareGiverHomepage> {
           _errorMessage = "Failed to load conversations: ${response.statusCode}";
         });
       }
+    } on SocketException {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = "No Internet connection or server unreachable.";
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_errorMessage!)),
+      );
     } catch (e) {
       setState(() {
         _isLoading = false;
         _errorMessage = "Error occurred while fetching conversations.";
       });
       print("Error fetching conversations: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_errorMessage!)),
+      );
     }
   }
+
 
   Future<void> _loadCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -284,11 +329,15 @@ class _HomepageState extends State<CareGiverHomepage> {
       print('Error loading service account JSON: $e');
     }
   }
-  Future<void> fetchHomepageAndNavigate(
+  Future<http.Response> fetchHomepageAndNavigate(
       BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
+      final apiUrl = kIsWeb
+          ? 'http://localhost:3001/api/homepage' // Web environment (localhost or public URL)
+          : 'http://10.0.2.2:3001/api/homepage'; // Mobile emulator
+
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/api/homepage'),
+        Uri.parse(apiUrl),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -301,10 +350,10 @@ class _HomepageState extends State<CareGiverHomepage> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else if(userType == 'Care giver') {
+        } else if (userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
-        }else{
-          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
+        } else {
+          homepage = HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
 
         // If mounted, navigate to the homepage
@@ -314,13 +363,17 @@ class _HomepageState extends State<CareGiverHomepage> {
             MaterialPageRoute(builder: (context) => homepage),
           );
         }
+        return response; // Return the response on success
       } else {
-        _showErrorDialog('Failed to load homepage data');
+        throw Exception('Failed to load homepage data. Status code: ${response.statusCode}');
       }
+    } on SocketException {
+      throw Exception('No Internet connection or server unreachable');
     } catch (e) {
-      _showErrorDialog('An error occurred: $e');
+      throw Exception('Unexpected error occurred: $e');
     }
   }
+
   void _showErrorDialog(String message) {
     if (mounted) {
       showDialog(
@@ -339,22 +392,26 @@ class _HomepageState extends State<CareGiverHomepage> {
     }
   }
 
-
   Future<void> fetchHomepageData() async {
-    final homepageUrl = Uri.parse('http://10.0.2.2:3001/api/homepage');
-    final imageUrl = Uri.parse('http://10.0.2.2:3001/user/image/${widget.savedEmail}');
+    final homepageApiUrl = kIsWeb
+        ? 'http://localhost:3001/api/homepage' // Web environment
+        : 'http://10.0.2.2:3001/api/homepage'; // Mobile emulator
+
+    final imageApiUrl = kIsWeb
+        ? 'http://localhost:3001/user/image/${widget.savedEmail}' // Web environment
+        : 'http://10.0.2.2:3001/user/image/${widget.savedEmail}'; // Mobile emulator
 
     try {
       final homepageResponse = await http.get(
-        homepageUrl,
+        Uri.parse(homepageApiUrl),
         headers: {
           'Content-Type': 'application/json',
-          'token': token ?? ''
+          'token': token ?? '',
         },
       );
 
       if (homepageResponse.statusCode == 200) {
-        var responseBody = jsonDecode(homepageResponse.body);
+        final responseBody = jsonDecode(homepageResponse.body);
 
         setState(() {
           apiResponse = 'Success: ${responseBody['message']}';
@@ -366,27 +423,41 @@ class _HomepageState extends State<CareGiverHomepage> {
       }
 
       final imageResponse = await http.get(
-        imageUrl,
+        Uri.parse(imageApiUrl),
         headers: {
           'Content-Type': 'application/json',
-          'token': token ?? ''
+          'token': token ?? '',
         },
       );
 
       if (imageResponse.statusCode == 200) {
         final imageData = jsonDecode(imageResponse.body);
         String relativeImagePath = imageData['imagePath'];
-        photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+        photoUrl = (kIsWeb
+            ? 'http://localhost:3001/' // Web environment
+            : 'http://10.0.2.2:3001/') + relativeImagePath.replaceAll('\\', '/');
       } else {
         setState(() {
           photoUrl = null;
         });
       }
+    } on SocketException {
+      setState(() {
+        apiResponse = 'Error: No Internet connection or server unreachable.';
+        photoUrl = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(apiResponse!)),
+      );
     } catch (error) {
       setState(() {
         apiResponse = 'Error: $error';
         photoUrl = null;
       });
+      print('Error fetching homepage data: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(apiResponse!)),
+      );
     }
   }
 
@@ -439,10 +510,12 @@ class _HomepageState extends State<CareGiverHomepage> {
 
 
   Future<void> fetchMedicalReports(String careRecipientId) async {
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/user/files/$careRecipientId' // Web environment
+        : 'http://10.0.2.2:3001/user/files/$careRecipientId'; // Mobile emulator
+
     try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/user/files/$careRecipientId'),
-      );
+      final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -456,7 +529,8 @@ class _HomepageState extends State<CareGiverHomepage> {
           ),
         );
       } else {
-        // If the response is not successful, navigate with an empty list
+        // Log the error and navigate with an empty list
+        print('Failed to fetch files: ${response.statusCode}');
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -464,9 +538,18 @@ class _HomepageState extends State<CareGiverHomepage> {
           ),
         );
       }
+    } on SocketException {
+      print('Error: No Internet connection or server unreachable.');
+      // Navigate with an empty list in case of a connection error
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MedicalReportsPage(files: []),
+        ),
+      );
     } catch (e) {
       print('Error fetching files: $e');
-      // Navigate with an empty list if an error occurs
+      // Navigate with an empty list if an unexpected error occurs
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -475,6 +558,7 @@ class _HomepageState extends State<CareGiverHomepage> {
       );
     }
   }
+
 
 
 // Function to show the medical reports in a dialog
@@ -636,25 +720,27 @@ class _HomepageState extends State<CareGiverHomepage> {
       String date,
       String time,
       ) {
-    final selectedDateFormatted = "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}";
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/updateSchedule/$scheduleId' // Web environment
+        : 'http://10.0.2.2:3001/updateSchedule/$scheduleId'; // Mobile emulator
+
+    final selectedDateFormatted =
+        "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}";
 
     print('Editing Schedule: $scheduleId');
     print('Updated Name: $name');
     print('Updated Date: $date');
     print('Updated Time: $time');
-    print('Selected Calendar Date: $selectedDateFormatted'); // Include the selected date
-
-    // API call to update the schedule on the server
-    final url = Uri.parse('http://10.0.2.2:3001/updateSchedule/$scheduleId');
+    print('Selected Calendar Date: $selectedDateFormatted');
 
     Map<String, dynamic> data = {
       'name': name,
-      'date': selectedDateFormatted, // Send the selected calendar date
+      'date': selectedDateFormatted,
       'time': time,
     };
 
     http.put(
-      url,
+      Uri.parse(apiUrl),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${widget.savedToken}',
@@ -666,7 +752,8 @@ class _HomepageState extends State<CareGiverHomepage> {
 
         // Update local data list
         setState(() {
-          int index = scheduleData.indexWhere((schedule) => schedule['scedual_id'] == scheduleId);
+          int index = scheduleData
+              .indexWhere((schedule) => schedule['scedual_id'] == scheduleId);
           if (index != -1) {
             scheduleData[index] = {
               'scedual_id': scheduleId,
@@ -679,7 +766,8 @@ class _HomepageState extends State<CareGiverHomepage> {
 
         _fetchScheduleForSelectedDate(selectedDate);
       } else {
-        print('Failed to update schedule. Response code: ${response.statusCode}');
+        print(
+            'Failed to update schedule. Response code: ${response.statusCode}');
       }
     }).catchError((e) {
       print('Error: $e');
@@ -691,19 +779,32 @@ class _HomepageState extends State<CareGiverHomepage> {
 
 
   Future<bool> _deleteSchedule(int scedualId) async {
-    final response = await http.delete(
-      Uri.parse('http://10.0.2.2:3001/deleteSchedule/$scedualId'),
-      headers: {
-        'Authorization': 'Bearer ${widget.savedToken}', // Replace with actual token
-      },
-    );
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/deleteSchedule/$scedualId' // Web environment
+        : 'http://10.0.2.2:3001/deleteSchedule/$scedualId'; // Mobile emulator
 
-    if (response.statusCode == 200) {
-      return true;
-    } else {
+    try {
+      final response = await http.delete(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer ${widget.savedToken}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('Schedule deleted successfully!');
+        return true;
+      } else {
+        print(
+            'Failed to delete schedule. Response code: ${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      print('Error deleting schedule: $e');
       return false;
     }
   }
+
 
   void _showAddScheduleDialog() {
     final TextEditingController nameController = TextEditingController();
@@ -791,9 +892,14 @@ class _HomepageState extends State<CareGiverHomepage> {
                       'time': time,
                     };
 
+                    // Define API URL depending on the environment
+                    final apiUrl = kIsWeb
+                        ? 'http://localhost:3001/addSchedule' // Web environment
+                        : 'http://10.0.2.2:3001/addSchedule'; // Mobile emulator
+
                     // Make the POST request to your API
                     final response = await http.post(
-                      Uri.parse('http://10.0.2.2:3001/addSchedule'), // For Android emulator
+                      Uri.parse(apiUrl), // Use conditional API URL
                       headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ${widget.savedToken}',
@@ -829,9 +935,11 @@ class _HomepageState extends State<CareGiverHomepage> {
 
   List<Map<String, dynamic>> careRecipients1 = [];
 
-  // Fetch care recipients with token
   Future<void> fetchCareRecipients() async {
-    const String url = 'http://10.0.2.2:3001/getCareRecipients'; // Adjust URL if needed
+    // Define the API URL based on the environment
+    final String url = kIsWeb
+        ? 'http://localhost:3001/getCareRecipients' // Web environment
+        : 'http://10.0.2.2:3001/getCareRecipients'; // Mobile emulator
 
     try {
       final response = await http.get(
@@ -860,14 +968,20 @@ class _HomepageState extends State<CareGiverHomepage> {
 
 
 
+
   Future<void> _fetchScheduleForSelectedDate(DateTime selectedDay) async {
     try {
       // Format the selected date
       final formattedDate = "${selectedDay.year}-${selectedDay.month.toString().padLeft(2, '0')}-${selectedDay.day.toString().padLeft(2, '0')}";
 
+      // Define the URL based on the environment
+      final String url = kIsWeb
+          ? 'http://localhost:3001/ScheduleForCaregiverByDate/$formattedDate' // Web environment
+          : 'http://10.0.2.2:3001/ScheduleForCaregiverByDate/$formattedDate'; // Mobile emulator
+
       // Fetch the schedule data based on the selected date
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/ScheduleForCaregiverByDate/$formattedDate'), // Adjust the endpoint
+        Uri.parse(url),
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Include token if required
         },
@@ -893,13 +1007,18 @@ class _HomepageState extends State<CareGiverHomepage> {
       });
     }
   }
+
    bool hasUnfollowRequest = false;
 
   Future<void> checkUnfollowRequest(String id) async {
-    final url = Uri.parse('http://10.0.2.2:3001/notifications');
+    // Define the URL based on the environment (web or mobile emulator)
+    final String url = kIsWeb
+        ? 'http://localhost:3001/notifications' // Web environment
+        : 'http://10.0.2.2:3001/notifications'; // Mobile emulator
+
     try {
       final response = await http.get(
-        url,
+        Uri.parse(url),
         headers: {'Authorization': 'Bearer ${widget.savedToken}'},
       );
 
@@ -1021,29 +1140,40 @@ class _HomepageState extends State<CareGiverHomepage> {
 
 
   Future<List> fetchNotifications() async {
-    final url = 'http://10.0.2.2:3001/notifications';
+    // Define the URL based on the environment (web or mobile emulator)
+    final String url = kIsWeb
+        ? 'http://localhost:3001/notifications' // Web environment
+        : 'http://10.0.2.2:3001/notifications'; // Mobile emulator
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: {
-        'Authorization': 'Bearer ${widget.savedToken} ',  // Add token to the request headers
-      },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer ${widget.savedToken}',  // Add token to the request headers
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['notifications'];
-    } else {
-      throw Exception('Failed to load notifications');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['notifications'];
+      } else {
+        throw Exception('Failed to load notifications');
+      }
+    } catch (e) {
+      print('Error fetching notifications: $e');
+      rethrow;
     }
   }
 
-
-
   Future<void> sendUnfollowRequest(String token, String recipientId) async {
+    // Define the URL based on the environment (web or mobile emulator)
+    final String url = kIsWeb
+        ? 'http://localhost:3001/unfollow' // Web environment
+        : 'http://10.0.2.2:3001/unfollow'; // Mobile emulator
+
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3001/unfollow'), // Replace with your actual API URL
+        Uri.parse(url),
         headers: {
           'Authorization': 'Bearer $token', // Add the token to the request header
           'Content-Type': 'application/json',
@@ -1065,11 +1195,15 @@ class _HomepageState extends State<CareGiverHomepage> {
     }
   }
 
-
   Future<void> deleteUnfollowRequest(String token, String recipientId) async {
+    // Define the URL based on the environment (web or mobile emulator)
+    final String url = kIsWeb
+        ? 'http://localhost:3001/DeleteUnfollowRequest/$recipientId' // Web environment
+        : 'http://10.0.2.2:3001/DeleteUnfollowRequest/$recipientId'; // Mobile emulator
+
     try {
       final response = await http.delete(
-        Uri.parse('http://10.0.2.2:3001/DeleteUnfollowRequest/$recipientId'), // Replace with your actual API URL
+        Uri.parse(url),
         headers: {
           'Authorization': 'Bearer $token', // Add the token to the request header
           'Content-Type': 'application/json',
@@ -1089,9 +1223,12 @@ class _HomepageState extends State<CareGiverHomepage> {
   }
 
   int notificationCount = 0;
-
   Future<void> fetchNotificationCount() async {
-    final url = 'http://10.0.2.2:3001/notification-count';
+    // Define the URL based on the environment (web or mobile emulator)
+    final String url = kIsWeb
+        ? 'http://localhost:3001/notification-count' // Web environment
+        : 'http://10.0.2.2:3001/notification-count'; // Mobile emulator
+
     final headers = {
       'Authorization': 'Bearer ${widget.savedToken}',
     };
@@ -1102,9 +1239,13 @@ class _HomepageState extends State<CareGiverHomepage> {
         final data = json.decode(response.body);
         setState(() {
           notificationCount = data['notificationCount']; // Update the notification count
-          if(notificationCount>0){
+          if (notificationCount > 0) {
             sendMessage("SafeAging");
-            Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $notificationCount Notifications",fln:flutterLocalNotificationsPlugin );
+            Noti.showBigTextNotification(
+              title: "SafeAging",
+              body: "You Have New $notificationCount Notifications",
+              fln: flutterLocalNotificationsPlugin,
+            );
           }
         });
       } else {
@@ -1118,10 +1259,14 @@ class _HomepageState extends State<CareGiverHomepage> {
   int unreadMessageCount = 0;
 
   Future<void> fetchUnreadMessagesCount() async {
-    final url = Uri.parse('http://10.0.2.2:3001/unread-message-count');
+    // Define the URL based on the environment (web or mobile emulator)
+    final String url = kIsWeb
+        ? 'http://localhost:3001/unread-message-count' // Web environment
+        : 'http://10.0.2.2:3001/unread-message-count'; // Mobile emulator
+
     try {
       final response = await http.get(
-        url,
+        Uri.parse(url),
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Send the token in the header
         },
@@ -1135,9 +1280,13 @@ class _HomepageState extends State<CareGiverHomepage> {
         if (data.containsKey('unreadMessageCount') && data['unreadMessageCount'] is int) {
           setState(() {
             unreadMessageCount = data['unreadMessageCount'];
-            if(unreadMessageCount>0){
+            if (unreadMessageCount > 0) {
               sendMessage("SafeAging");
-              Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $unreadMessageCount Messages",fln:flutterLocalNotificationsPlugin );
+              Noti.showBigTextNotification(
+                title: "SafeAging",
+                body: "You Have New $unreadMessageCount Messages",
+                fln: flutterLocalNotificationsPlugin,
+              );
             }
           });
         } else {
@@ -1173,30 +1322,42 @@ class _HomepageState extends State<CareGiverHomepage> {
 
   String availabilityText = "";
   Future<void> fetchAvailability() async {
-    final response = await http.get(
-      Uri.parse('http://10.0.2.2:3001/getAvailability'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${widget.savedToken}',  // Pass the token in the header
-      },
-    );
+    // Define the URL based on the environment (web or mobile emulator)
+    final String url = kIsWeb
+        ? 'http://localhost:3001/getAvailability' // Web environment
+        : 'http://10.0.2.2:3001/getAvailability'; // Mobile emulator
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      if (data.isNotEmpty) {
-        // Construct a string with the availability information
-        setState(() {
-          availabilityText = "Available on: ${data[0]['days']}\n"
-              "From: ${data[0]['start_time']} to ${data[0]['end_time']}";
-        });
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.savedToken}', // Pass the token in the header
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        if (data.isNotEmpty) {
+          // Construct a string with the availability information
+          setState(() {
+            availabilityText = "Available on: ${data[0]['days']}\n"
+                "From: ${data[0]['start_time']} to ${data[0]['end_time']}";
+          });
+        } else {
+          setState(() {
+            availabilityText = "No availability set.";
+          });
+        }
       } else {
         setState(() {
-          availabilityText = "No availability set.";
+          availabilityText = "No availability Added";
         });
       }
-    } else {
+    } catch (e) {
+      print('Error fetching availability: $e');
       setState(() {
-        availabilityText = "No availability Added";
+        availabilityText = "Error fetching availability.";
       });
     }
   }
@@ -1429,7 +1590,12 @@ class _HomepageState extends State<CareGiverHomepage> {
                     // If the 'image_path' is not null or empty, construct the photo URL
                     String photoUrl = '';
                     if (relativeImagePath.isNotEmpty) {
-                      photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+                      final String baseUrl = kIsWeb
+                          ? 'http://localhost:3001/' // Web environment
+                          : 'http://10.0.2.2:3001/'; // Mobile emulator
+
+                      // Update the photoUrl based on the platform
+                      photoUrl = baseUrl + relativeImagePath.replaceAll('\\', '/');
                     }
 
                     // Return the card with the photo URL
@@ -1764,7 +1930,9 @@ class _HomepageState extends State<CareGiverHomepage> {
                                       contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                                       leading: CircleAvatar(
                                         backgroundImage: NetworkImage(
-                                          'http://10.0.2.2:3001/${recipient['image_path']}',
+                                          kIsWeb
+                                              ? 'http://localhost:3001/${recipient['image_path']}' // Web environment
+                                              : 'http://10.0.2.2:3001/${recipient['image_path']}', // Mobile emulator
                                         ),
                                         radius: 30, // Circular design
                                       ),
@@ -2004,7 +2172,9 @@ class CardPage extends StatelessWidget {
     // Construct the full image URL using the relative image path
     String photoUrl = '';
     if (relativeImagePath.isNotEmpty) {
-      photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+      photoUrl = kIsWeb
+          ? 'http://localhost:3001/' + relativeImagePath.replaceAll('\\', '/')
+          : 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
     }
 
     return Scaffold(
@@ -2065,11 +2235,17 @@ class RecipientDetailsPage extends StatefulWidget {
 }
 
 class _RecipientDetailsPageState extends State<RecipientDetailsPage> {
-  // Function to fetch medical reports
+  final baseUrl = kIsWeb
+      ? 'http://localhost:3001' // Web environment (localhost)
+      : 'http://10.0.2.2:3001'; // Mobile emulator
+
   Future<void> fetchMedicalReports(String careRecipientId) async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/user/files/$careRecipientId'),
+        Uri.parse('$baseUrl/user/files/$careRecipientId'),
+        headers: {
+          'Authorization': 'Bearer ${widget.savedToken}', // Pass the token for authentication
+        },
       );
 
       if (response.statusCode == 200) {
@@ -2103,6 +2279,7 @@ class _RecipientDetailsPageState extends State<RecipientDetailsPage> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

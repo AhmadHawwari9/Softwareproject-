@@ -19,6 +19,7 @@ import 'Notificationpage.dart';
 import 'Searchcaregievrpage.dart';
 import 'Settingspage.dart';
 import 'UserProfilePage.dart';
+import 'package:flutter/foundation.dart';
 
 File? _image;
 class HospitalUserForm extends StatefulWidget {
@@ -59,11 +60,16 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
     }
   }
 
+  final String baseUrl = kIsWeb
+      ? 'http://localhost:3001'  // For web environment
+      : 'http://10.0.2.2:3001'; // For mobile emulator or device
+
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      var uri = Uri.parse('http://10.0.2.2:3001/updateHospital');
+      // Use the dynamic base URL for the API endpoint
+      var uri = Uri.parse('$baseUrl/updateHospital');
       var request = http.MultipartRequest('POST', uri);
 
       request.fields['name'] = name ?? '';
@@ -89,9 +95,10 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
             SnackBar(content: Text('Hospital information updated successfully!')),
           );
           await fetchHomepageAndNavigate(context, widget.email, widget.password, widget.token, false);
+
           // Clear photo file after successful submission
           setState(() {
-            _image = null; // Reset photo file state
+            _image = null;  // Reset photo file state
           });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -107,7 +114,6 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
   }
 
 
-
   @override
   void initState() {
     super.initState();
@@ -115,11 +121,15 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
     fetchHospitalData();
   }
 
-  Future<void> fetchHomepageAndNavigate(
+  Future<http.Response> fetchHomepageAndNavigate(
       BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
+      final apiUrl = kIsWeb
+          ? 'http://localhost:3001/api/homepage' // Web environment (localhost or public URL)
+          : 'http://10.0.2.2:3001/api/homepage'; // Mobile emulator
+
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3001/api/homepage'),
+        Uri.parse(apiUrl),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -132,10 +142,10 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
           homepage = CareRecipientHomepage(email, password, token, isGoogleSignInEnabled);
         } else if (userType == 'Admin') {
           homepage = AdminHomepage(email, password, token, isGoogleSignInEnabled);
-        } else if(userType == 'Care giver') {
+        } else if (userType == 'Care giver') {
           homepage = CareGiverHomepage(email, password, token, isGoogleSignInEnabled);
-        }else{
-          homepage=HospitalUserForm(email, password, token, isGoogleSignInEnabled);
+        } else {
+          homepage = HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
 
         // If mounted, navigate to the homepage
@@ -145,11 +155,14 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
             MaterialPageRoute(builder: (context) => homepage),
           );
         }
+        return response; // Return the response on success
       } else {
-        _showErrorDialog('Failed to load homepage data');
+        throw Exception('Failed to load homepage data. Status code: ${response.statusCode}');
       }
+    } on SocketException {
+      throw Exception('No Internet connection or server unreachable');
     } catch (e) {
-      _showErrorDialog('An error occurred: $e');
+      throw Exception('Unexpected error occurred: $e');
     }
   }
   void _showErrorDialog(String message) {
@@ -184,21 +197,29 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
   }
   String? apiResponse;
 
+
   Future<void> fetchHomepageData() async {
-    final homepageUrl = Uri.parse('http://10.0.2.2:3001/api/homepage');
-    final imageUrl = Uri.parse('http://10.0.2.2:3001/user/image/${widget.email}');
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost or public URL)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final homepageUrl = Uri.parse('$baseUrl/api/homepage');
+    final imageUrl = Uri.parse('$baseUrl/user/image/${widget.email}');
 
     try {
+      // Fetch homepage data
       final homepageResponse = await http.get(
         homepageUrl,
         headers: {
           'Content-Type': 'application/json',
-          'token': widget.token ?? ''
+          'authorization': widget.token ?? '',
         },
       );
 
       if (homepageResponse.statusCode == 200) {
         var responseBody = jsonDecode(homepageResponse.body);
+
         setState(() {
           apiResponse = 'Success: ${responseBody['message']}';
         });
@@ -208,11 +229,12 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
         });
       }
 
+      // Fetch image data
       final imageResponse = await http.get(
         imageUrl,
         headers: {
           'Content-Type': 'application/json',
-          'token': widget.token ?? ''
+          'authorization': widget.token ?? '',
         },
       );
 
@@ -220,15 +242,13 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
         final imageData = jsonDecode(imageResponse.body);
         String relativeImagePath = imageData['imagePath'];
         setState(() {
-          photoUrl = 'http://10.0.2.2:3001/' + relativeImagePath.replaceAll('\\', '/');
+          photoUrl = '$baseUrl/' + relativeImagePath.replaceAll('\\', '/');
         });
-        print("Photo URL: $photoUrl");  // Add a print statement to confirm the URL
       } else {
         setState(() {
-          photoUrl = null;  // In case of error, clear the photo URL
+          photoUrl = null;
         });
       }
-
     } catch (error) {
       setState(() {
         apiResponse = 'Error: $error';
@@ -249,7 +269,11 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
   int notificationCount = 0;
 
   Future<void> fetchNotificationCount() async {
-    final url = 'http://10.0.2.2:3001/notification-count';
+    // Define the URL based on the environment (web or mobile emulator)
+    final String url = kIsWeb
+        ? 'http://localhost:3001/notification-count' // Web environment
+        : 'http://10.0.2.2:3001/notification-count'; // Mobile emulator
+
     final headers = {
       'Authorization': 'Bearer ${widget.token}',
     };
@@ -260,9 +284,13 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
         final data = json.decode(response.body);
         setState(() {
           notificationCount = data['notificationCount']; // Update the notification count
-          if(notificationCount>0){
+          if (notificationCount > 0) {
             sendMessage("SafeAging");
-            Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $notificationCount Notifications",fln:flutterLocalNotificationsPlugin );
+            Noti.showBigTextNotification(
+              title: "SafeAging",
+              body: "You Have New $notificationCount Notifications",
+              fln: flutterLocalNotificationsPlugin,
+            );
           }
         });
       } else {
@@ -276,10 +304,14 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
   int unreadMessageCount = 0;
 
   Future<void> fetchUnreadMessagesCount() async {
-    final url = Uri.parse('http://10.0.2.2:3001/unread-message-count');
+    // Define the URL based on the environment (web or mobile emulator)
+    final String url = kIsWeb
+        ? 'http://localhost:3001/unread-message-count' // Web environment
+        : 'http://10.0.2.2:3001/unread-message-count'; // Mobile emulator
+
     try {
       final response = await http.get(
-        url,
+        Uri.parse(url),
         headers: {
           'Authorization': 'Bearer ${widget.token}', // Send the token in the header
         },
@@ -293,9 +325,13 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
         if (data.containsKey('unreadMessageCount') && data['unreadMessageCount'] is int) {
           setState(() {
             unreadMessageCount = data['unreadMessageCount'];
-            if(unreadMessageCount>0){
+            if (unreadMessageCount > 0) {
               sendMessage("SafeAging");
-              Noti.showBigTextNotification(title: "SafeAging",body: "You Have New $unreadMessageCount Messages",fln:flutterLocalNotificationsPlugin );
+              Noti.showBigTextNotification(
+                title: "SafeAging",
+                body: "You Have New $unreadMessageCount Messages",
+                fln: flutterLocalNotificationsPlugin,
+              );
             }
           });
         } else {
@@ -353,7 +389,9 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
   Map<String, dynamic>? hospitalData;  // To store hospital data
 
   Future<void> fetchHospitalData() async {
-    const String apiUrl = 'http://10.0.2.2:3001/hospitalbyidfromauthnitication';
+    // Construct the full API URL using the dynamic base URL
+    final String apiUrl = '$baseUrl/hospitalbyidfromauthnitication';
+
     try {
       final response = await http.get(
         Uri.parse(apiUrl),
@@ -362,6 +400,7 @@ class _HospitalUserFormState extends State<HospitalUserForm> {
           'Content-Type': 'application/json',
         },
       );
+
       if (response.statusCode == 200) {
         setState(() {
           hospitalData = json.decode(response.body)['data'];  // Store the fetched data
