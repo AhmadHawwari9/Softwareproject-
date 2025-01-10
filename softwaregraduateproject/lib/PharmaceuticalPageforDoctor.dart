@@ -320,10 +320,13 @@ class MedicationDetailsPage extends StatelessWidget {
             fontWeight: FontWeight.bold,
             fontSize: 24,
             color: Colors.white,
+
           ),
         ),
         backgroundColor: Colors.teal,
         elevation: 4,
+        iconTheme: IconThemeData(color: Colors.white),
+
       ),
       body: Container(
         height: double.infinity,  // Ensure the container takes the full screen height

@@ -27,7 +27,7 @@ const {updateUserBio}=require('../Controller/Profile.controller');
 const {updateUserage,updateImageForUser}=require('../Controller/Profile.controller');
 const{getSchedule,updateSchedule,deleteSchedule,addSchedule,getScheduleByDateForUser}=require('../Controller/scheduleforcaregiver.Controller');
 const {getCareRecipients}=require('../Controller/Tablecarerecipientlist.controller');
-const {getReportsByUserId}=require('../Controller/History.controller');
+const {getReportsByUserId,getUserReports}=require('../Controller/History.controller');
 const {getUsers,deleteUser} =require('../Controller/Operationsonusersfortheadmin.controller');
 const{createCaregiverValidation}=require('../Validation/caregiverRequestToTheAdmin.validation');
 const{createCaregiverUsingPost,getCaregiver,moveCaregiverToUser,deleteCaregiverRequest,getHospital}=require('../Controller/caregiverRequestToTheAdmin.controller');
@@ -107,6 +107,7 @@ router.get('/getCareRecipients', authonitication, getCareRecipients);
 router.get('/user/files/:id', getFilesByUserId);
 
 router.get('/History/:user_id', getReportsByUserId);
+router.get('/user-history', authonitication, getUserReports);
 
 router.get('/usersoperationsforadmin', authonitication, getUsers);
 

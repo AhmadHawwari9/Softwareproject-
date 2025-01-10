@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/foundation.dart'; // For kIsWeb
+import 'package:syncfusion_flutter_charts/charts.dart';
 
 class HistoryPage extends StatefulWidget {
   final String recipientId;
@@ -144,51 +145,90 @@ class _HistoryPageState extends State<HistoryPage> {
       BuildContext context,
       String label,
       String title,
-      List<dynamic> data
+      List<dynamic> data,
       ) {
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DetailPage(
-                title: title,
-                data: data,
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetailPage(
+                    title: title,
+                    data: data,
+                  ),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                gradient: LinearGradient(
+                  colors: [Colors.teal, Colors.teal],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Text(
+                '$label Details',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
-          );
-        },
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-          decoration: BoxDecoration(
+          ),
+          SizedBox(height: 8),
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChartPage(
+                    title: title,
+                    data: data,
+                  ),
+                ),
+              );
+            },
             borderRadius: BorderRadius.circular(10),
-            gradient: LinearGradient(
-              colors: [Colors.teal, Colors.teal],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                gradient: LinearGradient(
+                  colors: [Colors.orange, Colors.deepOrange],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Text(
+                '$label Chart',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
+        ],
       ),
     );
   }
-}
 
+}
 
 
 class DetailPage extends StatelessWidget {
@@ -206,7 +246,7 @@ class DetailPage extends StatelessWidget {
       return dateA.compareTo(dateB);
     });
 
-    // Group data by month and year
+    // Group data by month and year, excluding empty months
     Map<int, Map<int, List<dynamic>>> groupedData = {};
     for (var item in data) {
       DateTime date = _parseDate(item['Date']);
@@ -224,12 +264,10 @@ class DetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('$title History',style: TextStyle(color: Colors.white),),
+        title: Text('$title History', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.teal,
         elevation: 4,
-        iconTheme: IconThemeData(
-          color: Colors.white, // This makes the back arrow white
-        ),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: ListView.builder(
         itemCount: groupedData.length,
@@ -251,50 +289,55 @@ class DetailPage extends StatelessWidget {
                 ),
                 SizedBox(height: 10),
                 ...groupedData[year]!.keys.toList().map((month) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _getMonthName(month),
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.teal,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      ...groupedData[year]![month]!.map((item) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Card(
-                            elevation: 8,
-                            shadowColor: Colors.grey.withOpacity(0.3),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.all(16),
-                              title: Text(
-                                'Date: ${item['Date']}',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blueGrey,
-                                ),
-                              ),
-                              subtitle: Text(
-                                '$title: ${item[title]}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                            ),
+                  // Only include months that have data
+                  if (groupedData[year]![month]!.isNotEmpty) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _getMonthName(month),
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.teal,
                           ),
-                        );
-                      }).toList(),
-                    ],
-                  );
+                        ),
+                        SizedBox(height: 8),
+                        ...groupedData[year]![month]!.map((item) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Card(
+                              elevation: 8,
+                              shadowColor: Colors.grey.withOpacity(0.3),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.all(16),
+                                title: Text(
+                                  'Date: ${item['Date']}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blueGrey,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '$title: ${item[title]}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    );
+                  } else {
+                    return SizedBox(); // Skip empty months
+                  }
                 }).toList(),
               ],
             ),
@@ -305,10 +348,17 @@ class DetailPage extends StatelessWidget {
   }
 
   DateTime _parseDate(String dateString) {
-    // Convert DD/MM/YYYY to YYYY-MM-DD format
-    List<String> parts = dateString.split('/');
-    String formattedDate = '${parts[2]}-${parts[1]}-${parts[0]}';
-    return DateTime.parse(formattedDate);
+    try {
+      List<String> parts = dateString.split('/');
+      if (parts.length != 3) {
+        throw FormatException("Invalid date format: $dateString");
+      }
+      String formattedDate = '${parts[2]}-${parts[1]}-${parts[0]}';
+      return DateTime.parse(formattedDate);
+    } catch (e) {
+      print("Error parsing date: $dateString, Error: $e");
+      return DateTime(2024, 1, 1);
+    }
   }
 
   String _getMonthName(int month) {
@@ -320,3 +370,72 @@ class DetailPage extends StatelessWidget {
   }
 }
 
+class ChartData {
+  final DateTime date;
+  final double value;
+
+  ChartData(this.date, this.value);
+}
+
+class ChartPage extends StatelessWidget {
+  final String title;
+  final List<dynamic> data;
+
+  ChartPage({required this.title, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    // Filter data to only include items from 2024 and later
+    List<ChartData> chartData = data.where((item) {
+      DateTime date = _parseDate(item['Date']);
+      // Only include data from 2024 and later
+      return date.year >= 2024 && item[title] != null;
+    }).map((item) {
+      DateTime date = _parseDate(item['Date']);
+      double value = double.tryParse(item[title].toString()) ?? 0.0;
+      return ChartData(date, value);
+    }).where((data) => data.value != 0.0).toList(); // Filter out zero values
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('$title Chart', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SfCartesianChart(
+          title: ChartTitle(text: '$title Over Time'),
+          legend: Legend(isVisible: true),
+          tooltipBehavior: TooltipBehavior(enable: true),
+          primaryXAxis: DateTimeAxis(title: AxisTitle(text: 'Date')),
+          primaryYAxis: NumericAxis(title: AxisTitle(text: title)),
+          series: <CartesianSeries>[
+            ColumnSeries<ChartData, DateTime>( // Changed to ColumnSeries
+              name: title,
+              dataSource: chartData,
+              xValueMapper: (ChartData data, _) => data.date,
+              yValueMapper: (ChartData data, _) => data.value,
+              color: Colors.teal, // Set the column color
+              dataLabelSettings: DataLabelSettings(isVisible: true),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  DateTime _parseDate(String dateString) {
+    try {
+      List<String> parts = dateString.split('/');
+      if (parts.length != 3) {
+        throw FormatException("Invalid date format: $dateString");
+      }
+      String formattedDate = '${parts[2]}-${parts[1]}-${parts[0]}';
+      return DateTime.parse(formattedDate);
+    } catch (e) {
+      print("Error parsing date: $dateString, Error: $e");
+      return DateTime(2024, 1, 1); // Default to 2024 if there's an error
+    }
+  }
+}

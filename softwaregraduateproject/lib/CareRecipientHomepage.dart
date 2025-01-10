@@ -769,6 +769,45 @@ class _HomepageState extends State<CareRecipientHomepage> {
     }
   }
 
+
+  Future<String> fetchUserhistory() async {
+    // Your API URL for fetching reports
+    final apiUrl = kIsWeb
+        ? 'http://localhost:3001/user-history' // Web environment
+        : 'http://10.0.2.2:3001/user-history'; // Emulator/Device environment
+
+    try {
+      // Get the token from the authentication system (e.g., shared preferences or any other method)
+      print("Sending request to: $apiUrl");  // Debugging output
+
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $token', // Ensure token is valid
+        },
+      );
+
+      print("Response Status: ${response.statusCode}"); // Debugging response status
+
+      if (response.statusCode == 200) {
+        // Parse the response body
+        final data = json.decode(response.body);
+        String userId = data['user_id'].toString(); // Get the user_id from the response
+        print("User ID: $userId"); // Print user ID
+        print("Reports: ${data['reports']}"); // Print reports
+
+        return userId; // Return the user_id
+      } else {
+        print("Failed to fetch reports: ${response.statusCode}");
+        return ''; // Return an empty string if failed
+      }
+    } catch (e) {
+      print("Error making request: $e");
+      return ''; // Return an empty string on error
+    }
+  }
+
+
   Future<void> sendNotificationEmergencyAlert() async {
     final apiUrl = kIsWeb
         ? 'http://localhost:3001/sendNotifications' // Web environment
@@ -951,6 +990,27 @@ class _HomepageState extends State<CareRecipientHomepage> {
                 );
               },
             ),
+
+            ListTile(
+              leading: Icon(Icons.medical_information),
+              title: Text("My Medical History"),
+              onTap: () async {
+                String userId = await fetchUserhistory(); // Fetch the user ID
+
+                if (userId.isNotEmpty) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HistoryPage(recipientId: userId), // Pass the user_id to HistoryPage
+                    ),
+                  );
+                } else {
+                  // Handle the case where the user_id could not be fetched (e.g., show an error)
+                  print("Failed to fetch user ID");
+                }
+              },
+            ),
+
 
             ListTile(
               leading: Icon(Icons.settings),
@@ -1289,5 +1349,8 @@ Future<void> sendMessage(String title) async {
     print('Error sending message: $error');
   }
 }
+
+
+
 
 
