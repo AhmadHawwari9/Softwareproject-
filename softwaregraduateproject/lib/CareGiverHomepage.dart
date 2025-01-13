@@ -277,7 +277,26 @@ class _HomepageState extends State<CareGiverHomepage> {
     }
   }
 
+  bool _isDayAvailable(String dayOfWeek) {
+    // Simulated response
+    List<Map<String, dynamic>> response = [
+      {
+        "days": "Sunday, Monday, Tuesday, Wednesday, Thursday",
+        "start_time": "08:00:00",
+        "end_time": "15:00:00",
+        "appointment_duration": 30,
+      }
+    ];
 
+    for (var schedule in response) {
+      List<String> availableDays = schedule['days'].split(', ').map((day) => day.trim()).toList();
+      if (availableDays.contains(dayOfWeek)) {
+        return true; // Day is available
+      }
+    }
+
+    return false; // Day is not available
+  }
   Future<void> _loadCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -1107,35 +1126,95 @@ class _HomepageState extends State<CareGiverHomepage> {
   }
 
 
+  List<String> availableDays = [];
+
+
   List<String> _getEventsForDay(DateTime day) {
-    // Normalize the input day to local midnight
     final localDay = DateTime(day.year, day.month, day.day);
+    List<String> events = [];
 
-    return scheduleData.where((schedule) {
-      DateTime scheduleDate;
-      try {
-        // Parse the 'Date' string as a local date
-        scheduleDate = DateTime.parse(schedule['Date']);
+    final dayOfWeek = DateFormat('EEEE').format(localDay); // Get the day of the week (e.g., Monday)
 
-        // Add one day to adjust for the time zone shift
-        scheduleDate = scheduleDate.add(const Duration(days: 1));
+    print('Day of Week: $dayOfWeek');
+    print('Available Days: $availableDays');
 
-        // Normalize to local midnight
-        scheduleDate = DateTime(scheduleDate.year, scheduleDate.month, scheduleDate.day);
-      } catch (e) {
-        print('Error parsing date: ${schedule['Date']}');
-        return false; // Skip invalid dates
+    if (availableDays.contains(dayOfWeek)) {
+      // Fetch start and end times from the availability data
+      String startTime = availabilityText.split("From: ")[1].split(" to ")[0]; // Extract start time
+      String endTime = availabilityText.split(" to ")[1].split("\n")[0]; // Extract end time
+
+      print('Start Time: $startTime');
+      print('End Time: $endTime');
+      print('Appointment Duration: $appointmentDuration');
+
+      // Calculate available slots for the day
+      int availableSlots = _calculateAvailableSlots(
+        startTime, // Start time from availability data
+        endTime,   // End time from availability data
+        appointmentDuration,   // Appointment duration
+      );
+
+      print('Available Slots: $availableSlots');
+
+      // Count booked appointments for the day
+      int bookedAppointments = scheduleData.where((schedule) {
+        DateTime scheduleDate;
+        try {
+          // Parse the 'Date' string as a local date
+          scheduleDate = DateTime.parse(schedule['Date']);
+
+          // Add one day to adjust for the time zone shift
+          scheduleDate = scheduleDate.add(const Duration(days: 1));
+
+          // Normalize to local midnight
+          scheduleDate = DateTime(scheduleDate.year, scheduleDate.month, scheduleDate.day);
+        } catch (e) {
+          print('Error parsing date: ${schedule['Date']}');
+          return false; // Skip invalid dates
+        }
+
+        // Compare only the date part
+        return scheduleDate == localDay;
+      }).length;
+
+      print('Booked Appointments: $bookedAppointments');
+
+      // Add events based on availability
+      if (availableSlots == 0) {
+        events.add('red'); // No available slots (red dot)
+      } else if (bookedAppointments >= availableSlots) {
+        events.add('red'); // All slots taken (red dot)
+      } else if (bookedAppointments > 0) {
+        events.add('teal'); // Some slots taken, but available (teal dot)
       }
+    }
 
-      // Compare only the date part
-      return scheduleDate == localDay;
-    }).map<String>((schedule) {
-      return schedule['Name']?.toString() ?? 'No Name';
-    }).toList();
+    print('Events: $events');
+    return events;
   }
 
 
+  int _calculateAvailableSlots(String startTime, String endTime, int appointmentDuration) {
+    // Parse start and end times into minutes
+    final start = _parseTime(startTime); // Convert to minutes
+    final end = _parseTime(endTime);     // Convert to minutes
 
+    // Calculate total available time in minutes
+    final totalAvailableTime = end - start;
+
+    // Calculate available slots using the equation: (endTime - startTime) / (appointmentDuration / 60)
+    final availableSlots = (totalAvailableTime / appointmentDuration).floor();
+
+    return availableSlots;
+  }
+
+  // Helper function to parse time in "HH:mm:ss" format to minutes
+  int _parseTime(String time) {
+    final parts = time.split(':');
+    final hours = int.parse(parts[0]);
+    final minutes = int.parse(parts[1]);
+    return hours * 60 + minutes; // Convert to minutes
+  }
 
 
 
@@ -1319,15 +1398,15 @@ class _HomepageState extends State<CareGiverHomepage> {
       }).toList();
     });
   }
-
   String availabilityText = "";
+  int appointmentDuration = 60;
   Future<void> fetchAvailability() async {
-    // Define the URL based on the environment (web or mobile emulator)
     final String url = kIsWeb
         ? 'http://localhost:3001/getAvailability' // Web environment
         : 'http://10.0.2.2:3001/getAvailability'; // Mobile emulator
 
     try {
+      print('Fetching availability from: $url'); // Debugging
       final response = await http.get(
         Uri.parse(url),
         headers: {
@@ -1336,31 +1415,52 @@ class _HomepageState extends State<CareGiverHomepage> {
         },
       );
 
+      print('Response status code: ${response.statusCode}'); // Debugging
+      print('Response body: ${response.body}'); // Debugging
+
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> data = json.decode(response.body); // Expecting a Map, not a List
+        print('Decoded data: $data'); // Debugging
+
         if (data.isNotEmpty) {
-          // Construct a string with the availability information
-          setState(() {
-            availabilityText = "Available on: ${data[0]['days']}\n"
-                "From: ${data[0]['start_time']} to ${data[0]['end_time']}";
-          });
-        } else {
-          setState(() {
-            availabilityText = "No availability set.";
-          });
+          final availabilityData = data['availability']; // Access the 'availability' field
+          print('Availability data: $availabilityData'); // Debugging
+
+          if (availabilityData != null && availabilityData.isNotEmpty) {
+            // Extract the days and split them into a list
+            final days = availabilityData[0]['days'] ?? ''; // Handle null
+            final startTime = availabilityData[0]['start_time'] ?? ''; // Handle null
+            final endTime = availabilityData[0]['end_time'] ?? ''; // Handle null
+            final duration = availabilityData[0]['appointment_duration'] ?? 0; // Handle null
+
+            setState(() {
+              // Explicitly cast the result of `split` to List<String>
+              availableDays = (days.split(', ') as List<dynamic>).map((day) => day.trim().toString()).toList();
+              availabilityText = "Available on: $days\nFrom: $startTime to $endTime";
+              appointmentDuration = duration;
+            });
+          } else {
+            setState(() {
+              availableDays = []; // Clear available days if no data
+              availabilityText = "No availability set.";
+            });
+          }
         }
       } else {
         setState(() {
+          availableDays = []; // Clear available days if the request fails
           availabilityText = "No availability Added";
         });
       }
     } catch (e) {
-      print('Error fetching availability: $e');
+      print('Error fetching availability: $e'); // Debugging
       setState(() {
+        availableDays = []; // Clear available days if an error occurs
         availabilityText = "Error fetching availability.";
       });
     }
   }
+
 
   Widget buildAvailabilityDisplay() {
     return Card(
@@ -1396,13 +1496,19 @@ class _HomepageState extends State<CareGiverHomepage> {
             SizedBox(height: 10),
             Text(
               availabilityText,
-              style: TextStyle(fontSize: 16, color: Colors.teal),
+              style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold, color: Colors.teal),
+            ),
+            SizedBox(height: 10),
+            Text(
+              "Appointment Duration: $appointmentDuration mins", // Display appointment duration
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal),
             ),
           ],
         ),
       ),
     );
   }
+
 
   TextEditingController searchController = TextEditingController();
   List<dynamic> filteredUsers = [];
@@ -1652,6 +1758,24 @@ class _HomepageState extends State<CareGiverHomepage> {
                 elevation: 4,
                 child: Column(
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.circle, color: Colors.teal, size: 12),
+                          SizedBox(width: 5),
+                          Expanded(  // Added Expanded widget to prevent overflow
+                            child: Text(" partially Booked"),
+                          ),
+                          SizedBox(width: 20),
+                          Icon(Icons.circle, color: Colors.red, size: 12),
+                          SizedBox(width: 5),
+                          Expanded(  // Added Expanded widget to prevent overflow
+                            child: Text("fully booked"),
+                          ),
+                        ],
+                      ),
+                    ),
                     // Calendar section
                     Container(
                       height: 400, // Fixed height for the calendar
@@ -1661,11 +1785,8 @@ class _HomepageState extends State<CareGiverHomepage> {
                         focusedDay: DateTime.now(),
                         calendarFormat: CalendarFormat.month,
                         eventLoader: (day) {
-                          final events = _getEventsForDay(day);
-                          return events;
+                          return _getEventsForDay(day); // Use the custom event loader
                         },
-
-
                         calendarStyle: CalendarStyle(
                           todayDecoration: BoxDecoration(
                             color: Colors.teal,
@@ -1676,9 +1797,8 @@ class _HomepageState extends State<CareGiverHomepage> {
                             shape: BoxShape.circle,
                           ),
                           outsideDaysVisible: false,
-                          markersMaxCount: 1, // Show only one marker per day
+                          markersMaxCount: 1, // Limit to one marker per day
                           markerDecoration: BoxDecoration(
-                            color: Colors.red, // Dot color for days with events
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -1687,13 +1807,28 @@ class _HomepageState extends State<CareGiverHomepage> {
                           titleCentered: true,
                         ),
                         onDaySelected: (selectedDay, focusedDay) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            setState(() {
-                              selectedDate = selectedDay;
-                            });
-                            _fetchScheduleForSelectedDate(selectedDay); // Fetch data for selected date
+                          setState(() {
+                            selectedDate = selectedDay;
                           });
+                          _fetchScheduleForSelectedDate(selectedDay); // Fetch data for selected date
                         },
+                        calendarBuilders: CalendarBuilders(
+                          markerBuilder: (context, day, events) {
+                            if (events.isNotEmpty) {
+                              // Use the first event color as the marker color
+                              final color = events.first == 'red' ? Colors.red : Colors.teal;
+                              return Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                ),
+                              );
+                            }
+                            return null; // No marker if there are no events
+                          },
+                        ),
                       ),
                     ),
                     Padding(

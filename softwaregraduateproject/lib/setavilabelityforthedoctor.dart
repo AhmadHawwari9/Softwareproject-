@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-
 class AvailabilityPage extends StatefulWidget {
   final String savedToken;
 
@@ -26,11 +25,13 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
   List<bool> selectedDays = List.filled(7, false);
   TimeOfDay? startTime;
   TimeOfDay? endTime;
+  int appointmentDuration = 30; // Default appointment duration in minutes
 
   // Helper function to convert TimeOfDay to 24-hour format
   String formatTimeTo24Hour(TimeOfDay time) {
     final now = DateTime.now();
-    final formattedTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    final formattedTime =
+    DateTime(now.year, now.month, now.day, time.hour, time.minute);
     return "${formattedTime.hour.toString().padLeft(2, '0')}:${formattedTime.minute.toString().padLeft(2, '0')}";
   }
 
@@ -62,12 +63,17 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
         .where((entry) => selectedDays[entry.key])
         .map((entry) => entry.value)
         .join(", ");
-    String startTimeString = startTime != null ? formatTimeTo24Hour(startTime!) : '';
-    String endTimeString = endTime != null ? formatTimeTo24Hour(endTime!) : '';
+    String startTimeString =
+    startTime != null ? formatTimeTo24Hour(startTime!) : '';
+    String endTimeString =
+    endTime != null ? formatTimeTo24Hour(endTime!) : '';
 
     // Make sure the data is valid
-    if (selectedDaysString.isEmpty || startTimeString.isEmpty || endTimeString.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please select days and time range.")));
+    if (selectedDaysString.isEmpty ||
+        startTimeString.isEmpty ||
+        endTimeString.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please select days, times, and duration.")));
       return;
     }
 
@@ -76,23 +82,26 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
       'days': selectedDaysString,
       'startTime': startTimeString,
       'endTime': endTimeString,
+      'appointmentDuration': appointmentDuration,
     };
 
     // Send the data to the server
     final response = await http.post(
-      Uri.parse('$baseUrl/setAvailability'),  // Replace with your actual API URL
+      Uri.parse('$baseUrl/setAvailability'), // Replace with your actual API URL
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${widget.savedToken}',  // Pass the token in the header
+        'Authorization': 'Bearer ${widget.savedToken}', // Pass the token in the header
       },
       body: json.encode(body),
     );
 
     // Handle the response
     if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Availability saved successfully!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Availability saved successfully!")));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error saving availability")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error saving availability")));
     }
   }
 
@@ -108,111 +117,114 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Select the time that you can receive reservations at:",
-              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.teal),
-            ),
-            SizedBox(height: 20),
-            Text(
-              "Select Days:",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            ...daysOfWeek.asMap().entries.map((entry) {
-              int index = entry.key;
-              String day = entry.value;
-              return CheckboxListTile(
-                title: Text(day),
-                value: selectedDays[index],
-                activeColor: Colors.teal,  // This sets the color when the checkbox is selected
-                onChanged: (bool? value) {
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Select the time that you can receive reservations at:",
+                style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal),
+              ),
+              SizedBox(height: 20),
+              Text(
+                "Select Days:",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              ...daysOfWeek.asMap().entries.map((entry) {
+                int index = entry.key;
+                String day = entry.value;
+                return CheckboxListTile(
+                  title: Text(day),
+                  value: selectedDays[index],
+                  activeColor: Colors.teal,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      selectedDays[index] = value ?? false;
+                    });
+                  },
+                );
+              }).toList(),
+              SizedBox(height: 20),
+              Text(
+                "Select Time Range:",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () => selectTime(context, true),
+                    child: Text(
+                      startTime == null
+                          ? "Start Time"
+                          : formatTimeTo24Hour(startTime!),
+                      style: TextStyle(fontSize: 16, color: Colors.teal),
+                    ),
+                  ),
+                  Text(
+                    "to",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  TextButton(
+                    onPressed: () => selectTime(context, false),
+                    child: Text(
+                      endTime == null
+                          ? "End Time"
+                          : formatTimeTo24Hour(endTime!),
+                      style: TextStyle(fontSize: 16, color: Colors.teal),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              Text(
+                "Appointment Duration (in minutes):",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              DropdownButton<int>(
+                value: appointmentDuration,
+                items: List.generate(8, (index) => 15 + index * 15).map((value) {
+                  return DropdownMenuItem<int>(
+                    value: value,
+                    child: Text("$value mins"),
+                  );
+                }).toList(),
+                onChanged: (value) {
                   setState(() {
-                    selectedDays[index] = value ?? false;
+                    appointmentDuration = value!;
                   });
                 },
-              );
-            }).toList(),
-            SizedBox(height: 20),
-            Text(
-              "Select Time Range:",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                TextButton(
-                  onPressed: () => selectTime(context, true),
-                  child: Text(
-                    startTime == null ? "Start Time" : formatTimeTo24Hour(startTime!),
-                    style: TextStyle(fontSize: 16, color: Colors.teal),
-                  ),
-                ),
-                Text(
-                  "to",
-                  style: TextStyle(fontSize: 16),
-                ),
-                TextButton(
-                  onPressed: () => selectTime(context, false),
-                  child: Text(
-                    endTime == null ? "End Time" : formatTimeTo24Hour(endTime!),
-                    style: TextStyle(fontSize: 16, color: Colors.teal),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
+                dropdownColor: Colors.white,
+                icon: Icon(Icons.timer, color: Colors.teal),
+                style: TextStyle(fontSize: 16, color: Colors.black),
+              ),
 
-            Spacer(),
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                ),
-                onPressed: saveAvailability,
-                child: Text(
-                  "Save Availability",
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                  onPressed: saveAvailability,
+                  child: Text(
+                    "Save Availability",
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 20), // Adds space below the button
-          ],
+              SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
+
     );
   }
-
-  Future<List<Map<String, String>>> fetchAvailability() async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/getAvailability'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${widget.savedToken}',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        // Explicitly cast the map to Map<String, String>
-        return data.map((item) => {
-          'days': item['days'] as String,
-          'start_time': item['start_time'] as String,
-          'end_time': item['end_time'] as String,
-        }).toList();
-      } else {
-        throw Exception('Failed to load availability');
-      }
-    } catch (e) {
-      print('Error fetching availability: $e');
-      return [];
-    }
-  }
-
 }
