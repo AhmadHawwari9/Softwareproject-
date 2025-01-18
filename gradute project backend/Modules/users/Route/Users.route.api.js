@@ -57,8 +57,9 @@ const {sendFollowRequest,getUserNotifications,fetchUserNotifications,deleteFollo
     
 const router = express.Router();
 const {sendCareRecipientNotifications}=require('../Controller/Emergencybutton.controller');
-
+const sendNotificationController=require('../Controller/SendNotifiactions.controller');
 const uploade = require('../../fileMannager/helper/multerobj');
+const{getUserIdByToken}=require('../Controller/Getuseridbytoken.controller');
 router.post('/api/users',uploade.single("photo"),createUsersValidation, createUsersUsingPost); // Sign up
 router.post('/api/Login', createUsersValidationLogin, createUsersUsingPostLogin);
 router.post('/api/ForgetPassword', validateEmail, sendCode);
@@ -174,7 +175,12 @@ router.get('/hospitalbyidfromauthnitication',authonitication, getHospitalByUserI
 router.post('/updateHospital', uploade.single('photo'),authonitication, updateHospital);
 
 //Emergency button
-router.get('/sendNotifications', authonitication, sendCareRecipientNotifications);
+router.post('/sendNotifications', authonitication, sendCareRecipientNotifications);
+
+//notifications
+router.post("/api/Sendnotifications", sendNotificationController);
+
+router.get('/getuseidbytoken',authonitication,getUserIdByToken);
 
 
 module.exports = router;
