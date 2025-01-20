@@ -356,7 +356,12 @@ class _HomepageState extends State<CareGiverHomepage> {
 
   late var userid='';
   Future<http.Response> fetchHomepageAndNavigate(
-      BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
+      BuildContext context,
+      String email,
+      String password,
+      String token,
+      bool isGoogleSignInEnabled,
+      ) async {
     try {
       final apiUrl = kIsWeb
           ? 'http://localhost:3001/api/homepage' // Web environment (localhost or public URL)
@@ -370,7 +375,9 @@ class _HomepageState extends State<CareGiverHomepage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final userType = data['userType'];
-        userid=data['userId'];
+
+        // Ensure userid is treated as a String
+        final userid = data['userId'].toString(); // Convert to String explicitly
 
         Widget homepage;
         if (userType == 'Care recipient') {
@@ -383,10 +390,10 @@ class _HomepageState extends State<CareGiverHomepage> {
           homepage = HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
 
-        try{
-          await OneSignal.login(userid.toString());
-        }catch(e){
-          print("Error ading onesignal:$e");
+        try {
+          await OneSignal.login(userid); // Use userid as a String
+        } catch (e) {
+          print("Error adding OneSignal: $e");
         }
 
         // If mounted, navigate to the homepage
@@ -1430,14 +1437,16 @@ class _HomepageState extends State<CareGiverHomepage> {
   int unreadMessageCount = 0;
 
   Future<void> fetchUnreadMessagesCount() async {
-    // Define the URL based on the environment (web or mobile emulator)
-    final String url = kIsWeb
-        ? 'http://localhost:3001/unread-message-count' // Web environment
-        : 'http://10.0.2.2:3001/unread-message-count'; // Mobile emulator
+    // Determine the base URL based on platform (web or mobile)
+    final baseUrl = kIsWeb
+        ? 'http://localhost:3001' // Web environment (localhost)
+        : 'http://10.0.2.2:3001'; // Mobile emulator
+
+    final url = Uri.parse('$baseUrl/unread-message-count');
 
     try {
       final response = await http.get(
-        Uri.parse(url),
+        url,
         headers: {
           'Authorization': 'Bearer ${widget.savedToken}', // Send the token in the header
         },
@@ -1452,13 +1461,12 @@ class _HomepageState extends State<CareGiverHomepage> {
           setState(() {
             unreadMessageCount = data['unreadMessageCount'];
             if (unreadMessageCount > 0) {
-              print('Device token :$devicetoken');
-              NotificationService.sendNotification(devicetoken!,"SafeAging","You Have New $unreadMessageCount Messages");
               // Noti.showBigTextNotification(
               //   title: "SafeAging",
               //   body: "You Have New $unreadMessageCount Messages",
               //   fln: flutterLocalNotificationsPlugin,
               // );
+
 
               sendNotification(
                 title: "SafeAging",
@@ -1486,6 +1494,7 @@ class _HomepageState extends State<CareGiverHomepage> {
       });
     }
   }
+
   List<Map<String, dynamic>> filteredRecipients = [];
 
 

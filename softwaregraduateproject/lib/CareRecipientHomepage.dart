@@ -12,6 +12,7 @@ import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
 import 'Conversations.dart';
 import 'DoctorPage.dart';
+import 'Emergencybuttonsettings.dart';
 import 'Historypage.dart';
 import 'HospitalPage.dart';
 import 'Hospitaluser.dart';
@@ -1107,6 +1108,18 @@ class _HomepageState extends State<CareRecipientHomepage> {
               title: Text("Home"),
               onTap: () async {
                 await fetchHomepageAndNavigate(context, email!, password!, token!, false);  // Passing the context to the function
+              },
+            ),
+
+
+            ListTile(
+              leading: Icon(Icons.add_alert), // Replace with your preferred icon
+              title: Text("Emergency button settings"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Emergencybuttonsettings(widget.savedToken)),
+                );
               },
             ),
 
