@@ -18,10 +18,8 @@ import 'CareGiverHomepage.dart';
 import 'CareRecipientHomepage.dart';
 import 'AdminHomepage.dart';
 
-
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 FlutterLocalNotificationsPlugin();
-
 
 class Loginpage extends StatefulWidget {
   @override
@@ -66,7 +64,6 @@ class _LoginPageState extends State<Loginpage> {
     }
   }
 
-
   Future<http.Response> fetchHomepageAndNavigate(
       BuildContext context, String email, String password, String token, bool isGoogleSignInEnabled) async {
     try {
@@ -82,7 +79,7 @@ class _LoginPageState extends State<Loginpage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final userType = data['userType'];
-        final userid=data['userId'];
+        final userid = data['userId'];
 
         Widget homepage;
         if (userType == 'Care recipient') {
@@ -95,10 +92,10 @@ class _LoginPageState extends State<Loginpage> {
           homepage = HospitalUserForm(email, password, token, isGoogleSignInEnabled);
         }
 
-        try{
+        try {
           await OneSignal.login(userid.toString());
-        }catch(e){
-          print("Error ading onesignal:$e");
+        } catch (e) {
+          print("Error adding onesignal: $e");
         }
 
         // If mounted, navigate to the homepage
@@ -119,7 +116,6 @@ class _LoginPageState extends State<Loginpage> {
     }
   }
 
-
   Future<void> _saveCredentials(String token, String email, String password, bool isGoogleSignInEnabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
@@ -128,7 +124,7 @@ class _LoginPageState extends State<Loginpage> {
     await prefs.setBool('isGoogleSignInEnabled', isGoogleSignInEnabled);
   }
 
-  Future<http.Response> _loginUser(Map<String, String> userData) async {
+  Future<Map<String, dynamic>> _loginUser(Map<String, String> userData) async {
     try {
       // Use 'localhost' for local development or a publicly accessible URL
       final apiUrl = kIsWeb
@@ -142,17 +138,22 @@ class _LoginPageState extends State<Loginpage> {
       );
 
       if (response.statusCode == 200) {
-        return response; // Successful login
+        return {'success': true, 'data': json.decode(response.body)};
+      } else if (response.statusCode == 401) {
+        // Unauthorized: Incorrect password
+        return {'success': false, 'error': 'Incorrect password'};
+      } else if (response.statusCode == 404) {
+        // Not Found: Email does not exist
+        return {'success': false, 'error': 'Email does not exist'};
       } else {
-        throw Exception('Failed to login. Status code: ${response.statusCode}, Body: ${response.body}');
+        return {'success': false, 'error': 'Login failed. Please try again.'};
       }
     } on SocketException {
-      throw Exception('No Internet connection or server unreachable');
+      return {'success': false, 'error': 'No Internet connection or server unreachable'};
     } catch (e) {
-      throw Exception('Unexpected error occurred: $e');
+      return {'success': false, 'error': 'Unexpected error occurred: $e'};
     }
   }
-
 
   void _showErrorDialog(String message) {
     if (mounted) {
@@ -253,7 +254,7 @@ class _LoginPageState extends State<Loginpage> {
                 padding: const EdgeInsets.all(16.0),
                 child: TextFormField(
                   decoration: InputDecoration(
-                    icon: Icon(Icons.person,color: Colors.teal,),
+                    icon: Icon(Icons.person, color: Colors.teal),
                     labelText: 'Email',
                   ),
                   validator: (value) {
@@ -269,11 +270,11 @@ class _LoginPageState extends State<Loginpage> {
                 child: TextFormField(
                   obscureText: !_isPasswordVisible,
                   decoration: InputDecoration(
-                    icon: Icon(Icons.lock,color: Colors.teal,),
+                    icon: Icon(Icons.lock, color: Colors.teal),
                     labelText: 'Password',
                     suffixIcon: IconButton(
                       icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,color: Colors.teal,),
+                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off, color: Colors.teal),
                       onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                     ),
                   ),
@@ -293,7 +294,7 @@ class _LoginPageState extends State<Loginpage> {
                     context,
                     MaterialPageRoute(builder: (context) => Forgetpassword()),
                   ),
-                  child: Text('Forget Password?',style: TextStyle(color: Colors.teal),),
+                  child: Text('Forget Password?', style: TextStyle(color: Colors.teal)),
                 ),
               ),
 
@@ -314,13 +315,14 @@ class _LoginPageState extends State<Loginpage> {
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     final response = await _loginUser({'email': email!, 'password': password!});
-                    if (response.statusCode == 200) {
-                      final data = json.decode(response.body);
+                    if (response['success']) {
+                      final data = response['data'];
                       _token = data['accesstoken'];
                       await _saveCredentials(_token!, email!, password!, isGoogleSignInEnabled);
                       await fetchHomepageAndNavigate(context, email!, password!, _token!, isGoogleSignInEnabled);
                     } else {
-                      setState(() => _errorMessage = 'Login failed');
+                      setState(() => _errorMessage = response['error']);
+                      _showErrorDialog(response['error']); // Show error dialog
                     }
                   }
                 },
@@ -355,7 +357,7 @@ class _LoginPageState extends State<Loginpage> {
                   context,
                   MaterialPageRoute(builder: (context) => Signup()), // Navigate to SignUp page
                 ),
-                child: Text('Don\'t have an account? Sign up here',style: TextStyle(color: Colors.teal),),
+                child: Text('Don\'t have an account? Sign up here', style: TextStyle(color: Colors.teal)),
               ),
             ],
           ),

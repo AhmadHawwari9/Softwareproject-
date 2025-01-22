@@ -745,19 +745,43 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
       print('Error: $e');
     }
   }
+
+
+  List<String> _generateTimeSlots(String startTime, String endTime, int duration) {
+    final start = TimeOfDay(
+      hour: int.parse(startTime.split(':')[0]),
+      minute: int.parse(startTime.split(':')[1]),
+    );
+    final end = TimeOfDay(
+      hour: int.parse(endTime.split(':')[0]),
+      minute: int.parse(endTime.split(':')[1]),
+    );
+
+    List<String> slots = [];
+    TimeOfDay current = start;
+
+    while (current.hour < end.hour ||
+        (current.hour == end.hour && current.minute < end.minute)) {
+      slots.add(current.format(context));
+      current = TimeOfDay(
+        hour: current.hour + (current.minute + duration) ~/ 60,
+        minute: (current.minute + duration) % 60,
+      );
+    }
+
+    return slots;
+  }
+  List<String> timeSlots = [];
+
   String availabilityText = "";
   int appointmentDuration = 0; // Add this at the beginning of the class or state.
 
   List<String> availableDays = [];
   Map<String, int> availableSlotsPerDay = {};
   Future<void> fetchAvailability() async {
-    final String url = kIsWeb
-        ? 'http://localhost:3001/getAvailability' // Web environment
-        : 'http://10.0.2.2:3001/getAvailability'; // Mobile emulator
-
     try {
       final response = await http.get(
-        Uri.parse(url),
+        Uri.parse('$baseUrl/availability/${widget.id}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${widget.savedToken}', // Pass the token in the header
@@ -765,39 +789,66 @@ class _UserDetailsPageState extends State<UserDetailsPagewithcalender> {
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+        final List<dynamic> data = json.decode(response.body);
         if (data.isNotEmpty) {
-          final availabilityData = data['availability']; // Access the 'availability' field
+          setState(() {
+            var daysData = data[0]['days'];
 
-          if (availabilityData != null && availabilityData.isNotEmpty) {
-            // Extract the days and split them into a list
-            setState(() {
-              availableDays = availabilityData[0]['days'].split(', ').map((day) => day.trim()).toList();
-              availabilityText = "Available on: ${availabilityData[0]['days']}\n"
-                  "From: ${availabilityData[0]['start_time']} to ${availabilityData[0]['end_time']}";
-              appointmentDuration = availabilityData[0]['appointment_duration'];
-            });
-          } else {
-            setState(() {
-              availableDays = []; // Clear available days if no data
-              availabilityText = "No availability set.";
-            });
-          }
+            if (daysData is List) {
+              availableDays = daysData.map((e) => e.toString()).toList();
+            } else if (daysData is String) {
+              availableDays = daysData.split(', ').map((e) => e.trim()).toList();
+            }
+
+            availabilityText = "Available on: ${data[0]['days']}\n"
+                "From: ${data[0]['start_time']} to ${data[0]['end_time']}";
+
+            appointmentDuration = data[0]['appointment_duration'];
+
+            // Generate time slots
+            timeSlots = _generateTimeSlots(
+              data[0]['start_time'],
+              data[0]['end_time'],
+              appointmentDuration,
+            );
+          });
+
+          // Fetch existing schedules for the selected date
+          await _fetchScheduleForSelectedDate(widget.id, selectedDate);
+
+          // Filter out booked time slots
+          setState(() {
+            final bookedTimes = selectedSchedules.map((schedule) {
+              return TimeOfDay(
+                hour: int.parse(schedule['Time'].split(':')[0]),
+                minute: int.parse(schedule['Time'].split(':')[1]),
+              ).format(context);
+            }).toSet();
+
+            print("Booked Times: $bookedTimes");
+            print("Time Slots Before Filtering: $timeSlots");
+
+            timeSlots.removeWhere((slot) => bookedTimes.contains(slot));
+
+            print("Time Slots After Filtering: $timeSlots");
+          });
+        } else {
+          setState(() {
+            availabilityText = "No availability set.";
+          });
         }
       } else {
         setState(() {
-          availableDays = []; // Clear available days if the request fails
-          availabilityText = "No availability Added";
+          availabilityText = "No availability added.";
         });
       }
     } catch (e) {
-      print('Error fetching availability: $e');
       setState(() {
-        availableDays = []; // Clear available days if an error occurs
-        availabilityText = "Error fetching availability.";
+        availabilityText = "Error fetching availability: $e";
       });
     }
   }
+
   int _calculateAvailableSlots(String startTime, String endTime, int appointmentDuration) {
     // Parse start and end times into minutes
     final start = _parseTime(startTime); // Convert to minutes
@@ -1525,16 +1576,31 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
   }
 
   void _bookAppointment(String slot) async {
-    // Convert the slot to 24-hour format
-    final timeOfDay = TimeOfDay(
-      hour: int.parse(slot.split(':')[0]) + (slot.contains('PM') ? 12 : 0),
-      minute: int.parse(slot.split(':')[1].split(' ')[0]),
-    );
-    final String formattedSlot = '${timeOfDay.hour.toString().padLeft(2, '0')}:${timeOfDay.minute.toString().padLeft(2, '0')}';
+    // Split the slot into hours, minutes, and period (AM/PM)
+    final parts = slot.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1].split(' ')[0]);
+    final period = parts[1].split(' ')[1];
 
+    // Convert to 24-hour format
+    int hour24 = hour;
+    if (period == 'PM' && hour != 12) {
+      // Add 12 to hours for PM times (except 12 PM)
+      hour24 += 12;
+    } else if (period == 'AM' && hour == 12) {
+      // 12 AM (midnight) should be 00:00 in 24-hour format
+      hour24 = 0;
+    }
+    // 12 PM remains 12:00 in 24-hour format
+
+    // Format the time as HH:mm
+    final String formattedSlot = '${hour24.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+
+    // Format the selected date
     final String selectedDate = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
 
     try {
+      // Call the API to book the appointment
       await addSchedule(
         token: widget.savedToken, // Pass the saved token
         scheduleUserId: int.parse(widget.id), // Convert the ID to an integer
@@ -1542,14 +1608,17 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
         time: formattedSlot, // Use the converted time slot
       );
 
+      // Update the UI to remove the booked slot
       setState(() {
-        timeSlots.remove(slot); // Remove the booked slot from the table
+        timeSlots.remove(slot);
       });
 
+      // Show a success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Successfully booked appointment for $slot")),
       );
     } catch (error) {
+      // Show an error message if booking fails
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to book appointment: $error")),
       );
