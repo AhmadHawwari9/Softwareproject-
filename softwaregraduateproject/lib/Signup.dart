@@ -668,7 +668,7 @@ class _SignupState extends State<Signup> {
                                     } else {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text("Signup failed: ${responseBody.body}"),
+                                          content: Text("you must  use another email this email exist"),
                                           backgroundColor: Colors.red,
                                         ),
                                       );

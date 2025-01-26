@@ -76,7 +76,7 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
       : 'http://10.0.2.2:3001'; // Mobile emulator
 
   Future<void> submitApplicationweb() async {
-    if (widget.userData['typeofuser'] == 'Care giver') { // Check if user is a caregiver
+    if (widget.userData['typeofuser'] == 'Care giver') {
       if (_selectedFile != null || kIsWeb) {
         setState(() {
           _isLoading = true;
@@ -151,10 +151,36 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
             );
           } else {
             var responseBody = await http.Response.fromStream(response);
-            print("Failed to submit application. Status: ${response.statusCode}, Response: ${responseBody.body}");
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Failed to submit application.")),
-            );
+            var responseData = json.decode(responseBody.body);
+
+            // Check if the response contains errors
+            if (responseData.containsKey('errors')) {
+              // Loop through the errors to find the email-related error
+              for (var error in responseData['errors']) {
+                if (error['path'] == 'email') {
+                  // Display a user-friendly message for email-related errors
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Email already exists. Please try another email.")),
+                  );
+                  break; // Stop after finding the email error
+                }
+              }
+            } else if (responseData.containsKey('error')) {
+              // If the backend returns a single error message
+              String errorMessage = responseData['error'];
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(errorMessage)),
+              );
+            } else {
+              // Fallback error message if no specific error is found
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Failed to submit application. Please try again.")),
+              );
+            }
+
+            // Log the error details for debugging
+            print("Error: ${response.statusCode} - ${response.reasonPhrase}");
+            print("Response Body: $responseData");
           }
         } catch (e) {
           print("Error: $e");
@@ -195,13 +221,11 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
       });
 
       try {
-        // Prepare the multipart request
         var request = http.MultipartRequest(
           'POST',
           Uri.parse('http://10.0.2.2:3001/caregiverRequestToTheAdmin'),
         );
 
-        // Add text fields
         request.fields.addAll(widget.userData);
 
         // Add the photo (assuming it's another file field you need to add)
@@ -210,18 +234,10 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
           request.files.add(photoFile);
         }
 
-        // Log the form data
-        print('Request Fields: ${request.fields}');
-        print('Photo Field Added: ${_selectedFile!.path}');
-
         // Add the file (this is likely the hardware presentation file)
         var file = await http.MultipartFile.fromPath('file', _selectedFile!.path);
         request.files.add(file);
 
-        // Log the file details
-        print('File: ${file.filename}');
-
-        // Send the request
         var response = await request.send();
 
         if (response.statusCode == 201) {
@@ -232,20 +248,43 @@ class _CareGiverFileUploadState extends State<CareGiverFileUpload> {
             SnackBar(content: Text("Application submitted successfully!")),
           );
 
-          // Log response data
-          print("Response Data: $responseData");
-
-          // Navigate to the login page and remove all previous routes
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => Loginpage()),
-                (route) => false, // This removes all previous routes
+                (route) => false,
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Failed to submit application.")),
-          );
+          var responseBody = await http.Response.fromStream(response);
+          var responseData = json.decode(responseBody.body);
+
+          // Check if the response contains errors
+          if (responseData.containsKey('errors')) {
+            // Loop through the errors to find the email-related error
+            for (var error in responseData['errors']) {
+              if (error['path'] == 'email') {
+                // Display a user-friendly message for email-related errors
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Email already exists. Please try another email.")),
+                );
+                break; // Stop after finding the email error
+              }
+            }
+          } else if (responseData.containsKey('error')) {
+            // If the backend returns a single error message
+            String errorMessage = responseData['error'];
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(errorMessage)),
+            );
+          } else {
+            // Fallback error message if no specific error is found
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Failed to submit application. Please try again.")),
+            );
+          }
+
+          // Log the error details for debugging
           print("Error: ${response.statusCode} - ${response.reasonPhrase}");
+          print("Response Body: $responseData");
         }
       } catch (e) {
         print("Error: $e");
